@@ -30,9 +30,6 @@ function script() {
                 }
             },false)
         },
-        // removeMessage(){
-        //     window.removeEventListener('message',null,false)
-        // }
     }
     window.DAppLink = DAppLink
 }

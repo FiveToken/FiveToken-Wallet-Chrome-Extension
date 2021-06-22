@@ -1,0 +1,36 @@
+{
+    "manifest_version": 2,
+    "name": "Filecoin Wallet",
+    "description": "chrome Filecoin Wallet extension",
+    "version": "1.0.0",
+    "options_page": "pages/filecoinwallet.html",
+    "icons":{
+		"16": "assets/image/logo.png",
+		"48": "assets/image/logo.png",
+		"128": "assets/image/logo.png"
+	},
+    "browser_action": {
+        "default_icon": "assets/image/logo.png",
+		"default_title": "filecoinwallet",
+        "default_popup": "pages/filecoinwallet.html"
+    },
+    "permissions":[
+		"http://*/*",
+		"https://*/*"
+    ],
+    "background":{
+		"scripts": ["background.js"]
+	},
+    "content_scripts": [
+        {
+            "matches": [
+                "<all_urls>"
+            ],
+            "js": [
+                "script-content.js"
+            ],
+            "run_at": "document_start",
+            "all_frames": true
+        }
+    ]
+}

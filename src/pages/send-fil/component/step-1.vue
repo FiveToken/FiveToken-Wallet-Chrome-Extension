@@ -1,236 +1,182 @@
 <template>
-<div class="send-fil-component">
-    <div class="top-title">
-        <div class="text">{{$t('sendFil.addReveice')}}</div>
-        <div class="cancel" @click="cancel">{{$t('sendFil.cancel')}}</div>
-    </div>
-    <div class="search">
-        <el-input v-model="toValue" :clearable="clearable" @input="searchChange" @clear="clear">
-            <i class="el-icon-search" slot="prepend"></i>
-        </el-input>
-    </div>
-    <div class="add-address-box" v-if="pageType === 'add-address'">
-        <div class="my-address 22" v-if="toMyAddressvisible" @click="toMyAddress">{{$t('sendFil.inMyAccount')}}</div>
-        <div class="recently-name" v-if="addressRecordLast.length">{{$t('sendFil.lastRecord')}}</div>
-        <div class="recently-list" v-if="addressRecordLast.length">
-            <div class="recently-item" v-for="(item,index) in addressRecordLast" :key="index" @click="addressClick(item.address)">
-                {{item.address| addressFormat}}
-            </div>
+<div class="step-1-component">
+    <div class="send-fil-box">
+        <div class="back-wrap">
+            <kyBack :name="$t('sendFil.send')" @pageBack="sendBack" />
         </div>
-        <div class="address-name" v-if="addressBook.length">{{$t('sendFil.addressBook')}}</div>
-        <div class="address-list" v-if="addressBook.length">
-            <div class="address-item" v-for="(item,index) in addressBook" :key="index" @click="addressClick(item.address)">
-                <div class="name">{{item.name}}</div>
-                <div class="address">{{item.address| addressFormat}}</div>
-            </div>
-        </div>
-    </div>
-
-    <div class="send-fil-box" v-if="pageType === 'send-fil'">
-        <div class="new-address" v-if="newAddress" @click="toAddressBook">{{$t('sendFil.addToaddress')}}</div>
-        <div class="detail-item">
-            <div class="label">{{$t('sendFil.property')}}</div>
-            <div class="value">
-                <div class="logo">
-                    <img class="img" :src="logo" />
-                </div>
-                <div class="fil-m">
-                    <div class="balance">{{$t('sendFil.balance')}}:{{balance}} FIL</div>
-                </div>
-            </div>
-        </div>
-        <div class="detail-item">
-            <div class="label">{{$t('sendFil.amount')}}</div>
-            <div class="value">
-                <div class="fil-m">
-                    <div class="fil">
-                        <el-input v-model="filValue" type="number"></el-input>
-                        <span>FIL</span>
+        <div class="send-content">
+            <div class="input-item">
+                <div class="label">{{$t('sendFil.token')}}</div>
+                <div class="value" @click="tokenVisible = true">
+                    <div class="logo">
+                        <img class="img" :src="logo" alt="">
                     </div>
-                    <div class="usd"> {{filUsd}} USD</div>
+                    <div class="token">{{formData.symbol}}</div>
+                    <div class="name">{{formData.chainName}}</div>
+                    <div class="icon">
+                        <i class="el-icon-arrow-right"></i>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="detail-item">
-            <div class="label">{{$t('sendFil.cost')}}</div>
-            <div class="systom-cost" v-if="type !== 3">
-                <div class="value-item" :class="{active:fast.type === type}" @click="selectCost(fast.type)">
-                    <div class="type">{{fast.name}}</div>
-                    <div class="fil">{{formatFil(fast.cost) }}</div>
-                    <div class="usd"> {{(fast.cost*price_usd/Math.pow(10, 18)).toFixed(8)}} USD</div>
-                </div>
-                <div class="value-item" :class="{active:ordinary.type === type}" @click="selectCost(ordinary.type)">
-                    <div class="type">{{ordinary.name}}</div>
-                    <div class="fil">{{formatFil(ordinary.cost) }}</div>
-                    <div class="usd">{{(ordinary.cost*price_usd/Math.pow(10, 18)).toFixed(8)}} USD</div>
+            <div class="input-item">
+                <div class="label">{{$t('sendFil.toAddress')}}</div>
+                <div class="value">
+                    <div class="name" v-if="formData.toName">{{formData.toName}}</div>
+                    <div class="address">
+                        <kyInput :value="formData.to" @changeInput="toChange"/>
+                    </div>
+                    <div class="icon" @click="addressVisible = true">
+                        <i class="el-icon-notebook-1"></i>
+                    </div>
                 </div>
             </div>
-            <div class="custom-cost" v-else>
-                <div class="left">
-                    <div class="fil">{{formatFil(custom.cost)}}</div>
-                    <div class="usd">{{(custom.cost*price_usd/Math.pow(10, 18)).toFixed(2)}} USD</div>
+            <div class="input-item">
+                <div class="label">{{$t('sendFil.number')}}</div>
+                <div class="value">
+                    <kyInput :value="formData.fil" @changeInput="filChange"/>
+                    <div class="all" @click="allFil">{{$t('sendFil.all')}}</div>
                 </div>
-                <div class="right" @click="reset">{{$t('sendFil.reset')}}</div>
+                <div class="available">
+                    {{ $t('sendFil.available') }} :
+                    {{ formData.balance | formatBalance(12,formData.decimals) }}
+                    {{ formData.symbol }}
+                </div>
             </div>
-        </div>
-        <div class="custom" @click="openDialog">
-            <div class="text">{{$t('sendFil.custom')}}</div>
         </div>
         <div class="position">
             <div class="btn-wrap">
-                <el-button @click="cancel">{{$t('sendFil.cancel')}}</el-button>
-                <el-button type="primary" :disabled="!disabled" @click="next">{{$t('sendFil.next')}}</el-button>
+                <kyButton :type="'primary'" :active="active" @btnClick="next">
+                    {{$t('sendFil.send')}}
+                </kyButton>
             </div>
         </div>
-    </div>
 
-    <div class="my-address-list" v-if="pageType === 'my-address'">
-        <div class="back" @click="back">{{$t('sendFil.backAll')}}</div>
-        <div class="my-address-name">{{$t('sendFil.myAccount')}}</div>
-        <div class="my-list">
-            <div class="my-item" v-for="(item,index) in accountList" :key="index" @click="addressClick(item.address)">
-                <div class="name">{{item.accountName}}</div>
-                <div class="address">{{item.address| addressFormat}}</div>
-            </div>
-        </div>
+        <el-dialog
+            :visible.sync="tokenVisible"
+            width="100%"
+            :fullscreen='true'
+            :top="'0'"
+            :show-close="false"
+        >
+            <kyToken
+                @selectToken="selectToken"
+                @colseToken="tokenVisible = false"
+            />
+        </el-dialog>
+        <el-dialog
+            :visible.sync="addressVisible"
+            width="100%"
+            :fullscreen='true'
+            :top="'0'"
+            :show-close="false"
+        >
+            <kyAddress
+                @selectAddress="selectAddress"
+                @colseAddress="addressVisible = false"
+            />
+        </el-dialog>
     </div>
-
-    <div class="search-error" v-if="pageType === 'address-error'"> {{$t('sendFil.invalidReceiverAddress')}}</div>
-    
 </div>
 </template>
 
 <script>
-import { isValidAddress,formatFilNum} from '@/utils'
+import kyBack from '@/components/back'
+import kyInput from '@/components/input'
+import kyButton from '@/components/button'
+import kyAddress from './address.vue'
+import kyToken from './token.vue'
+import { isValidAddress} from '@/utils'
+import { mapState } from 'vuex'
 export default {
     data(){
         return{
-            filValue:'',
-            toValue:'',
-            clearable:true,
+            // send-fil  select-token  select-address
+            pageType:'send-fil',
+            tokenVisible:false,
+            addressVisible:false,
             logo:require('@/assets/image/logo.png'),
-            // pageType:'add-address'， send-fil , add-address , my-address , address-error
+            accountList:[],
             addressRecordLast:[],
             addressBook:[],
-            accountList:[],
-            newAddress:true
         }
     },
     props:{
-        balance:Number,
-        type:Number,
-        price_usd:Number,
-        customVisible:Boolean,
-        address:String,
-        ordinary:Object,
-        fast:Object,
-        custom:Object,
-        step:Number,
-        to:String,
-        fil:Number,
-        pageType:String
-    },
-    filters:{
-        addressFormat(val){
-            if(val.length>12){
-                return val.substr(0,6) + '...' + val.substr(val.length-6,6)
-            }else{
-                return val
-            } 
-        },
+        formData:Object
     },
     computed:{
-        disabled(){
+        ...mapState('app',['rpc','symbol','networkType','decimals']),
+        active(){
             return this.to !== '' && this.filValue !== ''
         },
-        filUsd(){
-            let reg = /^[+-]?(0|([1-9]\d*))(\.\d+)?$/
-            let volid = reg.test(this.filValue)
-            if(volid) {
-                return (this.filValue * this.price_usd).toFixed(2)
-            }else{
-                return 0
-            }
-        },
-        pageName(){
-            let name = ''
-            switch(this.pageType){
-                case 'add-address':
-                    name = this.$t('sendFil.addReveice')
-                    break;
-                case 'send-fil':
-                    name = this.$t('sendFil.sendFil')
-                    break;
-                case 'my-address':
-                    name = this.$t('sendFil.addReveice')
-                    break;
-                case 'add-address':
-                    name = this.$t('sendFil.addReveice')
-                    break;
-            }
-            return name
-        },
-        toMyAddressvisible(){
-            return this.accountList.length > 1
-        }
     },
-    watch:{
-        filValue(val){
-            if(val){
-                this.$emit("update:fil",Number(val)||0)
+    filters:{
+        formatBalance(val,n,decimals){
+            let dec = val / Math.pow(10,Number(decimals))
+            var str = String(dec);
+            let index = str.indexOf('.')
+            if(index > -1){
+                let arr = str.split(".")
+                let num = arr[0] + "." + arr[1].substring(0,n)
+                return num
             }else{
-                this.$emit("update:fil",0)
+                return dec
             }
         },
-        toValue(val){
-            if(val){
-                let voild = this.addressBook.some(n=>{
-                    return n.address !== val
-                })
-                console.log(voild,'ccww')
-                this.newAddress = voild
-                this.$emit("update:to",val)
-            }else{
-                this.newAddress = false
-                this.$emit("update:to",'')
-            }
-        }
     },
-    async mounted(){
-        if(this.fil){
-            this.filValue = this.fil
-        }
-        this.toValue = this.to
-        let addressRecordLast = await window.filecoinwalletDb.addressRecordLast.where({ kunyao:'kunyao'}).toArray () || [];
-        this.addressRecordLast = addressRecordLast.filter(n=>{
-            return n.address === this.address
-        })
-        let addressBook = await window.filecoinwalletDb.addressBook.where({ kunyao:'kunyao'}).toArray () || [];
-        this.addressBook = addressBook
-        let accountList = await window.filecoinwalletDb.accountList.where({ kunyao:'kunyao'}).toArray () || [];
-        this.accountList = accountList
-        console.log(this.balance,'balancebalancebalancebalance')
+    components:{
+        kyBack,
+        kyInput,
+        kyButton,
+        kyAddress,
+        kyToken
     },
     methods:{
-        cancel(){
-            window.location.href = './wallet.html'
+        sendBack(){
+            this.$router.go(-1)
         },
-        formatFil(fil){
-            return formatFilNum(fil/Math.pow(10, 18))
+        selectToken(obj){
+            this.tokenVisible = false
+            this.$emit('formDataChange',{
+                key:'token',
+                value:obj,
+            })
+        },
+        selectAddress(obj){
+            this.addressVisible = false
+            let {item,type} = obj
+            this.$emit('formDataChange',{
+                key:'to',
+                value:item.address,
+                accountName:item.accountName,
+                type
+            })
+        },
+        toChange(val){
+            this.$emit('formDataChange',{
+                key:'to',
+                value:val,
+                accountName:'',
+                type:'input'
+            })
+        },
+        filChange(val){
+            this.$emit('formDataChange',{key:'fil',value:val})
+        },
+        allFil(){
+            this.$emit('formDataChange',{key:'isAll',value:1})
         },
         async searchChange(){
             if(this.toValue === '') return
-            let voild = !isValidAddress(this.toValue)
+            let voild = !isValidAddress(this.toValue,this.networkType)
             if(voild){
                 this.$emit('update:pageType','address-error')
             }else{
                 this.$emit('update:pageType','send-fil')
-                // address,create_time,kunyao
                 let create_time =  parseInt(new Date().getTime() / 1000)
                 await window.filecoinwalletDb.addressRecordLast.add({
                     address:this.toValue,
                     create_time,
-                    kunyao:'kunyao'
+                    khazix:'khazix'
                 })
             }
         },
@@ -243,18 +189,8 @@ export default {
         back(){
           this.$emit('update:pageType','add-address')
         },
-        selectCost(type){
-            if(type === 3){
-                this.$emit('update:customVisible', true)
-            }else{
-                this.$emit('update:type', type)
-            }
-        },
-        openDialog(){
-            this.$emit('update:customVisible', true)
-        },
         addressClick(address){
-            let voild = !isValidAddress(address)
+            let voild = !isValidAddress(address,this.networkType)
             if(voild){
                 this.$emit('update:pageType','address-error')
             }else{
@@ -265,9 +201,6 @@ export default {
         next(){
             this.$emit('next')
         },
-        reset(){
-            this.$emit('reset')
-        },
         toAddressBook(){
             window.location.href = `./setting-address.html?to=${this.toValue}`
         }
@@ -276,251 +209,106 @@ export default {
 </script>
 
 <style  lang="less" scoped>
-.send-fil-component{
-    .my-address{
-        padding: 10px 20px;
-        font-size: 14px;
-        color: #5CC1CB;
-        background: #fff;
-        cursor: pointer;
-    }
-    .recently-name{
-        font-size: 14px; 
-        color: #999;
-        padding: 10px 20px;
-    }
-    .recently-list{
-        .recently-item{
-            background: #fff;
-            font-size: 14px;
-            color: #222;
-            padding: 10px 20px;
-            cursor: pointer;
-        }
-    }
-    .address-name{
-        font-size: 14px; 
-        color: #999;
-        padding: 10px 20px;
-    }
-    .address-list{
-        .address-item{
-            background: #fff;
-            font-size: 14px;
-            padding: 10px 20px;
-            cursor: pointer;
-            .name{
-                color: #222;
-            }
-            .address{
-                color: #999;
-            }
-        }
-    }
-    .search{
-        padding: 0 10px;
-        margin-bottom: 10px;
-    }
-    .search-error{
-        background: #FCF2F3;
-        border: 1px solid #EFB5BA;
-        color: #C54A57;
-        font-size: 14px;
-        padding: 15px 10px;
-        border-radius: 10px;
-        width: calc(100% - 20px);
-        margin: 0 auto;
-        box-sizing: border-box;
-    }
-    .top-title{
-        position: relative;
-        padding: 10px 0;
-        .text{
-            font-size: 14px;
-            color: #222;
-            font-weight: bolder;
-            text-align: center;
-        }
-        .cancel{
-            position: absolute;
-            top: 50%;
-            right:10px;
-            transform: translateY(-50%);
-            font-size: 14px;
-            color: #5CC1CB;
-            cursor: pointer;
-        }
-    }
+.step-1-component{
+    height: 100%;
     .send-fil-box{
-        background: #fff;
-        padding: 10px;
-        height: 430px;
+        height: 100%;
         position: relative;
-        .new-address{
-            background: #ECF6FE;
-            font-size: 14px;
-            padding: 15px 10px;
-            border-radius: 10px;
-            width: 100%;
-            margin: 0 auto;
-            box-sizing: border-box;
-            border: 1px solid #9FC2E8;
-            color: #5CC1CB;
-            margin-bottom: 10px;
-            cursor: pointer;
+        .back-wrap{
+            padding: 15px 20px;
+            border-bottom: 1px solid #F6F7FF;
         }
-        .detail-item{
-            display: flex;
-            align-items: center;
-            margin-bottom: 10px;
-            .label{
-                width: 100px;
-            }
-            .value{
-                padding: 10px;
-                border:1px solid #eee;
-                flex-grow: 1;
-                display: flex;
-                align-items: center;
-                font-size: 14px;
-                color: #666;
-                .logo{
-                    width: 24px;
-                    height: 24px;
-                    .img{
-                        width: 24px;
-                        height: 24px;
-                    }
+        .send-content{
+            padding: 20px;
+            .input-item{
+                margin-bottom: 20px;
+                .label{
+                    font-size: 14px;
+                    color: #101010;
+                    margin-bottom: 5px;
+                    line-height: 20px;
                 }
-                .fil-m{
-                    padding-left: 15px;
-                    .fil{
-                        margin-bottom: 5px;
-                        display: flex;
-                        align-items: center;
-                        font-size: 14px;
-                        color: #666;
-                        /deep/.el-input{
-                            width: 100px;
-                            padding-right: 10px;
-                            .el-input__inner{
-                                height: 30px;
-                                line-height: 30px;
-                            }
+                .value{
+                    height: 36px;
+                    background: #F5F5F5;
+                    border-radius: 5px;
+                    display: flex;
+                    align-items: center;
+                    padding: 0 60px 0 10px;
+                    position: relative;
+                    cursor: pointer;
+                    .logo{
+                        width:18px;
+                        height: 18px;
+                        margin-right: 10px;
+                        .img{
+                            width:18px;
+                            height: 18px;  
                         }
                     }
-                    .usd{
-                        font-size: 12px;
-                        color: #666;
-                    }
-                }
-            }
-            .systom-cost{
-                display: flex;
-                flex-grow: 1;
-                .value-item{
-                    background: 10px;
-                    font-size: 14px;
-                    background: #fff;
-                    border:1px solid #eee;
-                    flex-grow: 1;
-                    padding: 10px;
-                    font-size: 12px;
-                    color: #999;
-                    height: 65px;
-                    box-sizing: border-box;
-                    flex:0 0 50%;
-                    &.active{
-                        background: #5CC1CB;
-                        color: #fff;
-                    }
-                    .type{
-                        margin-bottom: 5px;
-                    }
-                }
-            }
-            .custom-cost{
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                flex-grow: 1;
-                padding: 10px;
-                border:1px solid #eee;
-                .left{
-                    .fil{
+                    .token{
                         font-size: 14px;
-                        color: #666;
-                        margin-bottom: 5px;
+                        color: #101010;
+                        margin-right: 10px;
                     }
-                    .usd{
+                    .name{
+                        padding-right: 5px;
                         font-size: 12px;
-                        color: #666;
+                        color: #737171;
+                    }
+                    .address{
+                        flex-grow: 1;
+                    }
+                    .icon{
+                        position: absolute;
+                        right: 10px;
+                        top: 50%;
+                        transform: translateY(-50%);
+                        cursor: pointer;
+                        i{
+                            font-size: 18px;
+                            color: #201F1F;
+                        }
+                    }
+                    .all{
+                        width: 47px;
+                        height: 22px;
+                        background: #5CC1CB;
+                        position: absolute;
+                        line-height: 22px;
+                        text-align: center;
+                        font-size: 12px;
+                        color: #101010;
+                        border-radius: 5px;
+                        right: 10px;
+                        top: 50%;
+                        transform: translateY(-50%);
+                    }
+                    /deep/.input-component{
+                        flex-grow: 1;
+                        .el-input__inner{
+                            border: none;
+                            padding: 0;
+                        }
                     }
                 }
-                .right{
-                    color: #5CC1CB;
+                .available{
+                    padding-top: 4px;
                     font-size: 14px;
-                    cursor: pointer;
+                    color: #6A6767;
                 }
             }
-        }
-        .custom{
-            display: flex;
-            padding: 10px;
-            color: #5CC1CB;
-            font-size: 14px;
-            text-align: right;
-            cursor: pointer;
-            justify-content: flex-end;
         }
         .position{
-            position: absolute;
-            left: 0;
-            bottom: 0;
-            padding:10px;
-            border-top: 1px solid #eee;
             width: 100%;
-            box-sizing: border-box;
+            position: absolute;
+            bottom: 20px;
+            left: 0;
             .btn-wrap{
-                display: flex;
-                /deep/.el-button{
-                    flex-grow: 1;
-                }
-            }
-        }
-    }
-    .my-address-list{
-        .back{
-            padding: 10px 20px;
-            font-size: 14px;
-            cursor: pointer;
-            color: #5CC1CB;
-            margin-bottom: 10px;
-            background: #fff;
-
-        }
-        .my-address-name{
-            font-size: 14px; 
-            color: #999;
-            padding: 10px 20px;
-            margin-bottom: 10px;
-            background: #fff;
-        }
-        .my-list{
-            background: #fff;
-            .my-item{
-                font-size: 14px;
-                padding: 10px 20px;
-                border-bottom:1px solid #DCDFE6;
-                cursor: pointer;
-                .name{
-                    color: #222;
-                }
-                .address{
-                    color: #999;
-                }
+                padding: 0 20px;
             }
         }
     }
 }
 </style>
+

@@ -14,7 +14,7 @@ const ja = {
   },
   firstWallet:{
     create:'アカウントをインポートする',
-    question:'FiveTokenを初めてご利用ですか?',
+    question:'FilecoinWalletを初めてご利用ですか?',
     arr:[
       {
         icon:'el-icon-download',
@@ -47,7 +47,8 @@ const ja = {
     mnemonicWords:'アカウントニーモニック',
     placeholder:'クリップボードからアカウントニーモニック貼り付け',
     showWords:'アカウントニーモニック表示',
-    password:'新パスワード（数字、大文字・小文字ローマ字を含む8文字以上）',
+    password:'新パスワード',
+    passwordTips:'数字、大文字・小文字ローマ字を含む8文字以上',
     confirmPassword:'パスワード確認',
     agree:'私は読んだ後に同意します',
     clause:'使用規約',
@@ -63,7 +64,8 @@ const ja = {
     accountName:'アカウント名',
     back:'戻る',
     title:'パスワード作成',
-    password:'新パスワード（数字、大文字・小文字ローマ字を含む8文字以上）',
+    password:'新パスワード',
+    passwordTips:'数字、大文字・小文字ローマ字を含む8文字以上',
     diffError:'パスワードは一致していません',
     correctPassword:'パスワードを正しく入力してください',
     confirmPassword:'パスワード確認',
@@ -187,6 +189,7 @@ const ja = {
       {name:'アドレス帳',url:'./setting-address.html'},
       {name:'バックアップ',url:'./setting-backups.html'},
       {name:'について',url:'./setting-about.html'},
+      {name:'Network',url:'./setting-networks.html'}
    ]
   },
   settingAbout:{

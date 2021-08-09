@@ -13,14 +13,13 @@ request.interceptors.request.use(
   config => {
     config.headers = headers
     const { data, url } = config
-    // const mToken = localStorage.getItem('mToken')
     if (typeof data === 'undefined') {
       config.data = {}
     } 
     return config
   },
   error => {
-    console.log(error) // for debug
+    console.error('network error' + error) // for debug
     return Promise.reject(error)
   }
 )
@@ -35,8 +34,7 @@ request.interceptors.response.use(
     }
   },
   error => {
-    console.log('err2' + error) // for debug
-    Message.error('network error')
+    console.error('network error' + error) // for debug
     return Promise.reject(error)
   }
 )

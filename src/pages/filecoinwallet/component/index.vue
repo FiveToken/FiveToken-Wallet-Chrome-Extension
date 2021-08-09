@@ -27,14 +27,15 @@ export default {
         wallet,
         lock
     },
-    async mounted(){
-        let lockUser = await window.filecoinwalletDb.lockUser.where({ kunyao:'kunyao'}).toArray ();
-        if(lockUser.length){
-          this.lock = true
-        }
-        let accountList = await window.filecoinwalletDb.accountList.where({ kunyao:'kunyao'}).toArray ();
-        this.accountList = accountList
-        console.log(accountList,"accountList filecoinwallet-page")
+    async beforeCreate(){
+      let activenNetworks = await window.filecoinwalletDb.activenNetworks.where({ khazix:'khazix'}).toArray ();
+      let rpc = activenNetworks.length && activenNetworks[0].rpc
+      let lockUser = await window.filecoinwalletDb.lockUser.where({ khazix:'khazix'}).toArray ();
+      if(lockUser.length){
+        this.lock = true
+      }
+      let accountList = await window.filecoinwalletDb.accountList.where({ rpc:rpc}).toArray ();
+      this.accountList = accountList || []
     },
 }
 </script>

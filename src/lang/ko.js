@@ -47,7 +47,8 @@ const ko = {
     mnemonicWords:'계좌 도움말',
     placeholder:'클립보드에서 계좌 도움말을 붙여넣으십시요.',
     showWords:'계좌 도움말 보기',
-    password:'새 비밀번호(최소 8문자,숫자,대소문자들이 포함되여야 합니다.)',
+    password:'새 비밀번호',
+    passwordTips:'최소 8문자,숫자,대소문자들이 포함되여야 합니다.',
     confirmPassword:'비밀번호 확인',
     agree:'나는 이미 읽고 동의 합니다.',
     clause:'사용 조항',
@@ -63,7 +64,8 @@ const ko = {
     accountName:'계좌 명',
     back:'돌아가기',
     title:'비밀번호 만들기',
-    password:'새 비밀번호(최소 8문자,숫자,대소문자들이 포함되여야 합니다.)',
+    password:'새 비밀번호',
+    passwordTips:'최소 8문자,숫자,대소문자들이 포함되여야 합니다.',
     diffError:'비밀번호가 다릅니다.',
     correctPassword:'정확한 비밀번호를 입력하십시요.',
     confirmPassword:'비밀번호 확인',
@@ -186,6 +188,7 @@ const ko = {
       {name:'주소부',url:'./setting-address.html'},
       {name:'백업',url:'./setting-backups.html'},
       {name:'대해서',url:'./setting-about.html'},
+      {name:'Network',url:'./setting-networks.html'}
    ]
   },
   settingAbout:{
@@ -265,7 +268,7 @@ const ko = {
     inputPassword:'계정 비밀번호를 입력하세요'
   },
   connect:{
-    title:'FiveToken을 사용하여 연결합니다.  ',
+    title:'Filecoinwallet을 사용하여 연결합니다.  ',
     cancel:'취소',
     connect:'연결합니다'
   }

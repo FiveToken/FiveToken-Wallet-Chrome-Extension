@@ -1,106 +1,159 @@
 <template>
-<div class="setting-backups">
-    <div class="back">
-        <i class="el-icon-arrow-left" @click="back"></i>
-        <span>{{$t('settingBackups.backups')}}</span>
-        <i class="el-icon-close" @click="closeSetting"></i>
-    </div>
-     <div class="backups-content">
-         <div class="step-1" v-if="step === 1">
-            <div class="show-words">{{$t('settingBackups.showWords')}}</div>
-            <div class="btn-wrap" @click="backupsStep(2)">
-                <el-button>{{$t('settingBackups.showWords')}}</el-button>
+    <layout>
+        <div class="setting-backups">
+            <div class="backups-content">
+                <div class="step-1" v-if="step === 1">
+                    <div class="top-back">
+                        <kyBack 
+                            @pageBack="back" 
+                            :name="$t('settingBackups.backupsCheck')" 
+                            :close="false"
+                        ></kyBack>
+                    </div>
+                    <div class="backups-check">
+                        <div class="backups-tips" v-if="backups === 'privateKey'">{{$t('settingBackups.pkTips')}}</div>
+                        <div class="backups-tips" v-else>{{$t('settingBackups.mneTips')}}</div>
+                        <div class="input-item">
+                            <div class="label">{{$t('settingBackups.inputPassword')}}</div>
+                            <kyInput 
+                                :value="password"
+                                :suffix="suffix" 
+                                :type="passwordType" 
+                                @changeInput="passwordChange"
+                                @changeEye="passwordEye"
+                            ></kyInput>
+                        </div>
+                    </div>
+                    
+                </div>
+                <div class="step-2" v-if="step === 2">
+                    <div class="top-back">
+                        <kyBack 
+                            @pageBack="back" 
+                            :name="backupsTitle" 
+                            :close="true"
+                            @pageClose="pageClose"
+                        ></kyBack>
+                    </div>
+                    <div class="backups-check">
+                        <div class="backups-tips" v-if="backups === 'privateKey'">{{$t('settingBackups.pkTips')}}</div>
+                        <div class="backups-tips" v-else>{{$t('settingBackups.mneTips')}}</div>
+                        <div class="input-item">
+                            <div class="label" v-if="backups === 'privateKey'">{{$t('settingBackups.yourPk')}}</div>
+                            <div class="label" v-else>{{$t('settingBackups.yourMne')}}</div>
+                            <div class="value" v-if="backups === 'privateKey'">{{pk}}</div>
+                            <div class="value" v-else>{{mnemonic}}</div>
+                        </div>
+                        <div class="copy copy-mne" v-if="backups === 'privateKey'" @click="copyMne" :data-clipboard-text="pk">
+                            {{$t('settingBackups.copy')}}
+                        </div>
+                        <div class="copy copy-mne" v-else @click="copyMne" :data-clipboard-text="mnemonic">
+                            {{$t('settingBackups.copy')}}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="position">
+                    <div class="btn-wrap">
+                        <kyButton 
+                            v-if="step === 1" 
+                            :type="'primary'" 
+                            @btnClick="next"
+                            :active="password!==''"
+                        >
+                            {{$t('settingBackups.next')}}
+                        </kyButton>
+                        <kyButton 
+                            v-if="step === 2"
+                            @btnClick="pageClose"
+                        >
+                            {{$t('settingBackups.close')}}
+                        </kyButton>
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="step-2" v-if="step === 2">
-            <div class="title">{{$t('settingBackups.accountWords')}}</div>
-            <div class="sub-title">{{$t('settingBackups.tips')}}</div>
-            <div class="wraning">
-                <div class="w-left">
-                    <i class="el-icon-warning-outline"></i>
-                </div>
-                <div class="w-right">
-                    <div class="t">{{$t('settingBackups.warning')}}</div>
-                    <div class="s">{{$t('settingBackups.warningTips')}}</div>
-                </div>
-            </div>
-            <div class="input-item">
-                <div class="label">{{$t('settingBackups.inputPassword')}}</div>
-                <el-input v-model="password" type="password"></el-input>
-            </div>
-            <div class="position">
-                <div class="btn-wrap">
-                    <el-button @click="backupsStep(1)">{{$t('settingBackups.cancel')}}</el-button>
-                    <el-button type="primary" @click="next">{{$t('settingBackups.next')}}</el-button>
-                </div>
-            </div>
-        </div>
-        
-        <div class="step-3" v-if="step === 3">
-            <div class="label"> {{$t('settingBackups.yourWords')}}</div>
-            <div class="text">{{mnemonicWords}}</div>
-            <div class="action">
-                <div class="copy copy-mne" @click="copyMne" :data-clipboard-text="mnemonicWords">
-                    <i class="el-icon-document-copy"></i>
-                    <div class="t">{{$t('settingBackups.copy')}}</div>
-                </div>
-                <div class="download" @click="downloadCSV">
-                    <i class="el-icon-download"></i>
-                    <div class="t">{{$t('settingBackups.saveCsv')}}</div>
-                </div>
-            </div>
-            <div class="position">
-                <div class="btn-wrap">
-                    <el-button @click="close">{{$t('settingBackups.close')}}</el-button>
-                </div>
-            </div>
-        </div>
-     </div>
-    
-</div>
+    </layout>
 </template>
-
 <script>
-import { validatePrivateKey ,privateKeyDecode} from '@/utils/key'
-import { AESDecrypt } from '@/utils/f1'
+import { validatePassword,getPrivateKey,getQueryString,deCodeMnePsd} from '@/utils'
 import ClipboardJS from 'clipboard'
+import layout from '@/components/layout'
+import kyBack from '@/components/back'
+import kyInput from '@/components/input'
+import kyButton from '@/components/button'
+import { mapState } from 'vuex'
 export default {
     data(){
         return{
             step:1,
             password:'',
-            address:'',
-            encodePrivateKey:'',
-            mnemonicWords:'',
-            digest:''
+            mnemonic:'',
+            backups:'',
+            suffix:true,
+            passwordType:'password',
+            pk:''
+        }
+    },
+    components:{
+        layout,
+        kyBack,
+        kyInput,
+        kyButton
+    },
+    computed:{
+        ...mapState('app',[
+            'address',
+            'digest',
+            'privateKey',
+            'rpc'
+        ]),
+        backupsTitle(){
+            let str = ""
+            if(this.backups === 'privateKey'){
+                str = this.$t('settingBackups.backupsPk')
+            }else{
+                str = this.$t('settingBackups.backupsWords')
+            }
+            return str
         }
     },
     async mounted(){
-        let activeAccount = await window.filecoinwalletDb.activeAccount.where({ kunyao:'kunyao'}).toArray ()|| [];
-        this.address = activeAccount.length && activeAccount[0].address
-        let encodePrivateKey = activeAccount.length && activeAccount[0].privateKey
-        this.digest = activeAccount.length && activeAccount[0].digest
-        this.encodePrivateKey = encodePrivateKey
+        let backups = getQueryString("backups")
+        this.backups = backups
     },
     methods:{
         back(){
-             window.location.href = './setting.html'
+            this.$router.go(-1)
         },
         closeSetting(){
             window.location.href = './wallet.html'
         },
+        passwordChange(val){
+            this.password = val
+        },
+        passwordEye(eye){
+            this.passwordType = eye ? 'text':'password'
+        },
         async next(){
-            let voild = await validatePrivateKey(this.address,this.password,this.encodePrivateKey,this.digest)
-            if(voild){
-                this.step = 3
-                let activeAccount = await window.filecoinwalletDb.activeAccount.where({ kunyao:'kunyao'}).toArray ();
-                let AESmnemonicWords = activeAccount.length && activeAccount[0].mnemonicWords
-                let privateKey = privateKeyDecode(this.encodePrivateKey,this.address, this.password)
-                
-                this.mnemonicWords = AESDecrypt(AESmnemonicWords,privateKey)
-            }else{
-                this.$message.error(this.$t('settingBackups.passwordError'))
+            let walletKey = await window.filecoinwalletDb.walletKey.where({khazix:'khazix'}).toArray()
+            if(walletKey.length){
+                let mnePsd = await deCodeMnePsd(walletKey[0].mnemonicWords,walletKey[0].password)
+                let { mnemonic,password } = mnePsd
+                let voild = await validatePassword(this.password,password)
+                if(voild){
+                    this.step = 2
+                    if(this.backups === 'privateKey'){
+                        let pk = await getPrivateKey(this.privateKey,this.address,password,this.networkType,true)
+                        this.pk = pk
+                    }else{
+                        this.mnemonic = mnemonic
+                    }
+                }else{
+                    this.$message.error(this.$t('settingBackups.passwordError'))
+                }
             }
+            
         },
         copyMne(){
             let that = this
@@ -110,23 +163,10 @@ export default {
             })
             clipboard.on('error', function(e) {})
         },
-        downloadCSV(){
-            let uri = 'data:text/csv;charset=utf-8,\ufeff' + encodeURIComponent(this.mnemonicWords);
-            let link = document.createElement("a");
-            link.href = uri;
-            link.download =  "json.csv";
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            console.log(uri,'downloadCSV')
+        pageClose(){
+            window.location.href = './wallet.html'
         },
-        backupsStep(step){
-            this.step = step
-        },
-        close(){
-            this.mnemonicWords =  ''
-            this.step = 1
-        }
+        
     }
 }
 </script>
@@ -135,146 +175,65 @@ export default {
 .setting-backups{
     width: 100%;
     margin: 0 auto;
-    min-height: 100%;
+    height: 100%;
     background: #fff;
     box-sizing: border-box;
-    .back{
-        display: flex;
-        align-items: center;
-        padding:  10px 20px;
-        color: #222;
-        border-bottom: 1px solid #eee;
-        margin-bottom: 20px;
-        justify-content: space-between;
-        i{
-            width: 35px;
-            height: 35px;
-            font-size: 18px;
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-        }
-        .el-icon-arrow-left{
-            justify-content: flex-start;
-        }
-        .el-icon-close{
-            justify-content: flex-end;
-        }
-        span{
-            flex-grow: 1;
-            font-size: 18px;
-            text-align: left;
-        }
-    }
     .backups-content{
         position: relative;
-        height: 520px;
+        height: 100%;
+        .top-back{
+            position: relative;
+            padding: 20px;
+            border-bottom:1px solid #F6F7FF;
+        }
+        .backups-tips{
+            width: 100%;
+            height: 40px;
+            line-height: 40px;
+            background-color: #FDF8EB;
+            font-size: 12px;
+            color: #101010;
+            text-align: center;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            border:1px solid #F7E00A;
+        }
         .step-1{
-            padding:0 20px;
-            .page-name{
-                border-bottom: 1px solid #eee;
-                font-size: 18px;
-                color: #222;
-                padding-bottom: 20px;
-            }
-            .show-words{
-                font-size: 14px;
-                color: #999;
-                margin-bottom: 20px;
-            }
-            .btn-wrap{
-                width: 240px;
-                /deep/.el-button{
-                    width: 100%;
-                    color: #C64345;
-                    border: 1px solid #C64345;
-                    &:hover{
-                        background: #fff;
-                    }
-                    &:focus{
-                        background: #fff;
+            .backups-check{
+                padding: 20px;
+                .input-item{
+                    .label{
+                        font-size: 14px;
+                        color: #201F1F;
+                        line-height: 20px;
+                        margin-bottom: 5px;
                     }
                 }
             }
         }
         .step-2{
-            .title{
-                font-size: 28px;
-                color: #222;
-                font-weight: bolder;
-                padding:0 20px 20px;
-            }
-            .sub-title{
-                font-size: 14px;
-                color: #999;
-                margin-bottom: 20px;
-                padding: 0 20px;
-            }
-            .wraning{
-                display: flex;
-                align-items: center;
+            .backups-check{
                 padding: 20px;
-                background: #FDF4F4;
-                margin-bottom: 20px;
-                .w-left{
-                    i{
-                        font-size: 18px;
-                        color: #FD334C;
-                    }
-                }
-                .w-right{
-                    padding-left: 20px;
-                    .t{
-                        font-size: 16px;
-                        color: #222;
-                        margin-bottom: 5px;
-                    }
-                    .s{
+                .input-item{
+                    margin-bottom: 20px;
+                    .label{
                         font-size: 14px;
-                        color: #999;
+                        color: #201F1F;
+                        margin-bottom: 10px;
+                    }
+                    .value{
+                        padding: 20px;
+                        background: #F5F5F5;
+                        border-radius: 10px;
+                        color: #201F1F;
+                        font-size: 14px;
+                        word-break: break-all;
                     }
                 }
-            }
-            .input-item{
-                padding: 0 20px;
-                .label{
+                .copy{
                     font-size: 14px;
-                    color: #999;
-                    margin-bottom: 10px;
-                }
-            }
-        }
-        .step-3{
-            padding: 20px;
-            .label{
-                font-size: 14px;
-                color: #999;
-                margin-bottom: 10px;
-            }
-            .text{
-                padding: 15px;
-                background: #fafafa;
-                font-size: 14px;
-                color: #666;
-                border: 1px solid #eee;
-            }
-            .action{
-                display: flex;
-                align-items: center;
-                .copy,.download{
-                    flex-grow: 1;
-                    height: 35px;
-                    line-height: 35px;
-                    border: 1px solid #eee;
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    color: #3295DC;
-                    font-size: 14px;
+                    color: #1C818A;
                     cursor: pointer;
-                    i{
-                        margin-right: 10px;
-                    }
                 }
             }
         }

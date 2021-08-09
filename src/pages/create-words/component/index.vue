@@ -1,68 +1,72 @@
 <template>
-<div class="create-words">
-    <!-- <bHeader /> -->
-    <div class="back" @click="back">
-        <i class="el-icon-arrow-left"></i>
-        <span>{{$t('creatWallet.back')}}</span>
-    </div>
-    <div class="content">
-        <div class="left">
-            <div class="title">{{$t('creatWords.title')}}</div>
-            <div class="sub-title">{{$t('creatWords.subTitle1')}}</div>
-            <div class="sub-title">{{$t('creatWords.subTitle2')}}</div>
-            <div class="secret-language">
-                <div class="posttion" v-if="mask" @click="mask = false">
-                    <div class="icon"><i class="el-icon-lock"></i></div>
-                    <div class="text">{{$t('creatWords.showWords')}}</div>
+    <layout>
+        <div class="create-words">
+            <kyBack @pageBack="back"/>
+            <div class="content">
+                 <div class="title">{{$t('creatWords.title')}}</div>
+                <div class="sub-title">{{$t('creatWords.subTitle')}}</div>
+                <div class="mnemonic-words">
+                    <div class="words-items" v-for="(item,index) in mnemonicArr" :key="index">
+                        <div class="no">#{{index+1}}</div>
+                        <div class="text">{{item}}</div>
+                    </div>
                 </div>
-                <div class="words" :class="{active:!mask}">{{mnemonicWords}}</div>
+                <div class="copy copy-words" @click="copyWords" :data-clipboard-text="mnemonicWords">
+                    {{$t('creatWords.copy')}}
+                </div>
+                <div class="tips">{{$t('creatWords.tips1')}}</div>
+                <div class="tips">{{$t('creatWords.tips2')}}</div>
+                <div class="btn-wrap">
+                    <kyButton :type="'primary'" :active="active" @btnClick="next">{{$t('creatWords.btn1')}}</kyButton>
+                    <kyButton @btnClick="skip">{{$t('creatWords.btn2')}}</kyButton>
+                </div>
             </div>
-            <div class="btn-wrap">
-                <el-button type="primary" plain @click="skip">{{$t('creatWords.btn1')}}</el-button>
-                <el-button type="primary" :disabled='mask' @click="next">{{$t('creatWords.btn2')}}</el-button>
+            <div class="loading" v-if="isFetch">
+                <img :src="loading" alt="">
             </div>
-        
         </div>
-        <div class="right">
-            <div class="tips">{{$t('creatWords.tips')}}</div>
-            <div class="info">{{$t('creatWords.tipsInfo')}}</div>
-        </div>
-    </div>
-    <div class="loading" v-if="isFetch">
-            <img :src="loading" alt="">
-        </div>
-</div>
+    </layout>
 </template>
 
 <script>
-import { getQueryString } from '@/utils'
-
-import { genT1WalletByMne,AESEncrypt } from '@/utils/f1'
-import { privateKeyEncode ,genPrivateKeyDigest} from '@/utils/key'
-import { BalanceNonceByAddress } from '@/utils/api'
+import ClipboardJS from 'clipboard'
+import { getQueryString,getF1ByMne,enCodeMnePsd } from '@/utils'
+import layout from '@/components/layout'
+import kyButton from '@/components/button'
+import kyBack from '@/components/back'
+import { mapState } from 'vuex'
+import { MyGlobalApi } from '@/utils/api'
 export default {
     data(){
         return{
+            active:true,
             loading:require('@/assets/image/loading.png'),
             isFetch:false,
             show:false,
             mnemonicWords:'',
-            mask:true,
             accountName:'',
             password:'',
-            accountList:[]
+            mnemonicArr:[]
         }
     },
+    components:{
+        layout,
+        kyBack,
+        kyButton
+    },
+    computed:{
+        ...mapState('app',['rpc','networks','networkType','filecoinAddress0'])
+    },
     async mounted(){
-
         let mnemonicWords = getQueryString('mnemonicWords')
         this.mnemonicWords = mnemonicWords
+
+        let mnemonicArr = mnemonicWords.split(' ')
+        this.mnemonicArr = mnemonicArr
         let accountName = this.getQuery('accountName')
         let password = getQueryString('password')
-        console.log(accountName,'accountNameaccountName')
         this.accountName = decodeURIComponent(accountName)
         this.password = password
-        console.log(mnemonicWords,'window.location.mnemonicWords')
     },
     methods:{
         getQuery(name) { 
@@ -77,36 +81,84 @@ export default {
         },
         async skip(){
             this.isFetch = true
-            let f1 = genT1WalletByMne(this.mnemonicWords,this.password,[])
-            let { address,type,label,walletType,privateKey } = f1
-            let digest = await genPrivateKeyDigest(privateKey)
+            let f1 = await getF1ByMne(this.mnemonicWords,this.password,this.networkType,this.filecoinAddress0)
+            let { address,privateKey,digest } = f1
             let accountName = this.accountName
-            let pk = privateKeyEncode(privateKey,address,this.password)
             let create_time =  parseInt(new Date().getTime() / 1000)
-            
-            let AESmnemonicWords = AESEncrypt(this.mnemonicWords,privateKey)
-                await window.filecoinwalletDb.accountList.add({
-                    accountName,
-                    address,
-                    mnemonicWords:AESmnemonicWords,
-                    type,
-                    label,
-                    walletType,
-                    createType:'create',
-                    privateKey:pk,
-                    create_time,
-                    kunyao:'kunyao',
-                    digest,
-                    fil:0
-                })
-                await window.filecoinwalletDb.activeAccount.where({kunyao:'kunyao'}).delete()
-                await window.filecoinwalletDb.activeAccount.add({
-                    address,accountName,privateKey:pk,create_time,kunyao:'kunyao',fil:0,mnemonicWords:AESmnemonicWords,digest
-                })
-                window.location.href = './create-success.html'
+            MyGlobalApi.setRpc(this.rpc)
+            MyGlobalApi.setNetworkType(this.networkType)
+            let res = await MyGlobalApi.getBalance(address)
+            let { balance,nonce } = res
+            await window.filecoinwalletDb.accountList.add({
+                accountName,
+                address,
+                createType:'mnemonic',
+                privateKey,
+                create_time,
+                khazix:'khazix',
+                digest,
+                rpc:this.rpc,
+                fil:balance
+            })
+            for (let n of this.networks) {
+                if(n.rpc !== this.rpc){
+                    let oF1 = await getF1ByMne(this.mnemonicWords,this.password,n.networkType,this.filecoinAddress0)
+                    MyGlobalApi.setRpc(n.rpc)
+                    MyGlobalApi.setNetworkType(n.networkType)
+                    let oRes = await MyGlobalApi.getBalance(oF1.address)
+                    let { balance:oBanalce,nonce } = oRes
+                    console.log(n.rpc,'n.rpc')
+                    await window.filecoinwalletDb.accountList.add({
+                        accountName,
+                        address:oF1.address,
+                        createType:'mnemonic',
+                        privateKey:oF1.privateKey,
+                        create_time,
+                        khazix:'khazix',
+                        digest:oF1.digest,
+                        fil:oBanalce,
+                        rpc:n.rpc
+                    })
+                }
+            }
+            await window.filecoinwalletDb.activeAccount.where({khazix:'khazix'}).delete()
+            await window.filecoinwalletDb.activeAccount.add({
+                address,
+                accountName,
+                privateKey,
+                create_time,
+                khazix:'khazix',
+                rpc:this.rpc,
+                fil:balance,
+                createType:'mnemonic',
+                digest
+            })
+            let encode = await enCodeMnePsd(this.mnemonicWords,this.password)
+            let { mnemonic,password } = encode
+            console.log(encode,'encodeencodeencode 123')
+            await window.filecoinwalletDb.walletKey.where({khazix:'khazix'}).delete()
+            await window.filecoinwalletDb.walletKey.add({
+                mnemonicWords:mnemonic,
+                password,
+                rpc:this.rpc,
+                khazix:'khazix'
+            })
+            this.isFetch = false
+            window.location.href = './wallet.html'
         },
         back(){
             window.location.href = './create-wallet.html?backPage=wallet'
+        },
+        copyWords(){
+            let that = this
+            const clipboard = new ClipboardJS('.copy-words')
+            clipboard.on('success', function(e) {
+                that.$message({
+                    message: that.$t('creatWords.copySuccess'),
+                    type: 'success'
+                });
+            })
+            clipboard.on('error', function(e) {})
         },
         next(){
             let accountName = encodeURIComponent(this.accountName)
@@ -149,76 +201,70 @@ export default {
         display: flex;
         justify-content: space-between;
         flex-direction: column;
-        .left{
+        padding: 30px 0 0;
+        .title{
+            color: #222;
+            font-size: 20px;
+            font-weight: bolder;
             margin-bottom: 20px;
-            .title{
-                color: #222;
-                font-size: 28px;
-                font-weight: bolder;
-                margin-bottom: 10px;
-            }
-            .sub-title{
-                color: #222;
-                font-size: 16px;
-                margin-bottom: 20px;
-                line-height: 20px;
-            }
-            .secret-language{
-                width: 100%;
-                border-radius: 10px;
-                position: relative;
-                border: 1px solid #eee;
-                .words{
-                    padding: 20px;
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    box-sizing: border-box;
-                    font-size: 18px;
-                    text-align: center;
-                    color: rgba(102,102,102,0.1);
-                    &.active{
-                        color: #222;
-                    }
-                }
-                .posttion{
-                    width: 100%;
-                    height: 100%;
-                    background: rgba(0, 0, 0, 0.6);
-                    position: absolute;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%,-50%);
-                    display: flex;
-                    flex-direction: column;
-                    justify-content: center;
-                    align-items: center;
-                    color: #fff;
-                    cursor: pointer;
-                    z-index: 9;
-                    .icon{
-                        margin-bottom: 20px;
-                        /deep/.el-icon-lock{
-                            font-size: 28px;
-                        }
-                    }
-                    .text{
-                        font-size: 16px;
-                    }
-                }
-            }
-            .btn-wrap{
-                padding-top: 30px;
-            }
         }
-        .right{
-            flex: 0 0 35%;
+        .sub-title{
             color: #222;
             font-size: 16px;
+            margin-bottom: 20px;
             line-height: 20px;
-            .tips,.info{
-                margin-bottom: 20px;
+        }
+        .mnemonic-words{
+            width: 100%;
+            display: flex;
+            flex-wrap: wrap;
+            .words-items{
+                width: 100px;
+                height: 30px;
+                margin-right: 10px;
+                margin-bottom: 15px;
+                background: #F1F3FD;
+                position: relative;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 4px;
+                &:nth-child(3n){
+                    margin-right: 0;
+                }
+                .text{
+                    font-size: 14px;
+                    color: #101010;
+                }
+                .no{
+                    position: absolute;
+                    top: 0px;
+                    left: 3px;
+                    color: #6A6767;
+                    font-size: 12px;
+                    transform: scale(.8);
+                }
             }
+        }
+        .btn-wrap{
+            display: flex;
+            justify-content: space-between;
+            padding-top: 80px;
+            /deep/.button-wrap{
+                width: 155px;
+            }
+        }
+        .copy{
+            font-size: 14px;
+            color: #1C818A;
+            margin-bottom: 15px;
+            padding-top: 20px;
+            cursor: pointer;
+        }
+        .tips{
+            font-size: 12px;
+            color: #6A6767;
+            line-height: 20px;
         }
     }
 }

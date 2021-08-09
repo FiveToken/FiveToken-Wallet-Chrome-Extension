@@ -4,145 +4,156 @@
             <div class="logo">
                 <img class="img" :src="logo" />
             </div>
-            <div class="text">FiveToken</div>
+        </div>
+        <div class="networks-select">
+            <div class="networks-name" @click="totgleNetwork">
+                <div class="text">{{rpcName}}</div>
+                <i 
+                    class="icon el-icon-arrow-down"
+                ></i>
+            </div>
         </div>
         <div class="right">
             <div class="user">
-                <div class="icon-user-wrap" @click="totgleSetting">
+                <div class="icon-user-wrap" @click="toAccount">
                     <i class="el-icon-user"></i>
-                </div>
-                <div class="user-setting" :class="{active:settingVisable}">
-                    <div class="u-top">
-                        <a href="./wallet.html" class="name">{{$t('header.myAccount')}}</a>
-                        <div class="action" @click="lockUser">{{$t('header.lock')}}</div>
-                    </div>
-                    
-                    <div class="account-list" v-if="accountList.length">
-                        <div class="scroll-list">
-                            <div class="account-item" v-for="(item,index) in accountList" :key="index">
-                                <el-radio v-model="address" :label="item.address" class="radio-item" @change="changeAccount(item)">
-                                    <i class="el-icon-circle-check check"></i>
-                                    <div class="address-name">
-                                        <div class="name">{{item.accountName}}</div>
-                                       <div class="address">{{item.address|addressFormat}}</div>
-                                    </div>
-                                    <div class="fil">{{Number(item.fil).toFixed(4)}} FIL</div>
-                                </el-radio>
-                            </div>
-                        </div>
-                    </div>
-                    <a class="create" href="./create-wallet.html?backPage=wallet">
-                        <i class="el-icon-plus"></i>
-                        <div class="text">{{$t('header.createAccount')}}</div>
-                    </a>
-                    <a class="export" href="./first-wallet.html?export=1">
-                        <i class="el-icon-download"></i>
-                        <div class="text">{{$t('header.import')}}</div>
-                    </a>
-                    <a class="setting" href="./setting.html">
-                        <i class="el-icon-setting"></i>
-                        <div class="text">{{$t('header.setting')}}</div>
-                    </a>
                 </div>
             </div>
         </div>
+        <el-dialog
+            :visible.sync="networkVisible"
+            width="100%"
+            :show-close="false"
+            :modal-append-to-body="false"
+            :close-on-click-modal="false"
+            class="network-dialog"
+        >
+            <kyNetwork v-if="networkVisible" @confirmNet="networksChange" @closeNet="closeNet"/>
+        </el-dialog>
     </div>
 </template>
 
 <script>
-import { BalanceNonceByAddress } from '@/utils/api'
+import { MyGlobalApi } from '@/utils/api'
+import { mapState ,mapMutations, mapGetters} from 'vuex'
+import kyNetwork from './network.vue'
 export default {
     name:'ky-header',
     data(){
         return{
-            address:'',
             logo:require('@/assets/image/logo.png'),
-            accountList:[],
-            settingVisable:false,
-            privateKey:'',
-            digest:''
+            settingVisible:false,
+            networkVisible:false,
+            net:''
         }
     },
-    props:{
-        etitCount:Number
+    computed:{
+        ...mapState('app',[
+            'activenNetworks',
+            'rpc',
+            'rpcName',
+            'accountList',
+            'activeAccount',
+            'address',
+            'privateKey',
+            'digest',
+            'networkType'
+        ]),
     },
-    watch:{
-        async etitCount(newVal,oldVal){
-            let accountList = await window.filecoinwalletDb.accountList.where({ kunyao:'kunyao'}).toArray ();
-            this.accountList = accountList
-            console.log(newVal,oldVal,'newVal,oldVal')
-        }
-    },
-    filters:{
-        addressFormat(val){
-            if(val.length>12){
-                return val.substr(0,6) + '...' + val.substr(val.length-6,6)
-            }else{
-                return val
-            } 
-        },
-    },
-    async mounted(){
-        let accountList = await window.filecoinwalletDb.accountList.where({ kunyao:'kunyao'}).toArray ();
-        this.accountList = accountList
-        let activeAccount = await window.filecoinwalletDb.activeAccount.where({ kunyao:'kunyao'}).toArray ();
-        this.address = activeAccount.length && activeAccount[0].address
-        this.privateKey = activeAccount.length && activeAccount[0].privateKey
-        this.digest = activeAccount.length && activeAccount[0].digest
-        this.handle()
-    },
+    components: { kyNetwork },
     methods:{
-        handle(){
-            let that = this
-            document.addEventListener('click',function(e){
-                if(e.target.parentNode && e.target.parentNode.className !== 'icon-user-wrap'){
-                   that.settingVisable = false;
+        ...mapMutations('app',[
+            'SET_ACTIVENETWORKS',
+            'SET_RPC',
+            'SET_RPCNAME',
+            'SET_ACCOUNTLIST',
+            'SET_SYMBOL',
+            'SET_PRIVATEKEY',
+            'SET_ADDRESS',
+            'SET_DIGEST',
+            'SET_ACCOUNTNAME',
+            'SET_IDS',
+            'SET_BROWSER',
+            'SET_NETWORKTYPE',
+            'SET_FILECOINADDRESS0',
+            'SET_DECIMALS'
+        ]),
+        networksChange(obj){
+            window.filecoinwalletDb.activenNetworks.where({ khazix:'khazix'}).delete()
+            let {name,rpc,chainID,symbol,browser,ids,networkType,filecoinAddress0,decimals } = obj
+            console.log(networkType,'networkType 1234')
+            window.filecoinwalletDb.activenNetworks.add({
+                name,
+                rpc,
+                chainID,
+                ids,
+                symbol,
+                browser,
+                networkType,
+                filecoinAddress0,
+                decimals,
+                khazix:'khazix'
+            }).then(async (res)=>{
+                let accountList = await window.filecoinwalletDb.accountList.where({ rpc:rpc }).toArray ()|| [];
+                this.networkVisible = false
+                this.SET_RPC(rpc)
+                this.SET_RPCNAME(name)
+                this.SET_BROWSER(browser)
+                this.SET_ACCOUNTLIST(accountList)
+                this.SET_SYMBOL(symbol)
+                this.SET_IDS(ids)
+                this.SET_NETWORKTYPE(networkType)
+                this.SET_FILECOINADDRESS0(filecoinAddress0)
+                this.SET_ACTIVENETWORKS({
+                    ...obj
+                })
+                this.SET_DECIMALS(decimals)
+                
+                if(accountList.length){
+                    let first = accountList[0]
+                    console.log(first,'first')
+                    await this.changeAccount(first)
+                    this.$emit('networkChange')
+                }else{
+                    window.location.href = './welcome.html'
                 }
             })
+        },
+        async changeAccount(item){
+            let {address,accountName,privateKey,create_time,digest,createType} = item
+            this.settingVisible = false
+            this.SET_PRIVATEKEY(privateKey)
+            this.SET_ADDRESS(address)
+            this.SET_DIGEST(digest)
+            this.SET_ACCOUNTNAME(accountName)
+            MyGlobalApi.setRpc(this.rpc)
+            MyGlobalApi.setNetworkType(this.networkType)
+            let res = await MyGlobalApi.getBalance(address)
+            let { balance } = res
+            await window.filecoinwalletDb.activeAccount.where({khazix:'khazix'}).delete()
+            await window.filecoinwalletDb.activeAccount.add({
+                address,
+                accountName,
+                privateKey,
+                create_time,
+                khazix:'khazix',
+                fil:balance,
+                createType,
+                digest
+            })
+            // window.location.href = './wallet.html'
         },
         toWallet(){
             window.location.href = './wallet.html'
         },
-        totgleSetting(){
-            this.settingVisable = !this.settingVisable
+        totgleNetwork(){
+            this.networkVisible = true
         },
-        async lockUser(){
-            let create_time =  parseInt(new Date().getTime() / 1000)
-            await window.filecoinwalletDb.lockUser.add({
-                address:this.address,
-                privateKey:this.privateKey,
-                create_time,
-                kunyao:'kunyao',
-                digest:this.digest
-            })
-            window.location.href = './filecoinwallet.html'
+        closeNet(){
+            this.networkVisible = false
         },
-        async changeAccount(item){
-            await window.filecoinwalletDb.activeAccount.where({kunyao:'kunyao'}).delete()
-            let {address,accountName,privateKey,create_time,digest,mnemonicWords} = item
-            this.settingVisable = false
-            BalanceNonceByAddress([{address}]).then(async (result)=>{
-                let res = result.data
-                let balance = 0
-                if(res && res.code === -32603){
-                    balance = 0
-                }else{
-                    balance = Number(res && res.balance || 0) / Math.pow(10, 18)
-                }
-                await window.filecoinwalletDb.activeAccount.add({
-                    address,
-                    accountName,
-                    privateKey,
-                    create_time,
-                    kunyao:'kunyao',
-                    fil:balance,
-                    mnemonicWords,
-                    digest
-                })
-                window.location.href = './wallet.html'
-            }).catch(async (err)=>{
-                console.log(err,'BalanceNonceByAddressErr')
-            })
+        toAccount(){
+           window.location.href = './account.html' 
         }
     }
 }
@@ -152,7 +163,7 @@ export default {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding:10px;
+    padding:8px 10px;
     width: 100%;
     box-sizing: border-box;
     background: #f2f2f2;
@@ -176,6 +187,32 @@ export default {
             font-weight: 800;
         }
     }
+    .networks-select{
+        position: relative;
+        .networks-name{
+            width: 120px;
+            height: 32px;
+            line-height: 32px;
+            text-align: center;
+            border-radius: 20px;
+            border: 1px solid #ccc;
+            padding: 0 15px 0 5px;
+            cursor: pointer;
+            position: relative;
+            .text{
+                width: 100%;
+                overflow: hidden;
+                text-overflow:ellipsis;
+                white-space: nowrap;
+            }
+            .icon{
+                position: absolute;
+                right: 5px;
+                top:50%;
+                transform: translateY(-50%);
+            }
+        }
+    }
     .right{
         display: flex;
         align-items: center;
@@ -187,132 +224,21 @@ export default {
             display: flex;
             align-items: center;
             justify-content: flex-end;
+            cursor: pointer;
             .icon-user-wrap{
                 i{
                     font-size: 24px;
                     color: #666;
                 }
             }
-            .user-setting{
-                width: 320px;
-                position: absolute;
-                right: 0;
-                top: 40px;
-                background: rgba(0,0,0,0.7);
-                z-index: 99;
-                max-height: 0;
-                transition: all 0.3s;
-                overflow: hidden;
-                box-sizing: border-box;
-                border-radius:5px;
-                &.active{
-                    max-height: 345px;
-                }
-                .u-top{
-                    font-size: 14px;
-                    color: #fff;
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                    border-bottom: 1px solid #bbb;
-                    padding: 15px 20px 10px;
-                    &:hover{
-                        background: #3d3c3c;
-                    }
-                    .name{
-                        text-decoration: none;
-                        font-size: 14px;
-                        color: #fff;
-                    }
-                    .action{
-                        border:1px solid #fff;
-                        padding: 5px 20px;
-                        border-radius: 3px;
-                        cursor: pointer;
-                    }
-                }
-            }
-            .account-list{
-                max-height: 140px;
-                overflow-y: auto;
-                box-sizing: border-box;
-                position: relative;
-                overflow: auto;
-                border-bottom: 1px solid #eee;
-                /deep/.el-radio{
-                    width: 100%;
-                    display: flex;
-                    padding: 10px 20px;
-                    box-sizing: border-box;
-                    &.is-checked{
-                        .check{
-                            display: block;
-                        }
-                    }
-                    &:hover{
-                        background: #3d3c3c;
-                    }
-                    .el-radio__input{
-                        display: none;
-                    }
-                    .el-radio__label{
-                        flex-grow: 1;
-                        position: relative;
-                        padding-left: 30px;
-                        display: flex;
-                        justify-content: space-between;
-                        align-items: center;
-                    }
-                    .check{
-                        position: absolute;
-                        left: 0;
-                        top: 50%;
-                        color: #fff;
-                        transform: translateY(-50%);
-                        font-size: 18px;
-                        display: none;
-                    }
-                    .address-name{
-                        flex-grow: 1;
-                        .name{
-                            font-size: 14px;
-                            color: #fff;
-                            margin-bottom: 5px;
-                        }
-                        .address{
-                            font-size: 12px;
-                            color: #ccc;
-                        }
-                    }
-                    .fil{
-                        font-size: 14px;
-                        color: #fff;
-                    }
-                }
-            }
-            .create,.export,.setting{
-                display: flex;
-                justify-content: flex-start;
-                align-items: center;
-                padding:15px 20px;
-                cursor: pointer;
-                text-decoration: none;
-                &:hover{
-                    background: #3d3c3c;
-                }
-                i{
-                    font-size: 18px;
-                    color: #fff;
-                }
-                .text{
-                    font-size: 14px;
-                    color: #fff;
-                    padding-left: 10px;
-                }
-            }
-            .setting{
-                padding-bottom: 15px;
-            }
+           
+        }
+    }
+    /deep/.network-dialog{
+        bottom: 0;
+        top: auto;
+        .el-dialog{
+            border-radius: 10px 10px 0 0;
         }
     }
 }

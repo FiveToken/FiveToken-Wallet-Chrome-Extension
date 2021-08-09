@@ -2,25 +2,28 @@
   <div class="content-page">
     <welcome v-if="accountList.length === 0"/>
     <lockUser v-else-if="lockUser.length"/>
-    <div class="content-wrap" v-else>
-      <div class="logo">
-        <img class="img" :src="logo" />
+    <layout  v-else>
+      <div class="content-wrap">
+        <div class="logo">
+          <img class="img" :src="logo" />
+        </div>
+        <div class="www">{{origin}}</div>
+        <div class="title">{{$t('connect.title')}}</div>
+        <div class="select-address" v-if="accountList.length">
+          <el-radio-group v-model="address" @change="radioClick">
+            <el-radio :label="item.address" v-for="(item,index) in accountList" :key="index">
+              <div class="name">{{item.accountName}}</div>
+              <div class="address">{{item.address | formatAddress}}</div>
+            </el-radio>
+          </el-radio-group>
+        </div>
+        <div class="btn-wrap" v-if="accountList.length">
+          <el-button @click="cancel">{{$t('connect.cancel')}}</el-button>
+          <el-button type="primary" :disabled='disabled' @click="connect">{{$t('connect.connect')}}</el-button>
+        </div>
       </div>
-      <div class="www">{{origin}}</div>
-      <div class="title">{{$t('connect.title')}}</div>
-      <div class="select-address" v-if="accountList.length">
-        <el-radio-group v-model="address" @change="radioClick">
-          <el-radio :label="item.address" v-for="(item,index) in accountList" :key="index">
-            <div class="name">{{item.accountName}}</div>
-            <div class="address">{{item.address | formatAddress}}</div>
-          </el-radio>
-        </el-radio-group>
-      </div>
-      <div class="btn-wrap" v-if="accountList.length">
-        <el-button @click="cancel">{{$t('connect.cancel')}}</el-button>
-        <el-button type="primary" :disabled='disabled' @click="connect">{{$t('connect.connect')}}</el-button>
-      </div>
-    </div>
+    </layout>
+    
   </div>
 </template>
 
@@ -28,6 +31,7 @@
 import { validatePrivateKey} from '@/utils/key'
 import welcome from '@/pages/welcome/component/index.vue'
 import lockUser from '@/pages/lock-user/component/index.vue'
+import layout from '@/components/layout'
 export default {
     data(){
       return{
@@ -46,7 +50,8 @@ export default {
     },
     components:{
       welcome,
-      lockUser
+      lockUser,
+      layout
     },
     filters:{
       formatAddress(address){
@@ -58,9 +63,9 @@ export default {
         } 
       },
     },
-    async mounted(){
-        this.lockUser = await window.filecoinwalletDb.lockUser.where({ kunyao:'kunyao'}).toArray();
-        let accountList = await window.filecoinwalletDb.accountList.where({ kunyao:'kunyao'}).toArray();
+    async created(){
+        this.lockUser = await window.filecoinwalletDb.lockUser.where({ khazix:'khazix'}).toArray();
+        let accountList = await window.filecoinwalletDb.accountList.where({ khazix:'khazix'}).toArray();
         this.accountList = accountList
         if(accountList.length){
           let frist = accountList[0]
@@ -76,7 +81,7 @@ export default {
     },
     methods:{
       createAccount(){
-        window.location.href = './first-wallet.html'
+        window.location.href = './welcome.html'
       },
       radioClick(){
         this.connectAccount = this.accountList.find(n=>{

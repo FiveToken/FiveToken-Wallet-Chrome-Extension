@@ -33,7 +33,7 @@
             <div class="input-item">
                 <div class="label">{{$t('sendFil.number')}}</div>
                 <div class="value">
-                    <kyInput :value="formData.fil" @changeInput="filChange"/>
+                    <kyInput :value="formData.fil" type="number" @changeInput="filChange"/>
                     <div class="all" @click="allFil">{{$t('sendFil.all')}}</div>
                 </div>
                 <div class="available">
@@ -106,7 +106,7 @@ export default {
     computed:{
         ...mapState('app',['rpc','symbol','networkType','decimals']),
         active(){
-            return this.to !== '' && this.filValue !== ''
+            return this.formData.to !== '' && this.formData.fil !== ''
         },
     },
     filters:{
@@ -165,45 +165,16 @@ export default {
         allFil(){
             this.$emit('formDataChange',{key:'isAll',value:1})
         },
-        async searchChange(){
-            if(this.toValue === '') return
-            let voild = !isValidAddress(this.toValue,this.networkType)
-            if(voild){
-                this.$emit('update:pageType','address-error')
-            }else{
-                this.$emit('update:pageType','send-fil')
-                let create_time =  parseInt(new Date().getTime() / 1000)
-                await window.filecoinwalletDb.addressRecordLast.add({
-                    address:this.toValue,
-                    create_time,
-                    khazix:'khazix'
-                })
-            }
-        },
-        clear(){
-          this.$emit('update:pageType','add-address')
-        },
-        toMyAddress(){
-          this.$emit('update:pageType','my-address')
-        },
-        back(){
-          this.$emit('update:pageType','add-address')
-        },
-        addressClick(address){
-            let voild = !isValidAddress(address,this.networkType)
-            if(voild){
-                this.$emit('update:pageType','address-error')
-            }else{
-                this.$emit('update:pageType','send-fil')
-                this.toValue = address
-            }
-        },
         next(){
-            this.$emit('next')
+            if(this.active){
+                let volid = isValidAddress(this.formData.to,this.networkType)
+                if(volid){
+                    this.$emit('next')
+                }else{
+                    this.$message.error(this.$t('sendFil.addressError'))
+                }
+            }
         },
-        toAddressBook(){
-            window.location.href = `./setting-address.html?to=${this.toValue}`
-        }
     }
 }
 </script>

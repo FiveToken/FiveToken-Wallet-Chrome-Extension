@@ -27,8 +27,8 @@
                         <div class="fee-title">
                             <div class="label">{{$t('sendFil.maxGas')}}</div>
                             <div class="amount">
-                                <div class="token">{{ serviceFee | formatBalance(8)}} {{symbol}}</div>
-                                <div class="usd">$ {{ serviceFee*price_usd | formatBalance(2)}}</div>
+                                <div class="token">{{ allGasFee | formatBalance(8)}} {{symbol}}</div>
+                                <div class="usd">$ {{ allGasFee | formatUSD(4,price_usd)}}</div>
                             </div>
                         </div>
                     </template>
@@ -87,6 +87,18 @@ export default {
                 return val
             }
         },
+        formatUSD(val,n,price_usd){
+            let usd = val * price_usd
+            var str = String(usd);
+            let index = str.indexOf('.')
+            if(index > -1){
+                let arr = str.split(".")
+                let num = arr[0] + "." + arr[1].substring(0,n)
+                return num
+            }else{
+                return usd
+            }
+        },
         addressFormat(val){
             if(val.length>16){
                 return val.substr(0,8) + '...' + val.substr(val.length-8,8)
@@ -97,7 +109,7 @@ export default {
     },
     computed:{
         ...mapState('app',['rpc','symbol','address','networkType']),
-        serviceFee(){
+        allGasFee(){
             let gas = this.formData.gasFeeCap * this.formData.gasLimit / Math.pow(10,Number(9))
             return gas || 0
         },
@@ -111,7 +123,7 @@ export default {
             return unit
         },
         total(){
-            let total = Number(this.formData.fil) + this.serviceFee
+            let total = Number(this.formData.fil) + this.allGasFee
             return total
         },
         active(){
@@ -154,18 +166,6 @@ export default {
  .step-2-component{
     height: 100%;
     position: relative;
-    .loading{
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.6);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 999;
-    }
     .back-wrap{
         border-bottom: 1px solid #eee;
         padding: 15px 20px;

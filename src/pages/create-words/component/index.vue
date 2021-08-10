@@ -22,7 +22,7 @@
                 </div>
             </div>
             <div class="loading" v-if="isFetch">
-                <img :src="loading" alt="">
+                <img :src="loading" alt="" class="img">
             </div>
         </div>
     </layout>
@@ -188,6 +188,17 @@ export default {
         align-items: center;
         justify-content: center;
         z-index: 999;
+        .img{
+            animation:turnX 3s linear infinite;
+        }
+        @keyframes turnX{
+            0%{
+                transform:rotateZ(0deg);
+            }
+            100%{
+                transform:rotateZ(360deg);
+            }
+        }
     }
     .back{
         display: flex;

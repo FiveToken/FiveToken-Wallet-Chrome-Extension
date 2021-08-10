@@ -48,7 +48,7 @@
       </div>
       <!-- <kyCanvas /> -->
       <div class="loading" v-if="isFetch">
-        <img :src="loading" alt="" />
+        <img :src="loading" alt="" class="img"/>
       </div>
     </div>
   </layout>
@@ -66,7 +66,7 @@ import { mapState } from 'vuex';
 export default {
   data() {
     return {
-      contract: "0x740542fb3a6ca5ab1dcd067a7e08af9ab9c16886",
+      contract: "",
       loading: require("@/assets/image/loading.png"),
       isFetch: false,
       provider:null,
@@ -79,7 +79,7 @@ export default {
     };
   },
   computed:{
-      ...mapState('app',['rpc']),
+      ...mapState('app',['rpc','address']),
       active(){
           let v = false
           v = this.contract !== '' && this.contractEffective
@@ -109,8 +109,6 @@ export default {
         this.contract = val
         let isExists = this.tokenList.find(item => {return item.contract == this.contract}) != undefined
         this.isExists = isExists
-        // '0x740542fb3a6ca5ab1dcd067a7e08af9ab9c16886'
-        console.log(isExists,'isExists 123')
         if(!isExists){
             let provider = ethers.getDefaultProvider(this.rpc);
             let contract = new ethers.Contract(this.contract, ABI, provider);
@@ -124,13 +122,12 @@ export default {
                     that.name = values[1]
                     that.symbol = values[2]
                 }
-                console.log(values,'symbolPromise');
             }).catch(err=>{
                 that.contractEffective = false
                 that.decimals = ''
                 that.name = ''
                 that.symbol = ''
-                console.log(err,'err123')
+                console.log(err,'err contractInput')
             })
         }
         
@@ -147,6 +144,7 @@ export default {
                 rpc:this.rpc,
                 symbol:this.symbol,
                 contract:this.contract,
+                address:this.address,
                 khazix:'khazix',
             })
             window.location.href = './wallet.html'
@@ -236,6 +234,17 @@ export default {
     align-items: center;
     justify-content: center;
     z-index: 999;
+    .img{
+            animation:turnX 3s linear infinite;
+        }
+        @keyframes turnX{
+            0%{
+                transform:rotateZ(0deg);
+            }
+            100%{
+                transform:rotateZ(360deg);
+            }
+        }
   }
 }
 </style>

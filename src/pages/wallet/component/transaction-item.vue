@@ -25,7 +25,10 @@
                 </div>
             </div>
             <div class="amount">
-                <div class="fil">{{ Number(item.value) }} {{symbol}}</div>
+                <div class="fil">
+                    {{ item.value | formatBalance(8,item.decimals) }} 
+                    {{item.symbol}}
+                </div>
             </div>
         </div>
     </div>
@@ -51,15 +54,16 @@ export default {
                 return val
             } 
         },
-        formatBalance(val,n){
-            var str = String(val);
+        formatBalance(val,n,decimals){
+            let dec = val / Math.pow(10,Number(decimals))
+            var str = String(dec);
             let index = str.indexOf('.')
             if(index > -1){
                 let arr = str.split(".")
                 let num = arr[0] + "." + arr[1].substring(0,n)
                 return num
             }else{
-                return val
+                return str
             }
         }
     },

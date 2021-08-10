@@ -50,7 +50,8 @@ const zh = {
     subTitle:'请输入您的助记词，以恢复您的钱包',
     tips:'单词使用空格分割',
     btn:'导入',
-    error:'助记词错误'
+    error:'助记词错误',
+    exist:'账户已存在'
   },
   importPrivatkey:{
     title:'导入钱包',
@@ -59,6 +60,7 @@ const zh = {
     btn:'导入',
     titleNetwork:'选择网络',
     importError:'类型不支持',
+    exist:'账户已存在'
   },
   account:{
     title:'账户',
@@ -108,7 +110,8 @@ const zh = {
   messageDetail:{
     title:'消息详情',
     amount:'数量',
-    gasFee:'预估最大手续费',
+    willgasFee:"预估最大手续费",
+    gasFee:'手续费',
     from:'发送者',
     to:'接收者',
     messageId:'消息ID',
@@ -143,7 +146,9 @@ const zh = {
     maxGas:'预估最大手续费',
     totalTips:'发送数额+预估Gas费',
     total:'总额',
-    
+    gasFeeError:'低于当前BaseFee',
+    gasLimitError:'低于当前Gas Limit',
+    addressError:'地址格式不正确',
     insufficientBalance:'余额不足'
   },
   setting:{

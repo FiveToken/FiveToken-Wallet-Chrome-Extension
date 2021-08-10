@@ -75,9 +75,6 @@ export default {
             'accountList'
         ])
     },
-    mounted(){
-        console.log(this.$store.state,'ssss')
-    },
     components:{
         kyBack,
         kyInput

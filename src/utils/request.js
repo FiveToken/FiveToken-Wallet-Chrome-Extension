@@ -1,6 +1,4 @@
 import axios from 'axios'
-import { Message } from 'element-ui';
-// import { baseApi } from '@/config'
 const headers = {
     'Content-Type':'application/json'
 }

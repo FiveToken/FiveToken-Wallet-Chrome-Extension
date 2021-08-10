@@ -16,11 +16,10 @@
                 @previousStep="step = 1"
                 @sendFil="sendFil"
             />
-            
-        </div>
 
-        <div class="loading" v-if="isFetch">
-            <img :src="loading" alt="">
+            <div class="loading" v-if="isFetch">
+                <img :src="loading" alt="" class="img">
+            </div>
         </div>
     </layout>
 </template>
@@ -48,9 +47,9 @@ export default {
             mnePsd:null,
             formData:{
                 balance:0,
-                to:'f16wkgzlglyejqlougingwbnztnp7lrh2xgzlbviq',
+                to:'',
                 toName:'',
-                fil:0,
+                fil:'',
                 symbol:'',
                 chainName:'',
                 gasLimit:0,
@@ -112,7 +111,7 @@ export default {
             this.getTokenList()
         },
         async getTokenList(){
-            let list = await window.filecoinwalletDb.tokenList.where({ rpc:this.rpc }).toArray () || [];
+            let list = await window.filecoinwalletDb.tokenList.where({ rpc:this.rpc,address:this.address }).toArray () || [];
             let tokenList = [
                 {
                     rpc:this.rpc,
@@ -129,7 +128,7 @@ export default {
                 try{
                     let contract = new ethers.Contract(n.contract, ABI, provider);
                     contract.balanceOf(this.address).then(res=>{
-                        let balance = res.toNumber()
+                        let balance = res.toString()
                         tokenList.push(
                             {
                                 ...n,
@@ -157,7 +156,8 @@ export default {
                 case 'isAll':
                     if(value === 1){
                         let fil = this.formData.balance / Math.pow(10,Number(this.formData.decimals))
-                        this.$set(this.formData,'fil',fil)
+                        let gas = (this.formData.gasFeeCap * this.formData.gasLimit) / Math.pow(10, 9)
+                        this.$set(this.formData,'fil',fil - gas)
                     }
                     break;
                 case 'token':
@@ -211,6 +211,7 @@ export default {
             MyGlobalApi.setRpc(this.rpc)
             MyGlobalApi.setNetworkType(this.networkType)
             let res = await MyGlobalApi.getGasFee(from,to,nonce)
+            console.log(res,'getBaseFeeAndGas')
             let { gasLimit, gasPremium ,gasFeeCap } = res
             this.$set(this.formData,'gasLimit',gasLimit)
             this.$set(this.formData,'gasPremium',gasPremium)
@@ -225,8 +226,10 @@ export default {
         },
         next(){
             let balance = this.formData.balance / Math.pow(10, Number(this.formData.decimals))
-            let gas = this.formData.gasFeeCap * this.formData.gasLimit / Math.pow(10, 9)
-            if( this.fil + gas > balance){
+            let gas = (this.formData.gasFeeCap * this.formData.gasLimit) / Math.pow(10, 9)
+            let fil = Number(this.formData.fil)
+            console.log(gas,'this.formData.fil + gas balance')
+            if( fil + gas > balance){
                 this.$message.error(this.$t('sendFil.insufficientBalance'))
             }else{
                 if(this.formData.isAll === 1){
@@ -245,13 +248,13 @@ export default {
                 let wallet = new ethers.Wallet(privateKey, provider);
                 let contractSigner = new ethers.Contract(this.formData.contract, ABI, wallet);
 
-                let numberOfTokens = ethers.utils.parseUnits(this.formData.fil, 8);
+                let numberOfTokens = ethers.utils.parseUnits(this.formData.fil, this.formData.decimals);
+                let allGasFee = this.formData.gasFeeCap * this.formData.gasLimit * Math.pow(10, 9)
                 let res = await contractSigner.transfer(this.formData.to,numberOfTokens,{
-                    gasPrice: this.formData.gasFeeCap * Math.pow(10, 9),//ethers.utils.bigNumberify(),
+                    gasPrice: this.formData.gasFeeCap * Math.pow(10, 9),
                     gasLimit: Math.ceil(this.formData.gasLimit),
                 })
                 if(res){
-                    let serviceFee = this.formData.gasFeeCap * this.formData.gasLimit * Math.pow(10, 9)
                     let create_time =  parseInt(new Date().getTime() / 1000)
                         await window.filecoinwalletDb.messageList.add({
                             signed_cid:res.hash,
@@ -260,8 +263,9 @@ export default {
                             create_time,
                             block_time:'',
                             nonce:res.nonce,
-                            serviceFee,
+                            decimals:this.formData.decimals,
                             token:this.formData.symbol,
+                            allGasFee,
                             type:'pending',
                             khazix:'khazix',
                             value:this.formData.fil*Math.pow(10, Number(this.formData.decimals)),
@@ -302,7 +306,8 @@ export default {
                     MyGlobalApi.setRpc(this.rpc)
                     MyGlobalApi.setNetworkType(this.networkType)
                     let result = await MyGlobalApi.sendTransaction(tx)
-                    let serviceFee = this.formData.gasFeeCap * this.formData.gasLimit * Math.pow(10, 9)
+                    console.log(result,'result 8888888888')
+                    let allGasFee = this.formData.gasFeeCap * this.formData.gasLimit * Math.pow(10, 9)
                     if(result){
                         let create_time =  parseInt(new Date().getTime() / 1000)
                         await window.filecoinwalletDb.messageList.add({
@@ -312,7 +317,8 @@ export default {
                             create_time,
                             block_time:'',
                             nonce:result.nonce,
-                            serviceFee,
+                            allGasFee,
+                            decimals:this.formData.decimals,
                             token:this.formData.symbol,
                             type:'pending',
                             khazix:'khazix',
@@ -326,7 +332,7 @@ export default {
                             rpc:this.rpc,
                             khazix:'khazix',
                         })
-                        window.location.href = './wallet.html'
+                       window.location.href = './wallet.html'
                     }
                     this.isFetch = false
                 }catch(err){
@@ -345,6 +351,31 @@ export default {
 .send-fil{
     width: 100%;
     height: 100%;
+    position: relative;
+
+    .loading{
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 999;
+        .img{
+            animation:turnX 3s linear infinite;
+        }
+        @keyframes turnX{
+            0%{
+                transform:rotateZ(0deg);
+            }
+            100%{
+                transform:rotateZ(360deg);
+            }
+        }
+    }
     /deep/.el-dialog{
         margin: 0 auto;
         &.is-fullscreen{

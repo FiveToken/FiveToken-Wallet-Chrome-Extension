@@ -71,7 +71,8 @@
                     :balance="balance"
                     :price_usd="price_usd"
                     :receiveVisible.sync="receiveVisible"
-                    :symbol1="symbol"
+                    :symbol="symbol"
+                    :tokenList="tokenList"
                     @closeToken="tokenVisible = false"
                 />
             </el-dialog>
@@ -103,7 +104,8 @@ export default {
             QRUrl:'',
             signed_cid:'',
             tokenName:'',
-            tokenDecimals:0
+            tokenDecimals:0,
+            tokenList:[]
         }
     },
     computed:{
@@ -228,11 +230,16 @@ export default {
                 console.error(err)
             })
         },
-        tokenShow(obj){
+        async tokenShow(obj){
             let {symbol,decimals} = obj
-            this.tokenVisible = true
             this.tokenName = symbol
             this.tokenDecimals = Number(decimals)
+            let tokenList = await window.filecoinwalletDb.messageList.where({ 
+                rpc:this.rpc,
+                token:this.tokenName
+            }).toArray () || [];
+            this.tokenList = tokenList
+            this.tokenVisible = true
         },
     }
 }

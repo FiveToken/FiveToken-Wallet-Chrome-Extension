@@ -27,7 +27,7 @@
                 </kyButton>
             </div>
             <div class="loading" v-if="isFetch">
-                <img :src="loading" alt="">
+                <img :src="loading" alt="" class="img">
             </div>
         </div>
     </layout>
@@ -89,9 +89,9 @@ export default {
             if(volid){
                 this.isFetch = true
                 this.error = false
-                
                 let f1 = await getF1ByMne(this.form.mnemonicWords,this.form.password,this.networkType,this.filecoinAddress0)
                 let { address,privateKey,digest } = f1
+                
                 let create_time =  parseInt(new Date().getTime() / 1000)
                 MyGlobalApi.setRpc(this.rpc)
                 MyGlobalApi.setNetworkType(this.networkType)
@@ -199,6 +199,17 @@ export default {
         align-items: center;
         justify-content: center;
         z-index: 999;
+        .img{
+            animation:turnX 3s linear infinite;
+        }
+        @keyframes turnX{
+            0%{
+                transform:rotateZ(0deg);
+            }
+            100%{
+                transform:rotateZ(360deg);
+            }
+        }
     }
     .back{
         display: flex;

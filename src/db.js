@@ -1,7 +1,7 @@
 let filecoinwalletDb = new Dexie("filecoinwallet");
 
 filecoinwalletDb.version(2).stores({
-    messageList: 'id++,signed_cid,from,to,nonce,khazix,create_time,block_time,type,value,serviceFee,token,rpc',
+    messageList: 'id++,signed_cid,from,to,nonce,khazix,create_time,block_time,type,value,decimals,token,allGasFee,rpc',
     accountList: 'id++,address,accountName,createType,privateKey,fil,khazix,create_time,digest,rpc',
     activeAccount:'id++,rpc,address,accountName,createType,privateKey,create_time,khazix,fil,digest',
     addressBook:'id++,address,accountName,create_time,khazix,rpc',
@@ -9,7 +9,7 @@ filecoinwalletDb.version(2).stores({
     lockUser:'id++,address,privateKey,create_time,khazix,digest,rpc',
     networks:'id++,rpc,create_time,name,chainID,symbol,browser,decimals,ids,khazix,networkType,filecoinAddress0,disabled',
     activenNetworks:'id++,rpc,name,chainID,symbol,ids,browser,decimals,networkType,filecoinAddress0,khazix',
-    tokenList:'id++,rpc,chainName,decimals,symbol,contract,khazix',
+    tokenList:'id++,rpc,chainName,decimals,symbol,contract,address,khazix',
     walletKey:'id++,mnemonicWords,password,khazix,rpc',
 
 });

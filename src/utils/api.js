@@ -3,6 +3,7 @@ import { ethers } from 'ethers'
 import { fil2atto,formatDate } from '@/utils'
 import { getGasFeeCap,getGasLimit } from '@/utils'
 import { getT1SignedMsg } from '@/utils/message'
+import { Message } from 'element-ui';
 import { 
     BalanceNonceByAddress,
     MessagePush,
@@ -186,8 +187,8 @@ class GlobalApi{
                     let proxyRes = result.data
                     if(proxyRes){
                         let value = Number(proxyRes.value)
-                        let gas_fee = Number(proxyRes.all_gas_fee)
-                        let total_amount = Number(value) + Number(gas_fee)
+                        let all_gas_fee = Number(proxyRes.all_gas_fee)
+                        let total_amount = Number(value) + Number(all_gas_fee)
                         let block_time = proxyRes.block_time ? formatDate(proxyRes.block_time,true):""
                         console.log(proxyRes,'MessageDetails')
                         let type = 'pending'
@@ -202,7 +203,7 @@ class GlobalApi{
                             to:proxyRes.to,
                             nonce:proxyRes.nonce,
                             value,
-                            gas_fee,
+                            all_gas_fee,
                             total_amount,
                             type,
                             signed_cid,
@@ -221,16 +222,17 @@ class GlobalApi{
                     let wait = await ethRes.wait()
                     let type = wait.status === 1 ? 'success' : 'error'
                     let block_time = formatDate(block.timestamp,true)
-                    console.log(ethRes,block,'getTransaction   signed_cid')
+                    console.log(ethRes,block,'getTransaction   11111')
+                    console.log(ethRes.gasPrice.toString(),'getTransaction   222222')
                     let value = Number(ethRes.value.toString())
-                    let gas_fee = Number(ethRes.gasPrice.toString())
-                    let total_amount = value + gas_fee
+                    let all_gas_fee = Number(ethRes.gasPrice.toString()) * Number(ethRes.gasLimit.toString())
+                    let total_amount = value + all_gas_fee
                     let detail = {
                         from:ethRes.from,
                         to:ethRes.to,
                         nonce:ethRes.nonce,
                         value,
-                        gas_fee,
+                        all_gas_fee,
                         total_amount,
                         type,
                         block_time,
@@ -243,10 +245,9 @@ class GlobalApi{
                     this.FilecoinAPI.setRpc(this.rpc)
                     let filRes = await this.FilecoinAPI.chainGetMessage(signed_cid)
                     let stateRes = await this.FilecoinAPI.stateGetReceipt(signed_cid)
-                    console.log(stateRes,'stateRes 123456')
                     if(filRes){
-                        let gas_fee = Number(filRes.GasFeeCap) * Number(filRes.GasLimit)
-                        let total_amount = Number(value) + gas_fee
+                        let all_gas_fee = Number(filRes.GasFeeCap) * Number(filRes.GasLimit)
+                        let total_amount = Number(value) + all_gas_fee
                         let type = 'pending'
                         if(stateRes.ExitCode && stateRes.ExitCode === 0){
                             type = 'success'
@@ -259,7 +260,7 @@ class GlobalApi{
                             to:filRes.To,
                             nonce:filRes.Nonce,
                             value:filRes.Value,
-                            gas_fee,
+                            all_gas_fee,
                             total_amount,
                             type,
                             signed_cid,
@@ -293,7 +294,7 @@ class GlobalApi{
                     if(proxyRes.base_fee){
                         gasPremium_proxy = Number(gas_premium)
                         gasLimit_proxy = Number(gas_limit)
-                        gasFeeCap_proxy = getGasFeeCap(base_fee,3,gasPremium,gasLimit,this.networkType)/Math.pow(10,9)
+                        gasFeeCap_proxy = getGasFeeCap(base_fee,3,gasPremium_proxy,gasLimit_proxy,this.networkType)/Math.pow(10,9)
                     }
                     return {
                         gasLimit:gasLimit_proxy,
@@ -321,6 +322,7 @@ class GlobalApi{
                     this.FilecoinAPI.setRpc(this.rpc)
                     let filRes = await this.FilecoinAPI.getBaseFeeAndGas(from,to,nonce)
                     let { gasLimit,gasPremium,gasFeeCap } = filRes
+                    console.log(filRes,'filRes 1234')
                     return {
                         gasLimit,
                         gasPremium,
@@ -365,20 +367,17 @@ class GlobalApi{
         try{
             this.setFilecoinAPI()
             this.FilecoinAPI.setRpc(rpc)
-            let res = await this.FilecoinAPI.getChainHead()
+            let res = await this.FilecoinAPI.getStateNetworkName()
             if(res && res.result){
-                if(res.result.Blocks.length){
-                    let Miner = res.result.Blocks[0].Miner
-                    if(Miner.indexOf('f')>-1){
-                        return {
-                            networkType:'filecoin',
-                            filecoinAddress0:'f',
-                        }
-                    }else{
-                        return{
-                            networkType:'filecoin',
-                            filecoinAddress0:'t',
-                        }
+                if(res.result === 'mainnet'){
+                    return {
+                        networkType:'filecoin',
+                        filecoinAddress0:'f',
+                    }
+                }else{
+                    return{
+                        networkType:'filecoin',
+                        filecoinAddress0:'t',
                     }
                 }
             }else{
@@ -389,7 +388,7 @@ class GlobalApi{
             }
 
         }catch(error){
-            console.log(error,'GlobalApi.getChainHead')
+            console.log(error,'GlobalApi.getStateNetworkName err')
             return{
                 networkType:'',
                 filecoinAddress0:'',
@@ -515,12 +514,12 @@ class FilecoinAPI{
     setRpc(rpc){
         this.rpc = rpc
     }
-    async getChainHead(){
+    async getStateNetworkName(){
         try{
             let params = {
                 "id": 0,
                 "jsonrpc": "2.0",
-                "method": "Filecoin.ChainHead",
+                "method": "Filecoin.StateNetworkName",
                 "params": []
             }
             let res = await request({
@@ -530,7 +529,7 @@ class FilecoinAPI{
             })
             return res
         }catch(error){
-            console.log(error,'error filecoin getChainHead')
+            console.log(error,'error filecoin StateNetworkName')
         }
     }
     async getBalance(address){
@@ -698,13 +697,14 @@ class FilecoinAPI{
                 method: 'post',
                 data:params,
             })
+            console.log(res,'StateGetReceipt')
             if(res && res.result){
                 return res.result
             }else{
                 return null
             }
         }catch(error){
-            console.log(err,'err StateGetReceipt')
+            console.log(error,'err StateGetReceipt')
             return null
         }
     }

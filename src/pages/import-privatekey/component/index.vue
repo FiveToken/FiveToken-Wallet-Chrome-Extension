@@ -21,7 +21,7 @@
                 </kyButton>
             </div>
             <div class="loading" v-if="isFetch">
-                <img :src="loading" alt="">
+                <img :src="loading" alt="" class="img">
             </div>
         </div>
         <el-dialog
@@ -115,54 +115,62 @@ export default {
                 let f1 = await this.getf1ByCK()
                 if(f1){
                     let { address,privateKey,digest } = f1
-                    let accountName = `Account` + (this.accountList.length + 1)
-                    let create_time =  parseInt(new Date().getTime() / 1000)
-                    MyGlobalApi.setRpc(this.rpc)
-                    MyGlobalApi.setNetworkType(this.customNetworkType)
-                    let res = await MyGlobalApi.getBalance(address)
-                    let { balance,nonce } = res
-                    await window.filecoinwalletDb.accountList.add({
-                        accountName,
-                        address,
-                        createType:'privateKey',
-                        privateKey,
-                        create_time,
-                        khazix:'khazix',
-                        digest,
-                        fil:balance,
-                        rpc:this.net
+                    let isExist = this.accountList.find(n=>{
+                        return n.address === address
                     })
-                    await window.filecoinwalletDb.activeAccount.where({khazix:'khazix'}).delete()
-                    await window.filecoinwalletDb.activeAccount.add({
-                        address,
-                        accountName,
-                        privateKey,
-                        create_time,
-                        khazix:'khazix',
-                        createType:'privateKey',
-                        fil:balance,
-                        digest,
-                        rpc:this.net
-                    })
-                    await window.filecoinwalletDb.activenNetworks.where({ khazix:'khazix'}).delete()
-                    let obj = this.networks.find(n=>{
-                        return n.rpc === this.net
-                    })
-                    let {name, rpc,chainID,symbol,browser,networkType,filecoinAddress0,ids,decimals} = obj
-                    await window.filecoinwalletDb.activenNetworks.add({
-                        name,
-                        rpc,
-                        chainID,
-                        symbol,
-                        browser,
-                        networkType,
-                        filecoinAddress0,
-                        ids,
-                        decimals,
-                        khazix:'khazix'
-                    })
-                    this.isFetch = false
-                    window.location.href = './wallet.html'
+                    if(!isExist){
+                        let accountName = `Account` + (this.accountList.length + 1)
+                        let create_time =  parseInt(new Date().getTime() / 1000)
+                        MyGlobalApi.setRpc(this.rpc)
+                        MyGlobalApi.setNetworkType(this.customNetworkType)
+                        let res = await MyGlobalApi.getBalance(address)
+                        let { balance,nonce } = res
+                        await window.filecoinwalletDb.accountList.add({
+                            accountName,
+                            address,
+                            createType:'privateKey',
+                            privateKey,
+                            create_time,
+                            khazix:'khazix',
+                            digest,
+                            fil:balance,
+                            rpc:this.net
+                        })
+                        await window.filecoinwalletDb.activeAccount.where({khazix:'khazix'}).delete()
+                        await window.filecoinwalletDb.activeAccount.add({
+                            address,
+                            accountName,
+                            privateKey,
+                            create_time,
+                            khazix:'khazix',
+                            createType:'privateKey',
+                            fil:balance,
+                            digest,
+                            rpc:this.net
+                        })
+                        await window.filecoinwalletDb.activenNetworks.where({ khazix:'khazix'}).delete()
+                        let obj = this.networks.find(n=>{
+                            return n.rpc === this.net
+                        })
+                        let {name, rpc,chainID,symbol,browser,networkType,filecoinAddress0,ids,decimals} = obj
+                        await window.filecoinwalletDb.activenNetworks.add({
+                            name,
+                            rpc,
+                            chainID,
+                            symbol,
+                            browser,
+                            networkType,
+                            filecoinAddress0,
+                            ids,
+                            decimals,
+                            khazix:'khazix'
+                        })
+                        this.isFetch = false
+                        window.location.href = './wallet.html'
+                    }else{
+                        this.isFetch = true
+                        this.$message.error(this.$t('importPrivatkey.exist'))
+                    }
                 }else{
                     this.$message.error(this.$t('importPrivatkey.importError'))
                 }
@@ -223,6 +231,17 @@ export default {
         align-items: center;
         justify-content: center;
         z-index: 999;
+        .img{
+            animation:turnX 3s linear infinite;
+        }
+        @keyframes turnX{
+            0%{
+                transform:rotateZ(0deg);
+            }
+            100%{
+                transform:rotateZ(360deg);
+            }
+        }
     }
     .title{
         color: #222;

@@ -40,9 +40,9 @@
             </div>
             <div class="list-activity" v-if="type === '2'">
                 <div class="activity-item">
-                    <div class="date-refresh">
+                    <!-- <div class="date-refresh">
                         <div class="refresh" :class="{animate:listFetch}" @click="refreshList"><i class="el-icon-refresh"></i></div>
-                    </div>
+                    </div> -->
                     <div class="activity-wrap"> 
                         <div class="item-wrap" v-for="(item,index) in activityList" :key="index" @click="showDetail(item)">
                             <transactionItem :item="item" />
@@ -130,6 +130,7 @@ export default {
             let mesList = await window.filecoinwalletDb.messageList.where({ 
                 rpc:this.rpc
             }).reverse().sortBy('create_time')|| []
+            
             let myMesList = mesList.filter(n=>{
                 return n.from === this.address || n.to === this.address
             })
@@ -137,35 +138,47 @@ export default {
             myMesList.forEach(async (n)=>{
                 let succ = this.address === n.from ? this.$t('wallet.sendSuccess') : this.$t('wallet.receivedSuccess')
                 let err = this.address === n.from ? this.$t('wallet.sendError') : this.$t('wallet.receivedError')
-                if(n.type === 'pending'){
+                if(n.type !== 'pending1'){
                     let itemRes = await this.getDetail(n.signed_cid,n)
                     console.log(itemRes,'itemRes 123456')
-                    if(itemRes && itemRes.block_time){
-                        window.filecoinwalletDb.messageList.where("signed_cid").equals(n.signed_cid).modify({
-                            type:itemRes.type,
-                            block_time:itemRes.block_time
-                        })
-                    }
                     let typeName = ''
-                    switch(itemRes.type){
-                        case 'success':
-                            typeName = succ
-                            break;
-                        case 'error':
-                            typeName = err
-                            break;
-                        case 'pending':
-                            typeName = this.$t('wallet.waiting')
-                            break;
-                    }
-                    list.push(
-                        {
-                            ...n,
-                            type:itemRes.type,
-                            typeName,
-                            block_time:itemRes.block_time
+                    if(itemRes){
+                            switch(itemRes.type){
+                            case 'success':
+                                typeName = succ
+                                break;
+                            case 'error':
+                                typeName = err
+                                break;
+                            case 'pending':
+                                typeName = this.$t('wallet.waiting')
+                                break;
                         }
-                    )
+                        list.push(
+                            {
+                                ...n,
+                                type:itemRes.type,
+                                typeName,
+                                block_time:itemRes.block_time,
+                                allGasFee:itemRes.all_gas_fee
+                            }
+                        )
+                        if(itemRes){
+                            window.filecoinwalletDb.messageList.where("signed_cid").equals(n.signed_cid).modify({
+                                type:itemRes.type,
+                                allGasFee:itemRes.all_gas_fee,
+                                block_time:itemRes.block_time
+                            })
+                        }
+                    }else{
+                        list.push(
+                            {
+                                ...n,
+                                type:'pending',
+                                typeName:this.$t('wallet.waiting')
+                            }
+                        )
+                    }
                 }else{
                     let typeName = ''
                     switch(n.type){
@@ -182,23 +195,25 @@ export default {
                     list.push(
                         {
                             ...n,
-                            typeName
+                            typeName,
                         }
                     )
                 }
             })
-            console.log(myMesList,list,'list 333')
+            // delete same nonce
+            this.deleteSameNonce()
+            console.log(list,'list 333')
             this.activityList = list
         },
         async getTokenList(){
-            let list = await window.filecoinwalletDb.tokenList.where({ rpc:this.rpc }).toArray () || [];
+            let list = await window.filecoinwalletDb.tokenList.where({ rpc:this.rpc,address:this.address }).toArray () || [];
             let tokenList = []
             let provider = ethers.getDefaultProvider(this.rpc);
             list.forEach(async (n)=>{
                 try{
                     let contract = new ethers.Contract(n.contract, ABI, provider);
                     contract.balanceOf(this.address).then(res=>{
-                        let balance = res.toNumber()
+                        let balance = res.toString()
                         tokenList.push(
                             {
                                 ...n,
@@ -211,6 +226,7 @@ export default {
                 }
             })
             this.tokenList = tokenList
+            return tokenList
         },
         async getDetail(signed_cid,itemObj){
             MyGlobalApi.setRpc(this.rpc)
@@ -221,15 +237,36 @@ export default {
         skipToToken(symbol,decimals){
             this.$emit('tokenShow',{symbol,decimals})
         },
-        refreshList(){
-            
+        async deleteSameNonce(){
+            let mesList = await window.filecoinwalletDb.messageList.where({ 
+                rpc:this.rpc,
+                address:this.address
+            })
+            let obj = {};
+            let nonce = 0
+            for(var i =0; i<mesList.length; i++){
+                if(!obj.nonce){
+                    obj.nonce = mesList[i].nonce
+                }else{
+                    nonce = mesList[i].nonce
+                }
+            }
+            if(nonce){
+                console(nonce,'delete nonce')
+                await window.filecoinwalletDb.messageList.where({ 
+                    rpc:this.rpc,
+                    address:this.address,
+                    nonce,
+                    type:'pending'
+                }).delete()
+            }
         },
         selectType(type){
             this.type = type
         },
         showDetail(item){
-            let { from,to,fil,all_gas_fee,create_time,block_time,type,signed_cid,value,serviceFee,token } = item
-            let listObj = { from,to,fil,all_gas_fee,create_time,block_time,type,signed_cid,value,serviceFee,token }
+            let { from,to,fil,all_gas_fee,create_time,block_time,type,signed_cid,value,allGasFee,token,decimals } = item
+            let listObj = { from,to,fil,all_gas_fee,create_time,block_time,type,signed_cid,value,allGasFee,token,decimals }
             let listObjStr = JSON.stringify(listObj)
             window.location.href = `./message-detail.html?signed_cid=${signed_cid}&listObjStr=${listObjStr}`
         },

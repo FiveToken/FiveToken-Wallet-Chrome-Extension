@@ -13,15 +13,17 @@
         <div class="amount">
           <div class="label">{{ $t("messageDetail.amount") }}:</div>
           <div class="value">
-            {{ detail.value | formatAmount(8) }} {{ detail.token }}
+            {{ detail.value | formatAmount(8,detail.decimals) }} {{ detail.token }}
           </div>
         </div>
         <div class="info">
           <div class="info-item">
-            <div class="label">{{ $t("messageDetail.gasFee") }}:</div>
+            <div class="label">
+              {{  detail.type === 'pending'?$t("messageDetail.willgasFee"):$t("messageDetail.gasFee") }}:
+            </div>
             <div class="value">
               <div class="text">
-                {{ detail.serviceFee | formatGas(8) }} {{ detail.token }}
+                {{ detail.allGasFee | formatGas(8,detail.decimals) }} {{ detail.token }}
               </div>
             </div>
           </div>
@@ -63,31 +65,34 @@ export default {
     };
   },
   filters: {
-    formatAmount(val, n) {
-      var str = String(val);
+    formatAmount(val, n,decimals) {
+      let dec = val / Math.pow(10,Number(decimals))
+      var str = String(dec);
       let index = str.indexOf(".");
       if (index > -1) {
         let arr = str.split(".");
         let num = arr[0] + "." + arr[1].substring(0, n);
         return Number(num)
       } else {
-        return val
+        return str
       }
     },
-    formatGas(val, n) {
-      var str = String(val);
+    formatGas(val, n,decimals) {
+      console.log(decimals,'decimals 77777')
+      let dec = val / Math.pow(10,Number(decimals))
+      var str = String(dec);
       let index = str.indexOf(".");
       if (index > -1) {
         let arr = str.split(".");
         let num = arr[0] + "." + arr[1].substring(0, n);
         return Number(num);
       } else {
-        return val;
+        return str;
       }
     },
   },
   computed: {
-    ...mapState('app',['networkType']),
+    ...mapState('app',['networkType','browser']),
     time() {
       let str = "";
       if (this.detail && this.detail.type === "success") {

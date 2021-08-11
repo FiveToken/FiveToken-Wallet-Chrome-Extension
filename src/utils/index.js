@@ -1,6 +1,133 @@
 
 
 import {trim,toFixed} from 'mytoolkit'
+import { genT1WalletByMne,genT1WalletByCK,AESEncrypt,AESDecrypt,genPrivateKeyFromMne } from '@/utils/f1'
+import { privateKeyEncode,privateKeyDecode ,genPrivateKeyDigest,validatePrivateKey} from '@/utils/key'
+import { Wallet } from "ethers";
+const encodeKey = 'five'
+export const fiveTokenVersion = '1.1.0'
+
+export function isProxy(networkType){
+  return networkType === 'proxy'
+}
+
+export function isFilecoinChain(networkType){
+  return (networkType === 'proxy' || networkType === 'filecoin')
+}
+
+export async function enCodeMnePsd(mne,psd){
+  let mnemonic = await AESEncrypt(mne,encodeKey)
+  let password = await AESEncrypt(psd,encodeKey)
+  return {
+    mnemonic,
+    password
+  }
+}
+
+export async function deCodeMnePsd(mne,psd){
+  let mnemonic = AESDecrypt(mne,encodeKey)
+  let password = AESDecrypt(psd,encodeKey)
+  return {
+    mnemonic,
+    password
+  }
+}
+
+export async function getF1ByMne(mnemonic,password,networkType,filecoinAddress0,index) {
+  if(isFilecoinChain(networkType)){
+    let path = "m/44'/461'/0'/0"
+    let f1 = genT1WalletByMne(mnemonic,filecoinAddress0,path,index)
+    let { address,privateKey } = f1
+    let pk = privateKeyDecode(privateKey,address,password)
+    let digest = await genPrivateKeyDigest(privateKey)
+    return {
+      address,
+      privateKey:pk,
+      digest
+    }
+  }else{
+    let path = "m/44'/60'/0'/0"
+    let ck = await genPrivateKeyFromMne(mnemonic,path,index)
+    let privateKey = ck.toString("hex")
+    let f1 = new Wallet(privateKey)
+    let { address } = f1
+    let pk = AESEncrypt(privateKey,password)
+    let digest = await genPrivateKeyDigest(privateKey)
+    return {
+      address,
+      privateKey:pk,
+      digest
+    }
+  }
+}
+
+export async function getF1ByPrivateKey(privateKey,password,networkType,filecoinAddress0) { 
+  try{
+    if(isFilecoinChain(networkType)){
+      let f1 = genT1WalletByCK(privateKey,filecoinAddress0,[])
+      let { address } = f1
+      let pk = privateKeyDecode(privateKey,address,password)
+      let digest = await genPrivateKeyDigest(privateKey)
+      return {
+        address,
+        privateKey:pk,
+        digest
+      }
+    }else{
+      let walletMnemonic = new Wallet(privateKey)
+      let pk = AESEncrypt(privateKey,password)
+      let digest = await genPrivateKeyDigest(privateKey)
+      return {
+        address:walletMnemonic.address,
+        privateKey:pk,
+        digest
+      }
+    }
+  }catch(err){
+    return null
+  }
+}
+
+export async function validatePassword(psd,password) {
+  try{
+    if(psd === password){
+      return true
+    }else{
+      return false
+    }
+  }catch(err){
+    return false
+  }
+}
+
+function strToHexCharCode(pk) {
+　　if(pk === "") return "";
+    let obj = {
+        Type:'secp256k1',
+        PrivateKey:pk
+    }
+    let str = JSON.stringify(obj)
+　　var hexCharCode = [];
+　　for(var i = 0; i < str.length; i++) {
+　　　　hexCharCode.push((str.charCodeAt(i)).toString(16));
+　　}
+　　return hexCharCode.join("");
+}
+
+export function getPrivateKey(encodePrivateKey,address,password,networkType,hex) { 
+  if(isFilecoinChain(networkType)){
+    let pk = privateKeyDecode(encodePrivateKey,address,password)
+    if(hex){
+      let privateKey = strToHexCharCode(pk)
+      return privateKey
+    }else{
+      return pk
+    }
+  }else{
+    let pk = AESDecrypt(encodePrivateKey,password)
+    return pk
+  }
+}
 
 export function getQueryString(name) { 
   var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i"); 
@@ -111,7 +238,16 @@ function fixedFloat(num,size=2){
   }
 }
 
-export function isValidAddress(v){
+export function isValidAddress(v,networkType){
+  console.log(v,networkType,'v,networkType')
+  if(!isFilecoinChain(networkType)){
+    let bol = false
+    let start = v.startsWith('0x')
+    if(start && v.length === 42){
+      bol = true
+    }
+    return bol
+  }else{
     let str = trimStr(v)
     let bol = false
     if(str === '') return true
@@ -124,11 +260,12 @@ export function isValidAddress(v){
     }
     if((two === 't2' || two === 'f2') && str.length === 41){
       bol = true
-  }
+    }
     if((two === 't3' || two === 'f3') && str.length === 86){
         bol = true
     }
     return bol
+  }
 }
 
 export function trimStr(str){
@@ -148,4 +285,32 @@ export function fil2atto(v) {
 export function isDecimal(str) {
   let r = /(^\d+(?:\.\d+)?([eE]-?\d+)?$|^\.\d+([eE]-?\d+)?$)/
   return r.test(str)
+}
+
+export function getGasLimit(actor_exist,gas_used){
+  let gas = (Number(gas_used))*1.25
+  let gas_limit = actor_exist ? Math.floor(gas) : 2200000;
+  return gas_limit
+}
+// this.gasFeeCap(res.base_fee,base_fee_ratio,nano_ratio,gas_premium,gasLimit)
+export function getGasFeeCap(base_fee,base_fee_ratio,gas_premium,gasLimit,networkType){
+    // let gasfee_cap = Math.max(base_fee_ratio * Number(base_fee), nano_ratio * Math.pow(10, 9));
+    try{
+      if(!isFilecoinChain(networkType)){
+        return base_fee * gasLimit
+      }else{
+        let gasfee_cap = base_fee_ratio * base_fee + gas_premium
+        return gasfee_cap
+      }
+    }catch(err){
+      console.log(err,'getGasFeeCap。err')
+    }
+    
+    
+}
+
+
+export function getGasPremium(){
+  let gas_premium = Math.pow(10, 6)
+  return gas_premium
 }

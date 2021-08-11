@@ -1,39 +1,42 @@
 <template>
-<div class="setting-currency">
-    <div class="back">
-        <i class="el-icon-arrow-left" @click="back"></i>
-        <span>{{$t('settingCurrency.currency')}}</span>
-        <i class="el-icon-close" @click="closeSetting"></i>
-    </div>
-    <div class="currency-content">
-        <div class="transform">{{$t('settingCurrency.currencyConversion')}}</div>
-        <div class="transform-select">
-            <el-select v-model="value">
-                <el-option
-                v-for="item in $t('settingCurrency.currencyArr')"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value">
-                </el-option>
-            </el-select>
+    <layout>
+        <div class="setting-currency">
+            <div class="back">
+                <i class="el-icon-arrow-left" @click="back"></i>
+                <span>{{$t('settingCurrency.currency')}}</span>
+                <i class="el-icon-close" @click="closeSetting"></i>
+            </div>
+            <div class="currency-content">
+                <div class="transform">{{$t('settingCurrency.currencyConversion')}}</div>
+                <div class="transform-select">
+                    <el-select v-model="value">
+                        <el-option
+                        v-for="item in $t('settingCurrency.currencyArr')"
+                        :key="item.value"
+                        :label="item.label"
+                        :value="item.value">
+                        </el-option>
+                    </el-select>
+                </div>
+                <div class="language c">{{$t('settingCurrency.currentLanguage')}}</div>
+                <div class="current-language">{{ langName }}</div>
+                <div class="language-select">
+                    <el-select v-model="lang" @change="selectChange" placeholder="">
+                        <el-option
+                        v-for="(item,index) in $t('settingCurrency.languageList')"
+                        :key="index"
+                        :label="item.langName"
+                        :value="item.lang">
+                        </el-option>
+                    </el-select>
+                </div>
+                <div class="del-btn" @click="detelt">{{$t('settingCurrency.deleteAccount')}}</div>
+            </div>
         </div>
-        <div class="language c">{{$t('settingCurrency.currentLanguage')}}</div>
-        <div class="current-language">{{ langName }}</div>
-        <div class="language-select">
-            <el-select v-model="lang" @change="selectChange" placeholder="">
-                <el-option
-                v-for="(item,index) in $t('settingCurrency.languageList')"
-                :key="index"
-                :label="item.langName"
-                :value="item.lang">
-                </el-option>
-            </el-select>
-        </div>
-        <div class="del-btn" @click="detelt">{{$t('settingCurrency.deleteAccount')}}</div>
-    </div>
-</div>
+    </layout>
 </template>
 <script>
+import layout from '@/components/layout'
 export default {
     data(){
         return{
@@ -43,12 +46,14 @@ export default {
             address:''
         }
     },
-    
+    components:{
+        layout
+    },
     async mounted(){
-        // let currentLanguage = await window.filecoinwalletDb.currentLanguage.where({ kunyao:'kunyao'}).toArray ()|| [];
-        let activeAccount = await window.filecoinwalletDb.activeAccount.where({ kunyao:'kunyao'}).toArray ()|| [];
+        // let currentLanguage = await window.filecoinwalletDb.currentLanguage.where({ khazix:'khazix'}).toArray ()|| [];
+        let activeAccount = await window.filecoinwalletDb.activeAccount.where({ khazix:'khazix'}).toArray ()|| [];
         this.address = activeAccount.length && activeAccount[0].address
-        let lang = window.localStorage.getItem('filCurrentLang')
+        let lang = 'zh'
         this.lang = lang
         this.langName = this.getLangName(lang)
         console.log(lang,this.$t('settingCurrency.languageList'),'currentLanguage')
@@ -69,7 +74,7 @@ export default {
         },
         async selectChange(){
 
-            window.localStorage.setItem('filCurrentLang',this.lang)
+            window.localStorage.setItem('zh',this.lang)
             
             this.langName = this.getLangName(this.lang)
             this.$i18n.locale = this.lang
@@ -80,9 +85,9 @@ export default {
                 cancelButtonText: this.$t('settingCurrency.cancel'),
                 type: 'warning'
             }).then(async () => {
-                await window.filecoinwalletDb.activeAccount.where({kunyao:'kunyao'}).delete()
+                await window.filecoinwalletDb.activeAccount.where({khazix:'khazix'}).delete()
                 await window.filecoinwalletDb.accountList.where({address:this.address}).delete()
-                let accountList = await window.filecoinwalletDb.accountList.where({ kunyao:'kunyao'}).toArray () || [];
+                let accountList = await window.filecoinwalletDb.accountList.where({ khazix:'khazix'}).toArray () || [];
                 if(accountList.length){
                     let first = accountList.filter((n,index)=>{
                         return index === 0

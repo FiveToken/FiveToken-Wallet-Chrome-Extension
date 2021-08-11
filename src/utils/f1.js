@@ -14,8 +14,6 @@ import {
 import aesjs from 'aes-js'
 const CTRCouterNumber = 6
 
-const encode_prefix = process.env.NODE_ENV === 'production' ? 'f':'t'
-
 export function getQueryString(name) { 
   var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i"); 
   var r = window.location.search.substr(1).match(reg); 
@@ -25,18 +23,14 @@ export function getQueryString(name) {
 export function  genMnemonic() {
     return bip39.generateMnemonic()
 }
-export function genT1WalletByMne(mne, password, walletList) {
-    let ck = genPrivateKeyFromMne(mne)
+export function genT1WalletByMne(mne,filecoinAddress0,path,index) {
+    let ck = genPrivateKeyFromMne(mne,path,index)
     let privateStr = ck.toString("base64")
     let pubkey = privateToPublicKey(ck)
     let address = getAddressByPublicKey(pubkey)
+    const encode_prefix = filecoinAddress0
     address = `${encode_prefix}1${address}`;
     let count = 1
-    if (walletList.length > 0) {
-        let lastWallet = tail(walletList)
-        let lastWalletCount = lastWallet.count || walletList.length
-        count = lastWalletCount + 1
-    }
     return {
         label: `Filecoin-wallet ${count}`,
         count,
@@ -48,11 +42,12 @@ export function genT1WalletByMne(mne, password, walletList) {
     }
 }
 
-export function genT1WalletByCK(ck, hash, walletList) {
+export function genT1WalletByCK(ck,filecoinAddress0,walletList) {
   let privateStr = ck
   let pk = Buffer.from(ck, "base64");
   let pubkey = ethutil.privateToPublic(pk)
   let address = getAddressByPublicKey(pubkey)
+  const encode_prefix = filecoinAddress0
   address = `${encode_prefix}1${address}`;
   let count = 1
   if (walletList.length > 0) {
@@ -67,17 +62,18 @@ export function genT1WalletByCK(ck, hash, walletList) {
     address: address,
     walletType: 0,
     default: 1,
-    privateKey: privateStr//AESEncrypt(privateStr, hash),
+    privateKey: privateStr
   }
 }
 
-
-export function genPrivateKeyFromMne(mne) {
-  let fileCoinDerivePath = "m/44'/461'/0'/0"
+export function genPrivateKeyFromMne(mne,path,index) {
+  // m/44'/461'/0'/0
+  // m/44'/60'/0'/0
+  let fileCoinDerivePath = path
   let seed = bip39.mnemonicToSeedSync(mne)
   let rootKey = hdkey.fromMasterSeed(seed)
   let deriveKey = rootKey.derivePath(fileCoinDerivePath)
-  let k0 = deriveKey.deriveChild(0)
+  let k0 = deriveKey.deriveChild(index)
   return Buffer.from(k0._hdkey._privateKey)
 }
 
@@ -104,6 +100,7 @@ export function blake2b(arr, len) {
   return blake.blake2b(arr, null, len)
 }
 
+
 export function AESEncrypt(word, key) {
   let keyMD5 = CryptoJS.MD5(key).toString()
   let keyBytes = aesjs.utils.hex.toBytes(keyMD5)
@@ -122,6 +119,15 @@ export function AESDecrypt(encryptedData, key) {
   let decryptedBytes = aesCtr.decrypt(encryptedBytes)
   let decryptedStr = aesjs.utils.utf8.fromBytes(decryptedBytes)
   return decryptedStr
+}
+
+export function privateKeyDecode(encodePrivateKey,addrress, password){
+  let kek = genKek(addrress,password)
+  // let encodePrivateKey = localStorage.getItem('encodePrivateKey')
+  let privateKeyArr = CryptoJS.enc.Base64.parse(encodePrivateKey)
+  let ssk = xor(privateKeyArr.words,kek)
+  let ppk = CryptoJS.lib.WordArray.create(ssk,32).toString(CryptoJS.enc.Base64)
+  return ppk
 }
 
 export function privateKeyEncode(sk,address, password){
@@ -161,15 +167,6 @@ export function xor(first, second) {
       list.push(res);
     }
     return list;
-}
-
-export function privateKeyDecode(encodePrivateKey,addrress, password){
-  let kek = genKek(addrress,password)
-  // let encodePrivateKey = localStorage.getItem('encodePrivateKey')
-  let privateKeyArr = CryptoJS.enc.Base64.parse(encodePrivateKey)
-  let ssk = xor(privateKeyArr.words,kek)
-  let ppk = CryptoJS.lib.WordArray.create(ssk,32).toString(CryptoJS.enc.Base64)
-  return ppk
 }
   
 export async function validatePrivateKey(addrress, password, skKek, dig)  {

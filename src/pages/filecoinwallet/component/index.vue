@@ -1,5 +1,5 @@
 <template>
-  <div class="filecoinwallet-page">
+  <div class="fivetoken-page">
     <div class="lock" v-if="lock">
       <lock />
     </div>
@@ -11,7 +11,6 @@
 </template>
 
 <script>
-
 import welcome from '@/pages/welcome/component/index.vue'
 import wallet from '@/pages/wallet/component/index.vue'
 import lock from '@/pages/lock-user/component/index.vue'
@@ -27,19 +26,20 @@ export default {
         wallet,
         lock
     },
-    async mounted(){
-        let lockUser = await window.filecoinwalletDb.lockUser.where({ kunyao:'kunyao'}).toArray ();
-        if(lockUser.length){
-          this.lock = true
-        }
-        let accountList = await window.filecoinwalletDb.accountList.where({ kunyao:'kunyao'}).toArray ();
-        this.accountList = accountList
-        console.log(accountList,"accountList filecoinwallet-page")
+    async beforeCreate(){
+      let activenNetworks = await window.filecoinwalletDb.activenNetworks.where({ khazix:'khazix'}).toArray ();
+      let rpc = activenNetworks.length && activenNetworks[0].rpc
+      let lockUser = await window.filecoinwalletDb.lockUser.where({ khazix:'khazix'}).toArray ();
+      if(lockUser.length){
+        this.lock = true
+      }
+      let accountList = await window.filecoinwalletDb.accountList.where({ rpc:rpc}).toArray ();
+      this.accountList = accountList || []
     },
 }
 </script>
 <style lang="less" scoped>
-.filecoinwallet-page{
+.fivetoken-page{
   height: 100%;
   .wallet-wce-wrap{
     height: 100%;

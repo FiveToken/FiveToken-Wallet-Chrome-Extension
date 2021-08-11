@@ -100,6 +100,7 @@ export function blake2b(arr, len) {
   return blake.blake2b(arr, null, len)
 }
 
+
 export function AESEncrypt(word, key) {
   let keyMD5 = CryptoJS.MD5(key).toString()
   let keyBytes = aesjs.utils.hex.toBytes(keyMD5)

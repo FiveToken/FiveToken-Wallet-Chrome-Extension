@@ -5,8 +5,6 @@ import { genT1WalletByMne,genT1WalletByCK,AESEncrypt,AESDecrypt,genPrivateKeyFro
 import { privateKeyEncode,privateKeyDecode ,genPrivateKeyDigest,validatePrivateKey} from '@/utils/key'
 import { Wallet } from "ethers";
 const encodeKey = 'five'
-export const fiveTokenLanguage = 'zh'
-export const fiveTokenCurrency = 'usd'
 export const fiveTokenVersion = '1.1.0'
 
 export function isProxy(networkType){

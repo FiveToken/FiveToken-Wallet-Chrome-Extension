@@ -10,9 +10,11 @@
             />
             <stepTwo 
                 v-else
-                :price_usd="price_usd"
+                :price_currency="price_currency"
                 :formData="formData"
                 @formDataChange="formDataChange"
+                :baseFeeCap="baseFeeCap"
+                :baseLimit="baseLimit"
                 @previousStep="step = 1"
                 @sendFil="sendFil"
             />
@@ -41,10 +43,12 @@ export default {
             loading:require('@/assets/image/loading.png'),
             isFetch:false,
             step:1,
-            price_usd:0,
+            price_currency:0,
             nonce:0,
             maxNonce:0,
             mnePsd:null,
+            baseFeeCap:0,
+            baseLimit:0,
             formData:{
                 balance:0,
                 to:'',
@@ -71,7 +75,8 @@ export default {
             'accountList',
             'activenNetworks',
             'decimals',
-            'symbol'
+            'symbol',
+            'currency'
         ])
     },
     components:{
@@ -216,13 +221,24 @@ export default {
             this.$set(this.formData,'gasLimit',gasLimit)
             this.$set(this.formData,'gasPremium',gasPremium)
             this.$set(this.formData,'gasFeeCap',gasFeeCap)
+            this.baseFeeCap = gasFeeCap
+            this.baseLimit = gasLimit
+            if(this.formData.isAll === 1){
+                let fil = this.formData.balance / Math.pow(10,Number(this.formData.decimals))
+                let gas = (this.formData.gasFeeCap * this.formData.gasLimit) / Math.pow(10, 9)
+                this.$set(this.formData,'fil',fil - gas)
+            }
         },
         async getFilPricePoints(){
             MyGlobalApi.setRpc(this.rpc)
             MyGlobalApi.setNetworkType(this.networkType)
             let res = await MyGlobalApi.getPrice()
-            let { usd } = res
-            this.price_usd = usd
+            let { usd,cny } = res
+            if(this.currency === 'cny'){
+                this.price_currency = cny
+            }else{
+                this.price_currency = usd
+            }
         },
         next(){
             let balance = this.formData.balance / Math.pow(10, Number(this.formData.decimals))
@@ -261,7 +277,7 @@ export default {
                             from:this.address,
                             to:this.formData.to,
                             create_time,
-                            block_time:'',
+                            block_time:0,
                             nonce:res.nonce,
                             decimals:this.formData.decimals,
                             token:this.formData.symbol,
@@ -283,7 +299,12 @@ export default {
                 this.isFetch = false
             }catch(error){
                 this.isFetch = false
-                console.log(error,'sendToken error')
+                if(error.error && error.error.message){
+                    this.$message({
+                        type:'error',
+                        message:error.error && error.error.message
+                    })
+                }
             }
         },
         async sendFil(){
@@ -315,7 +336,7 @@ export default {
                             from:address,
                             to:this.formData.to,
                             create_time,
-                            block_time:'',
+                            block_time:0,
                             nonce:result.nonce,
                             allGasFee,
                             decimals:this.formData.decimals,

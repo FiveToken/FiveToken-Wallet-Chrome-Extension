@@ -1,11 +1,4 @@
 const en = {
-  header:{
-    myAccount:'我的账户',
-    lock:'锁定',
-    createAccount:'创建账户',
-    import:'导入账户',
-    setting:'设置'
-  },
   welcome: {
     title:'欢迎使用FiveToken',
     subTitle1:'Filecoin生态领域的连接器，多链融合，未来存储世界的入口。',
@@ -75,8 +68,8 @@ const en = {
     cancel:'取消'
   },
   wallet:{
-    receive:'收款',
-    send:'发送',
+    receive:'receive',
+    send:'send',
     tab:[
       {name:'资产',type:'1'},
       {name:'活动',type:'2'}
@@ -250,7 +243,7 @@ const en = {
     inputPassword:'请输入您的帐户密码'
   },
   connect:{
-    title:'使用 filecoinwallet 连接',
+    title:'使用 fivetoken 连接',
     cancel:'取消',
     connect:'连接'
   },

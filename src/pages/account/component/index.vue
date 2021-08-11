@@ -322,24 +322,43 @@ export default {
         max-height: 390px;
         overflow-y: auto;
         .mne-account,.pk-account{
-            padding: 0 20px;
             .mne-tit{
                     height: 40px;
                     line-height: 40px;
                     font-size: 14px;
                     color: #101010;
+                    padding: 0 20px;
             }
             .mne-list{
-               padding-left: 45px;
                .mne-item{
-                    padding: 10px 0;
-                    border-bottom:1px solid #E6F0F0;
+                    padding: 10px 20px 10px 50px;
                     position: relative;
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
+                    cursor: pointer;
+                    &::before{
+                        content: '';
+                        position: absolute;
+                        width: 300px;
+                        height:1px;
+                        background: #E6F0F0;
+                        left: 50px;
+                        bottom: 0;
+                    }
+                    &:hover{
+                        background: #f5f5f5;
+                    }
                     &:first-child{
-                        border-top:1px solid #E6F0F0;
+                       &::after{
+                            content: '';
+                            position: absolute;
+                            width: 300px;
+                            height:1px;
+                            background: #E6F0F0;
+                            left: 50px;
+                            top: 0;
+                        }
                     }
                     &:nth-child(even){
                         .icon{

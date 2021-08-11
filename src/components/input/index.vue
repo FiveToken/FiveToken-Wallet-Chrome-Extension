@@ -47,13 +47,15 @@ export default {
             }
         }
     }
+    /deep/.el-textarea{
+        .el-textarea__inner{
+            background: #F5F5F5;
+        }
+    }
     /deep/.el-input{
         .el-input__inner{
             height: 36px;
             line-height: 36px;
-            background: #F5F5F5;
-        }
-        .el-textarea__inner{
             background: #F5F5F5;
         }
         .el-input__suffix{

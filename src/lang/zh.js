@@ -1,13 +1,6 @@
 const zh = {
-  header:{
-    myAccount:'我的账户',
-    lock:'锁定',
-    createAccount:'创建账户',
-    import:'导入账户',
-    setting:'设置'
-  },
   welcome: {
-    title:'欢迎使用FiveToken',
+    title:'欢迎使用 FiveToken',
     subTitle1:'Filecoin生态领域的连接器，多链融合，未来存储世界的入口。',
     subTitle2:'我们很高兴见到您。',
     btn1:'创建新钱包',
@@ -77,8 +70,6 @@ const zh = {
     cancel:'取消'
   },
   wallet:{
-    receive:'收款',
-    send:'发送',
     tab:[
       {name:'资产',type:'1'},
       {name:'活动',type:'2'}
@@ -89,6 +80,13 @@ const zh = {
       {name:'备份私钥',action:'backupPrivateKey'},
       {name:'删除钱包',action:'deleteWallet'}
     ],
+    statusSuccess:'完成',
+    statusError:'失败',
+    statusPending:'确认中',
+    send:'发送',
+    received:'接收',
+    labelSend:'发送地址',
+    labelReceived:'收款地址',
     titleEdit:'修改账户名',
     editLabel:'账户名称',
     editTips:'小于15个字符',
@@ -99,10 +97,6 @@ const zh = {
     copyAddress:'复制地址',
     copySuccess:'复制成功',
     tranRecord:'交易记录',
-    receivedSuccess:'接收成功',
-    receivedError:'接收失败',
-    sendSuccess:'发送成功',
-    sendError:'发送失败',
     noTransactionRecord:'没有交易',
     waiting:'等待',
     noBrowser:'当前网络未添加区块链浏览器地址'
@@ -149,7 +143,7 @@ const zh = {
     gasFeeError:'低于当前BaseFee',
     gasLimitError:'低于当前Gas Limit',
     addressError:'地址格式不正确',
-    insufficientBalance:'余额不足'
+    insufficientBalance:'余额不足',
   },
   setting:{
     name:'设置',
@@ -180,7 +174,7 @@ const zh = {
     networkName:'网络名称',
     addTips:' 恶意网络可谎报区块状态，请添加您信任的网络。',
     chainID:'链ID',
-    symbol:'符号(选填)',
+    symbol:'符号',
     rpc:"RPC URL",
     browser:'区块浏览器URL(选填)',
     cancel:'取消',
@@ -225,13 +219,13 @@ const zh = {
     add:'添加'
   },
   lock:{
-    title:'欢迎使用FiveToken',
+    title:'欢迎使用 FiveToken',
     subTitle:'Filecoin生态领域的连接器，多链融合，未来存储世界的入口。',
     unlocking:'解锁',
     label:'密码'
   },
   connect:{
-    title:'使用 filecoinwallet 连接',
+    title:'使用 FiveToken 连接',
     cancel:'取消',
     connect:'连接'
   },

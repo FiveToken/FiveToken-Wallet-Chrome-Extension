@@ -48,7 +48,7 @@ export default {
         return{
             form:{
                 name:'',
-                rpc:'https://1w1cJziPEPGNpMlwFjxyj8f7dhd:87323bed6d5a3aa3eb3cbd7ee1d28407@filecoin.infura.io',
+                rpc:'',
                 chainID:'',
                 tokenSymbol:'',
                 browser:''

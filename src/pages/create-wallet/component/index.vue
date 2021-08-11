@@ -81,7 +81,8 @@ export default {
                 password:'Aa123456',
                 confirmPassword:'Aa123456'
             },
-            placeholder:''
+            placeholder:'',
+            createType:''
         }
     },
     computed: {
@@ -102,6 +103,7 @@ export default {
     },
     mounted(){
         let createType = getQueryString('createType')
+        console.log(createType,'createType 666666')
         this.createType = createType
     },
     methods:{
@@ -125,15 +127,10 @@ export default {
         confirmEye(eye){
             this.confirmType = eye ? 'text':'password'
         },
-        toService(){
-            let lang = this.$i18n.locale
-            lang = lang === 'zh' ? 'cn' : lang
-            openUrl(`https://filecoinwallet.com/service?lang=${lang}`)
-        },
         create(){
             if(!this.disabled){
+                this.reset()
                 let v = this.check()
-                console.log(v,'123')
                 if(v){
                     let trim = this.form.accountName.replace(/(^\s*)|(\s*$)/g, "")
                     let accountName = encodeURIComponent(trim)
@@ -147,6 +144,12 @@ export default {
                     }
                 }
             }
+        },
+        reset(){
+            this.nameError = false
+            this.passwordError = false
+            this.confirmError = false
+            this.diff = false
         },
         check(){
             if(this.form.accountName.length > 15){

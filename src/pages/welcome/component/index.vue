@@ -35,7 +35,6 @@ export default {
     },
     methods: {
       createWallet(){
-        // window.location.href = './import-privatekey.html'
         window.location.href = './create-wallet.html?createType=create'
       },
       importWallet(){

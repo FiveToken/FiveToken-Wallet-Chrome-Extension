@@ -6,14 +6,13 @@
                 <kyTop
                     v-if="rpc"
                     :balance="balance"
-                    :price_usd="price_usd"
                     :editNameVisable.sync="editNameVisable"
                     :deleteUserVisible.sync="deleteUserVisible"
                     :receiveVisible.sync="receiveVisible"
                 />
                 <kyList
                     v-if="address && rpc"
-                    :price_usd="price_usd"
+                    :price_currency="price_currency"
                     :balance="balance"
                     @tokenShow="tokenShow"
                 />
@@ -69,7 +68,7 @@
                     :tokenDecimals="tokenDecimals"
                     :tokenName="tokenName"
                     :balance="balance"
-                    :price_usd="price_usd"
+                    :price_currency="price_currency"
                     :receiveVisible.sync="receiveVisible"
                     :symbol="symbol"
                     :tokenList="tokenList"
@@ -100,7 +99,7 @@ export default {
             receiveVisible:false,
             tokenVisible:false,
             balance:0,
-            price_usd:0,
+            price_currency:0,
             QRUrl:'',
             signed_cid:'',
             tokenName:'',
@@ -116,7 +115,8 @@ export default {
             'address',
             'privateKey',
             'ids',
-            'networkType'
+            'networkType',
+            'currency'
         ]),
     },
     components:{
@@ -194,8 +194,14 @@ export default {
             MyGlobalApi.setRpc(this.rpc)
             MyGlobalApi.setNetworkType(this.networkType)
             let res = await MyGlobalApi.getPrice(this.ids)
-            let { usd } = res
-            this.price_usd = usd
+            let { usd,cny } = res
+            console.log(this.currency,'this.currency 999999')
+            if(this.currency === 'cny'){
+                this.price_currency = cny
+            }else{
+                this.price_currency = usd
+            }
+            
         },
         sendFil(){
             window.location.href = './send-fil.html'

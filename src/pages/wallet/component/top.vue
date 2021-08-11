@@ -35,7 +35,7 @@
                 <div class="icon">
                     <img class="img" :src="send" />
                 </div>
-                <div class="text">{{$t('wallet.receive')}}</div>
+                <div class="text">{{$t('wallet.received')}}</div>
             </div>
             <div class="send" @click="sendFil">
                 <div class="icon">
@@ -66,7 +66,6 @@ export default {
     },
     props:{
         balance:Number,
-        price_usd:Number,
     },
     filters:{
         addressFormat(val){
@@ -104,12 +103,24 @@ export default {
             'decimals'
         ]),
     },
+    mounted(){
+        this.handle()
+    },
     methods:{
         ...mapMutations('app',[
             'SET_ACCOUNTNAME'
         ]),
         walletMenu(){
             this.walletMenuVisable = !this.walletMenuVisable
+        },
+        handle(){
+            let that = this
+            document.addEventListener('click',function(e){
+                console.log(e.target.parentNode.className,'e.target.parentNode.className')
+                if(e.target.parentNode && e.target.parentNode.className !== 'more-icon'){
+                   that.walletMenuVisable = false;
+                }
+            })
         },
         confirmEdit(){
             let address = this.address

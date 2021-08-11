@@ -8,7 +8,7 @@
                  <div class="logo">
                     <img class="img" :src="logo" />
                 </div>
-                <div class="filecoinwallet">{{$t('settingAbout.filVersion')}}</div>
+                <div class="fivetoken">{{$t('settingAbout.filVersion')}}</div>
                 <div class="version">{{version}}</div>
                 <div class="tips">{{$t('settingAbout.tips')}}</div>
                 <div class="privacy-policy" @click="toPrivacy">{{$t('settingAbout.privacy')}}</div>
@@ -46,12 +46,12 @@ export default {
         toService(){
             let lang = this.$i18n.locale
             lang = lang === 'zh' ? 'cn' : lang
-            openUrl(`https://filecoinwallet.com/service?lang=${lang}`)
+            openUrl(`https://fivetoken.io/service?lang=${lang}`)
         },
         toPrivacy(){
             let lang = this.$i18n.locale
             lang = lang === 'zh' ? 'cn' : lang
-            openUrl(`https://filecoinwallet.com/private?lang=${lang}`)
+            openUrl(`https://fivetoken.io/private?lang=${lang}`)
         }
     }
 }
@@ -79,7 +79,7 @@ export default {
                 height: 36px;
             }
         }
-        .filecoinwallet{
+        .fivetoken{
             font-size: 18px;
             color: #222;
             margin-bottom: 5px;

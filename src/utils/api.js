@@ -175,6 +175,10 @@ class GlobalApi{
             
             
         }catch(err){
+            Message({
+                type:'error',
+                message:err
+            })
             console.log(err,'GlobalApi.sendTransaction.err')
             return null
         }
@@ -218,12 +222,10 @@ class GlobalApi{
                     this.setBSCChainAPI()
                     this.BSCChainAPI.setProvider(this.rpc)
                     let ethRes = await this.BSCChainAPI.getTransaction(signed_cid)
+                    let rptRes = await this.BSCChainAPI.getTransactionReceipt(signed_cid)
                     let block = await this.BSCChainAPI.getBlock(ethRes.blockNumber)
-                    let wait = await ethRes.wait()
-                    let type = wait.status === 1 ? 'success' : 'error'
+                    let type = rptRes.status === 1 ? 'success' : 'error'
                     let block_time = formatDate(block.timestamp,true)
-                    console.log(ethRes,block,'getTransaction   11111')
-                    console.log(ethRes.gasPrice.toString(),'getTransaction   222222')
                     let value = Number(ethRes.value.toString())
                     let all_gas_fee = Number(ethRes.gasPrice.toString()) * Number(ethRes.gasLimit.toString())
                     let total_amount = value + all_gas_fee
@@ -422,8 +424,6 @@ class GlobalApi{
     }
 }
 
-export const MyGlobalApi = new GlobalApi()
-
 class BSCChainAPI{
     constructor(){
         this.provider = null;
@@ -459,11 +459,20 @@ class BSCChainAPI{
         try{
             let res = await this.provider.getTransaction(hash)
             return res
-        }catch(err){
-            console.log(err,'BSCChainAPI.getTransaction')
+        }catch(error){
+            console.log(error,'BSCChainAPI.getTransaction error')
             return null
         }
         
+    }
+    async getTransactionReceipt(hash){
+        try{
+            let res = await this.provider.getTransactionReceipt(hash)
+            return res
+        }catch(error){
+            console.log(error,'BSCChainAPI.getTransactionReceipt error')
+            return null
+        }
     }
     async getGasPrice(){
         try{
@@ -697,7 +706,6 @@ class FilecoinAPI{
                 method: 'post',
                 data:params,
             })
-            console.log(res,'StateGetReceipt')
             if(res && res.result){
                 return res.result
             }else{
@@ -709,3 +717,5 @@ class FilecoinAPI{
         }
     }
 }
+
+export const MyGlobalApi = new GlobalApi()

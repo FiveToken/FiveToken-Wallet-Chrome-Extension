@@ -17,7 +17,10 @@
                     </div>
                     <div class="fil-amount">{{balance|formatBalance(8,decimals)}} {{symbol}}</div>
                     <div class="amount">
-                        <div class="usd">$ {{(balance*price_usd)|formatBalance(2,decimals)}}</div>
+                        <div class="usd">
+                            {{ currency === 'cny' ? "¥" : "$"}} 
+                            {{(balance*price_currency)|formatBalance(2,decimals)}}
+                        </div>
                     </div>
                 </div>
                 <div 
@@ -31,18 +34,18 @@
                     </div>
                     <div class="fil-amount">{{item.balance|formatBalance(8,item.decimals)}} {{item.symbol}}</div>
                     <div class="amount">
-                        <div class="usd">$ {{(item.balance*price_usd)|formatBalance(2,item.decimals)}}</div>
+                        <div class="usd">
+                            {{ currency === 'cny' ? "¥" : "$"}} 
+                            {{(item.balance*price_currency)|formatBalance(2,item.decimals)}}
+                        </div>
                     </div>
                 </div>
-                <div class="add-token" @click="addToken">
+                <div class="add-token" v-if="networkType === 'ethereum'" @click="addToken">
                     <i class="el-icon-plus"></i>
                 </div>
             </div>
             <div class="list-activity" v-if="type === '2'">
                 <div class="activity-item">
-                    <!-- <div class="date-refresh">
-                        <div class="refresh" :class="{animate:listFetch}" @click="refreshList"><i class="el-icon-refresh"></i></div>
-                    </div> -->
                     <div class="activity-wrap"> 
                         <div class="item-wrap" v-for="(item,index) in activityList" :key="index" @click="showDetail(item)">
                             <transactionItem :item="item" />
@@ -57,7 +60,7 @@
 
 <script>
 import { mapState } from 'vuex'
-import { getNowFormatDateEn } from '@/utils'
+import { formatDate } from '@/utils'
 import transactionItem from './transaction-item.vue'
 import ABI from '@/utils/abi'
 import { ethers } from 'ethers'
@@ -73,7 +76,7 @@ export default {
         }
     },
     props:{
-        price_usd:Number,
+        price_currency:Number,
         balance:Number
     },
     filters:{
@@ -107,13 +110,15 @@ export default {
             'rpc',
             'symbol',
             'networkType',
-            'decimals'
+            'decimals',
+            'currency'
         ]),
     },
     components:{
         transactionItem
     },
     watch:{
+        // monitoring RPC changes 
         rpc(val){
             if(val){
                 this.getTokenList()
@@ -122,7 +127,9 @@ export default {
         }
     },
     async mounted(){
+        // get assets list
         this.getTokenList()
+        // get activity list
         this.getActivityList()
     },
     methods:{
@@ -136,33 +143,20 @@ export default {
             })
             let list = []
             myMesList.forEach(async (n)=>{
-                let succ = this.address === n.from ? this.$t('wallet.sendSuccess') : this.$t('wallet.receivedSuccess')
-                let err = this.address === n.from ? this.$t('wallet.sendError') : this.$t('wallet.receivedError')
-                if(n.type !== 'pending1'){
+                // Get status
+                if(n.type === 'pending'){
                     let itemRes = await this.getDetail(n.signed_cid,n)
-                    console.log(itemRes,'itemRes 123456')
-                    let typeName = ''
                     if(itemRes){
-                            switch(itemRes.type){
-                            case 'success':
-                                typeName = succ
-                                break;
-                            case 'error':
-                                typeName = err
-                                break;
-                            case 'pending':
-                                typeName = this.$t('wallet.waiting')
-                                break;
-                        }
                         list.push(
                             {
                                 ...n,
                                 type:itemRes.type,
-                                typeName,
+                                create_time:formatDate(n.create_time,true),
                                 block_time:itemRes.block_time,
                                 allGasFee:itemRes.all_gas_fee
                             }
                         )
+                        // get detail, update db messageList (type,allGasFee,block_time)
                         if(itemRes){
                             window.filecoinwalletDb.messageList.where("signed_cid").equals(n.signed_cid).modify({
                                 type:itemRes.type,
@@ -174,36 +168,25 @@ export default {
                         list.push(
                             {
                                 ...n,
-                                type:'pending',
-                                typeName:this.$t('wallet.waiting')
+                                create_time:formatDate(n.create_time,true),
+                                type:'pending'
                             }
                         )
                     }
                 }else{
-                    let typeName = ''
-                    switch(n.type){
-                        case 'success':
-                            typeName = succ
-                            break;
-                        case 'error':
-                            typeName = err
-                            break;
-                        case 'pending':
-                            typeName = this.$t('wallet.waiting')
-                            break;
-                    }
                     list.push(
                         {
                             ...n,
-                            typeName,
+                            create_time:formatDate(n.create_time,true),
                         }
                     )
                 }
             })
-            // delete same nonce
+            // delete same nonce （ type = pending）
             this.deleteSameNonce()
-            console.log(list,'list 333')
-            this.activityList = list
+            this.activityList = list.sort((a,b)=>{
+                return a.block_time - b.block_time
+            })
         },
         async getTokenList(){
             let list = await window.filecoinwalletDb.tokenList.where({ rpc:this.rpc,address:this.address }).toArray () || [];
@@ -376,31 +359,8 @@ export default {
                 }
             }
             .list-activity{
-                .activity-item{
-                    &:first-child{
-                        .date-refresh{
-                            .refresh{
-                                display: block;
-                                cursor: pointer;
-                                &.animate{
-                                    animation: rotate 1s linear infinite;
-                                }
-                            }
-                        }
-                    }
-                    .date-refresh{
-                        padding: 3px 20px;
-                        font-size: 14px;
-                        color: #B4B5B7;
-                        background: #F8F8F8;
-                        display: flex;
-                        align-items: center;
-                        justify-content: space-between;
-                        .refresh{
-                            display: none;
-                        }
-                    }
-                }
+                height: 440px;
+                overflow-y: auto;
                 .no-data{
                     padding: 15px 0;
                     font-size: 16px;

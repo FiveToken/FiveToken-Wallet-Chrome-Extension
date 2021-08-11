@@ -1,24 +1,27 @@
-# hello-world
+## 描述
+FiveToken是一个xxxxxxxxxx
 
-## Project setup
-```
-npm install
-```
+## Dependencies
+Node.js version 12+
 
-### Compiles and hot-reloads for development
-```
-npm run serve
-```
+## How to run
+Project setup <br/>
+```npm install```
 
-### Compiles and minifies for production
-```
-npm run build
-```
+Development<br/>
+1.```npm run build-watch```<br/>
+2.谷歌浏览器>更多工具>扩展程序>打开开发者模式<br/>
+3.加载已解压的扩展程序，选择项目中 dist 文件夹<br/>
 
-### Lints and fixes files
-```
-npm run lint
-```
+## Compiles and minifies for production<br/>
+```npm run build```
 
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+## How to use
+[Download](https://chrome.google.com/webstore/detail/filecoin-wallet/bpcblmpljpaghnefcaejpdakdbibmafm)<br/>
+[User Guide](https://docs.fivetoken.io/userguide/filecoinchrome.html)<br/>
+
+## Browsers support
+Chrome(last 2 versions)
+
+## License
+[MIT](https://github.com/FiveToken/FiveToken-Wallet-Chrome-Extension/blob/master/LICENSE)

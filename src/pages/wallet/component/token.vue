@@ -5,7 +5,10 @@
         </div>
         <div class="logo"></div>
         <div class="balance">{{balance|formatBalance(tokenDecimals)}} {{symbol}}</div>
-        <div class="usd">$ {{balance|formatUsd(price_usd,tokenDecimals)}}</div>
+        <div class="usd">
+            {{ currency === 'cny' ? "¥" : "$"}} 
+            {{balance|formatUsd(price_currency,tokenDecimals)}}
+        </div>
         <div class="action">
             <div class="receive" @click="openReceive">
                 <div class="icon">
@@ -40,10 +43,13 @@ export default {
             send:require('@/assets/image/send.png')
         }
     },
+    computed:{           
+        ...mapState('app',['currency'])
+    },
     props:{
         tokenName:String,
         balance:Number,
-        price_usd:Number,
+        price_currency:Number,
         receiveVisible:Boolean,
         tokenVisible:Boolean,
         symbol:String,

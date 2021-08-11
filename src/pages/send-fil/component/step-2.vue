@@ -28,7 +28,10 @@
                             <div class="label">{{$t('sendFil.maxGas')}}</div>
                             <div class="amount">
                                 <div class="token">{{ allGasFee | formatBalance(8)}} {{symbol}}</div>
-                                <div class="usd">$ {{ allGasFee | formatUSD(4,price_usd)}}</div>
+                                <div class="usd">
+                                    {{ currency === 'cny' ? "¥" : "$"}} 
+                                    {{ allGasFee | formatUSD(4,price_currency)}}
+                                </div>
                             </div>
                         </div>
                     </template>
@@ -36,10 +39,12 @@
                         <div class="gasfee">
                             <div class="label">{{$t('sendFil.networkGas')}}（{{gasUnit}})</div>
                             <kyInput :value="formData.gasFeeCap" @changeInput='gasFeeCapChange'></kyInput>
+                            <div class="tips" v-if="formData.gasFeeCap < baseFeeCap">{{$t('sendFil.gasFeeError')}}</div>
                         </div>
                         <div class="gaslimit">
                             <div class="label">Gas Limit</div>
                             <kyInput :value="formData.gasLimit" @changeInput='gasLimitChange'></kyInput>
+                            <div class="tips" v-if="formData.gasLimit < baseLimit">{{$t('sendFil.gasLimitError')}}</div>
                         </div>
                     </div>
                 </el-collapse-item>
@@ -87,8 +92,8 @@ export default {
                 return val
             }
         },
-        formatUSD(val,n,price_usd){
-            let usd = val * price_usd
+        formatUSD(val,n,price_currency){
+            let usd = val * price_currency
             var str = String(usd);
             let index = str.indexOf('.')
             if(index > -1){
@@ -108,7 +113,7 @@ export default {
         },
     },
     computed:{
-        ...mapState('app',['rpc','symbol','address','networkType']),
+        ...mapState('app',['rpc','symbol','address','networkType','currency']),
         allGasFee(){
             let gas = this.formData.gasFeeCap * this.formData.gasLimit / Math.pow(10,Number(9))
             return gas || 0
@@ -127,12 +132,14 @@ export default {
             return total
         },
         active(){
-            return true
+            return this.formData.gasFeeCap !== "" && this.formData.gasLimit !== ""
         }
     },
     props:{
         formData:Object,
-        price_usd:Number
+        price_currency:Number,
+        baseLimit:Number,
+        baseFeeCap:Number
     },
     components:{
         kyBack,
@@ -144,7 +151,9 @@ export default {
             this.$emit('previousStep')
         },
         send(){
-            this.$emit('sendFil')
+            if(this.active){
+                this.$emit('sendFil')
+            }
         },
         gasFeeCapChange(val){
             this.$emit('formDataChange',{
@@ -271,10 +280,22 @@ export default {
                     width: 100%;
                     display: flex;
                     justify-content: space-between;
-                    align-items: center;
+                    align-items: flex-start;
                     box-sizing: border-box;
                     .gasfee,.gaslimit{
                         flex: 0 0 45%;
+                        .label{
+                            font-size: 14px;
+                            color: #101010;
+                            line-height: 20px;
+                            margin-bottom: 3px;
+                        }
+                        .tips{
+                            font-size: 12px;
+                            color: #1C818A;
+                            line-height: 20px;
+                            padding-top: 3px;
+                        }
                     }
                 }
             }

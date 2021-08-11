@@ -91,7 +91,7 @@ export default {
                 top: 50%;
                 right: 15px;
                 color: #4EC1C9;
-                font-size: 14px;
+                font-size: 18px;
                 transform: translateY(-50%);
             }
         }

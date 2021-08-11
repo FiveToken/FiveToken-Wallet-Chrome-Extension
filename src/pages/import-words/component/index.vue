@@ -23,7 +23,7 @@
                     :active='active' 
                     @btnClick="importWallet"
                 >
-                    {{$t('importWallet.btn')}}
+                    {{$t('importWords.btn')}}
                 </kyButton>
             </div>
             <div class="loading" v-if="isFetch">

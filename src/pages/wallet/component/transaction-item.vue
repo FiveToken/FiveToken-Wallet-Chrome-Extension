@@ -1,7 +1,7 @@
 <template>               
     <div class="transaction-item-components" >
         <div class="block-time">
-            {{item.block_time}}
+            {{item.type === 'pending' ? item.create_time : item.block_time}}
         </div>
         <div class="info-wrap">
             <div class="icon reveiced" v-if="item.type === 'success' && item.to === address">
@@ -16,18 +16,23 @@
             <div class="icon error" v-if="item.type === 'error'">
                 <img class="img" :src="error" />
             </div>
-            <div class="des">
-                <div class="name">{{item.typeName}}</div>
-                <div class="from-to">
-                    <span :class="{from:address === item.from}">{{item.from | addressFormat}} </span>
-                    - 
-                    <span :class="{to:address === item.to}">{{item.to |addressFormat }}</span>
+            <div class="name-status">
+                <div class="name">
+                    {{address === item.from? $t('wallet.send'):$t('wallet.received')}}
                 </div>
+                <div class="status">
+                    {{ item.type | formatStatusName(that) }}
+                </div>
+                
             </div>
-            <div class="amount">
+            <div class="fil-address">
                 <div class="fil">
                     {{ item.value | formatBalance(8,item.decimals) }} 
-                    {{item.symbol}}
+                    {{ item.token }}
+                </div>
+                <div class="address">
+                    {{ address === item.from ? $t('wallet.labelReceived'):$t('wallet.labelSend') }}:
+                    {{ address | addressFormat(item.from,item.to) }}
                 </div>
             </div>
         </div>
@@ -35,11 +40,11 @@
 </template>
 <script>
 import { mapState } from 'vuex'
-import { getNowFormatDateEn } from '@/utils'
 import transactionItem from './transaction-item.vue'
 export default {
     data(){
         return{
+            that:this,
             rec:require('@/assets/image/rec.png'),
             send:require('@/assets/image/send.png'),
             pending:require('@/assets/image/pending.png'),
@@ -47,12 +52,21 @@ export default {
         }
     },
     filters:{
-        addressFormat(val){
-            if(val.length>12){
-                return val.substr(0,6) + '...' + val.substr(val.length-6,6)
+        addressFormat(address,from,to){
+            if(address === from){
+                if(to.length > 12){
+                    return to.substr(0,6) + '...' + to.substr(to.length-6,6)
+                }else{
+                    return to
+                } 
             }else{
-                return val
-            } 
+                if(from.length > 12){
+                    return from.substr(0,6) + '...' + from.substr(from.length-6,6)
+                }else{
+                    return from
+                } 
+            }
+            
         },
         formatBalance(val,n,decimals){
             let dec = val / Math.pow(10,Number(decimals))
@@ -65,13 +79,28 @@ export default {
             }else{
                 return str
             }
+        },
+        formatStatusName(type,that){
+            let name = ''
+            switch(type){
+                case 'success':
+                    name = that.$t('wallet.statusSuccess')
+                    break;
+                case 'error':
+                    name = that.$t('wallet.statusError')
+                    break;
+                case 'pending':
+                    name = that.$t('wallet.statusPending')
+                    break;
+            }
+            return name
         }
     },
     props:{
         item:Object
     },
     computed:{
-        ...mapState('app',['address'])
+        ...mapState('app',['address']),
     },
     methods:{
         skipToToken(item){
@@ -102,7 +131,7 @@ export default {
         align-items: center;
     }
     .block-time{
-        color: #ccc;
+        color: #999;
         font-size: 12px;
         margin-bottom: 10px;
     }
@@ -130,41 +159,29 @@ export default {
             height: 22px;
         }
     }
-    .des{
-        flex-grow: 1;
+    .name-status{
         padding-left: 15px;
         .name{
             font-size: 14px;
-            color: #222;
+            color: #101010;
             margin-bottom: 5px;
             font-weight: bold;
         }
-        .from-to{
+        .status{
             font-size: 12px;
-            color:#5CC1CB;
-            .from{
-                color: #999;
-            }
-            .to{
-                color:#999;
-            }
+            color: #999;
         }
     }
-    .amount{
-        flex: 0 0 72px;
-        width: 72px;
+    .fil-address{
+        flex-grow: 1;
+        text-align: right;
+        padding-left: 10px;
         .fil{
             font-size: 14px;
             color: #222;
             margin-bottom: 5px;
-            font-weight: bold;
-            width: 100%;
-            overflow: hidden;
-            text-overflow:ellipsis;
-            white-space: nowrap;
-            text-align: right;
         }
-        .usd{
+        .address{
             font-size: 12px;
             color: #999;
         }

@@ -106,7 +106,8 @@ export default {
             'address',
             'digest',
             'privateKey',
-            'rpc'
+            'rpc',
+            'networkType'
         ]),
         backupsTitle(){
             let str = ""

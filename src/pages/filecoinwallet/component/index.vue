@@ -1,5 +1,5 @@
 <template>
-  <div class="filecoinwallet-page">
+  <div class="fivetoken-page">
     <div class="lock" v-if="lock">
       <lock />
     </div>
@@ -11,7 +11,6 @@
 </template>
 
 <script>
-
 import welcome from '@/pages/welcome/component/index.vue'
 import wallet from '@/pages/wallet/component/index.vue'
 import lock from '@/pages/lock-user/component/index.vue'
@@ -40,7 +39,7 @@ export default {
 }
 </script>
 <style lang="less" scoped>
-.filecoinwallet-page{
+.fivetoken-page{
   height: 100%;
   .wallet-wce-wrap{
     height: 100%;

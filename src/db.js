@@ -77,25 +77,11 @@ window.filecoinwalletDb.networks.where({ khazix:'khazix'}).toArray().then(res=>{
                 disabled:true
             },
             {
-                name:'Binance TEST',
-                rpc:'https://data-seed-prebsc-1-s1.binance.org:8545',
-                chainID:'56',
-                symbol:'BNB',
-                ids:'binancecoin',
-                browser:'https://bscscan.com',
-                khazix:'khazix',
-                networkType:'ethereum',
-                filecoinAddress0:'',
-                create_time:create_time+4,
-                decimals:18,
-                disabled:true
-            },
-            {
                 name:'Ethereum Mainnet',
-                rpc:'https://bsc-dataseed.binance.org',
-                chainID:'',
-                symbol:'',
-                browser:'',
+                rpc:'https://mainnet.infura.io/v3/96837d28a772466ca6ed88eddb221e09',
+                chainID:'1',
+                symbol:'ETH',
+                browser:'https://etherscan.io',
                 ids:'ethereum',
                 khazix:'khazix',
                 networkType:'ethereum',
@@ -103,7 +89,21 @@ window.filecoinwalletDb.networks.where({ khazix:'khazix'}).toArray().then(res=>{
                 create_time:create_time+3,
                 decimals:18,
                 disabled:true
-            }
+            },
+            {
+                name:'Binance TEST',
+                rpc:'https://data-seed-prebsc-1-s1.binance.org:8545',
+                chainID:'56',
+                symbol:'BNB',
+                ids:'binancecoin',
+                browser:'https://testnet.bscscan.com',
+                khazix:'khazix',
+                networkType:'ethereum',
+                filecoinAddress0:'',
+                create_time:create_time+4,
+                decimals:18,
+                disabled:true
+            },
         ]
         window.filecoinwalletDb.networks.bulkPut(defaultNetworks)
     }

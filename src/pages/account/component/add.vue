@@ -9,7 +9,7 @@
            <div class="tips">{{ $t('account.addTips') }}</div>
            <div class="input-item">
                <div class="label">{{ $t('account.addLabel') }}</div>
-               <kyInput :value="addName" @changeInput="changeInput"/>
+               <kyInput :value="addName" @changeInput="changeInput" maxlength='15'/>
            </div>
            <div class="btn-wrap">
                <kyButton @btnClick="closeAdd">{{ $t('account.cancel') }}</kyButton>

@@ -23,7 +23,6 @@ const messages = {
 
 let language = window.localStorage.getItem('fiveTokenLanguage')
 let currency = window.localStorage.getItem('fiveTokenCurrency')
-console.log(language,'language 99999999999')
 if(!language){
   window.localStorage.setItem('fiveTokenLanguage','zh')
 }

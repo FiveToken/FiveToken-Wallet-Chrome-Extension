@@ -11,6 +11,7 @@ filecoinwalletDb.version(2).stores({
     activenNetworks:'id++,rpc,name,chainID,symbol,ids,browser,decimals,networkType,filecoinAddress0,khazix',
     tokenList:'id++,rpc,chainName,decimals,symbol,contract,address,khazix',
     walletKey:'id++,mnemonicWords,password,khazix,rpc',
+    web3File:'id++,address,rpc,create_time,nickname,describe,cid,khazix'
 
 });
 window.filecoinwalletDb = filecoinwalletDb
@@ -34,29 +35,29 @@ window.filecoinwalletDb.networks.where({ khazix:'khazix'}).toArray().then(res=>{
                 decimals:18,
                 disabled:true
             },
-            {
-                name:'Filcoin TEST',
-                rpc:'https://1w1cJziPEPGNpMlwFjxyj8f7dhd:87323bed6d5a3aa3eb3cbd7ee1d28407@filecoin.infura.io',
-                chainID:'',
-                symbol:'FIL TEST',
-                ids:'filecoin',
-                browser:'https://filscan.io',
-                khazix:'khazix',
-                create_time:create_time,
-                networkType:'filecoin',
-                filecoinAddress0:'f',
-                decimals:18,
-                disabled:true
-            },
+            // {
+            //     name:'Filcoin TEST',
+            //     rpc:'https://1w1cJziPEPGNpMlwFjxyj8f7dhd:87323bed6d5a3aa3eb3cbd7ee1d28407@filecoin.infura.io',
+            //     chainID:'',
+            //     symbol:'FIL TEST',
+            //     ids:'filecoin',
+            //     browser:'https://filscan.io',
+            //     khazix:'khazix',
+            //     create_time:create_time,
+            //     networkType:'filecoin',
+            //     filecoinAddress0:'f',
+            //     decimals:18,
+            //     disabled:true
+            // },
             {
                 name:'Calibration Testnet',
-                rpc:'http://192.168.1.161:8083',
+                rpc:'https://calibration.node.glif.io',
                 chainID:'',
                 symbol:'FIL',
                 ids:'filecoin',
                 browser:'https://calibration.filscan.io/#',
                 khazix:'khazix',
-                networkType:'proxy',
+                networkType:'filecoin',
                 filecoinAddress0:'t',
                 create_time:create_time+1,
                 decimals:18,

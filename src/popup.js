@@ -7,8 +7,8 @@ function popupWindowRemove(){
     background.backgroundWindowRemove()
 }
 
-function popupGetVal(){
-    let val = background.backgroundReturnValue()
+function popupGetVal(key){
+    let val = background.backgroundReturnValue(key)
     return val
 }
 

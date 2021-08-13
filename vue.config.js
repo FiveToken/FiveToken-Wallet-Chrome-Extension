@@ -25,7 +25,9 @@ const chromeName = [
   'import-privatekey',
   'account',
   'message-detail',
-  'add-token'
+  'add-token',
+  'get-web3',
+  'update-web3'
 ];
 
 
@@ -42,6 +44,10 @@ chromeName.forEach(name => {
 const plugins =
   process.env.NODE_ENV === "production"
     ? [
+      {
+        from: path.resolve("src/web3.min.js"),
+        to: `${path.resolve("dist")}/web3.min.js`
+      },
         {
           from: path.resolve("src/popup.js"),
           to: `${path.resolve("dist")}/popup.js`
@@ -72,6 +78,11 @@ const plugins =
         }
       ]
     : [
+      
+        {
+          from: path.resolve("src/web3.min.js"),
+          to: `${path.resolve("dist")}/web3.min.js`
+        },
         {
           from: path.resolve("src/popup.js"),
           to: `${path.resolve("dist")}/popup.js`

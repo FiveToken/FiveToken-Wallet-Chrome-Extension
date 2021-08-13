@@ -146,6 +146,7 @@ export default {
                 // Get status
                 if(n.type === 'pending'){
                     let itemRes = await this.getDetail(n.signed_cid,n)
+                    console.log(itemRes,'getDetail 555555')
                     if(itemRes){
                         list.push(
                             {

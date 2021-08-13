@@ -16,7 +16,7 @@ const zh = {
     password:'请输入账户密码',
     passwordTips:'8位及以上字符',
     passwordError:'无效的密码',
-    diffError:'密码不一样',
+    diffError:'密码不匹配',
     correctPassword:'请输入正确的密码',
     confirmPassword:'确认密码',
     btn:'下一步'

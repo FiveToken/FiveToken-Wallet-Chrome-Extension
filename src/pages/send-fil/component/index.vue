@@ -353,7 +353,7 @@ export default {
                             rpc:this.rpc,
                             khazix:'khazix',
                         })
-                       window.location.href = './wallet.html'
+                       // window.location.href = './wallet.html'
                     }
                     this.isFetch = false
                 }catch(err){

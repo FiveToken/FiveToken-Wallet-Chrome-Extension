@@ -156,7 +156,7 @@ export default {
                 this.addAccountVisable = false
                 let { mnemonic,password } = this.mnePsd
                 let index = this.accountList.length + 1
-                let f1 = await getF1ByMne(mnemonic,password,this.networkType,filecoinAddress0,index)
+                let f1 = await getF1ByMne(mnemonic,password,this.networkType,this.filecoinAddress0,index)
                 let { address,privateKey,digest } = f1
                 MyGlobalApi.setRpc(this.rpc)
                 MyGlobalApi.setNetworkType(this.networkType)
@@ -192,6 +192,7 @@ export default {
             }catch(err){
                 this.addAccountVisable = false
                 this.isFetch = false
+                console.log(err,'add error')
             }
         },
         closeAdd(){
@@ -372,7 +373,7 @@ export default {
                     }
                     .check{
                         position: absolute;
-                        left: -40px;
+                        left: 20px;
                         top: 50%;
                         transform: translateY(-50%);
                         i{

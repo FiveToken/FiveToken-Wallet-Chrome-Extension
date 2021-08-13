@@ -2,7 +2,7 @@
   <div class="content-page">
     <welcome v-if="accountList.length === 0"/>
     <lockUser v-else-if="lockUser.length"/>
-    <layout  v-else>
+    <layout  v-else @layoutMounted="layoutMounted">
       <div class="content-wrap">
         <div class="logo">
           <img class="img" :src="logo" />
@@ -32,6 +32,7 @@ import { validatePrivateKey} from '@/utils/key'
 import welcome from '@/pages/welcome/component/index.vue'
 import lockUser from '@/pages/lock-user/component/index.vue'
 import layout from '@/components/layout'
+import { mapState } from 'vuex'
 export default {
     data(){
       return{
@@ -44,6 +45,7 @@ export default {
       }
     },
     computed:{
+      ...mapState('app',['rpc']),
       disabled(){
         return this.address === ''
       }
@@ -76,10 +78,13 @@ export default {
             accountName:frist.accountName
           }
         }
-        let origin = popupGetVal()
+        let origin = popupGetVal('origin')
         this.origin = origin
     },
     methods:{
+      layoutMounted(){
+        console.log(this.rpc,'rpc')
+      },
       createAccount(){
         window.location.href = './welcome.html'
       },
@@ -94,7 +99,7 @@ export default {
       },
       connect(){
         let { address,fil,accountName } = this.connectAccount
-        let obj = { address }
+        let obj = { address,rpc:this.rpc,accountName }
         popupToBackground('filecoinWalletConnect', obj)
       }
     }

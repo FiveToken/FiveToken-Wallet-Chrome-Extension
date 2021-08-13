@@ -90,6 +90,7 @@ import kyToken from './token.vue'
 import { MyGlobalApi } from '@/utils/api'
 import QRCode from 'qrcode'
 import { mapGetters, mapMutations, mapState } from 'vuex'
+import { formatDate } from '@/utils'
 export default {
     data(){
         return{
@@ -244,7 +245,12 @@ export default {
                 rpc:this.rpc,
                 token:this.tokenName
             }).toArray () || [];
-            this.tokenList = tokenList
+            this.tokenList = tokenList.map(n=>{
+                return {
+                    ...n,
+                    create_time:formatDate(n.create_time,true),
+                }
+            })
             this.tokenVisible = true
         },
     }

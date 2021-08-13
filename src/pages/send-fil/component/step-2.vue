@@ -30,7 +30,7 @@
                                 <div class="token">{{ allGasFee | formatBalance(8)}} {{symbol}}</div>
                                 <div class="usd">
                                     {{ currency === 'cny' ? "¥" : "$"}} 
-                                    {{ allGasFee | formatUSD(4,price_currency)}}
+                                    {{ allGasFee | formatUSD(8,price_currency)}}
                                 </div>
                             </div>
                         </div>
@@ -99,6 +99,7 @@ export default {
             if(index > -1){
                 let arr = str.split(".")
                 let num = arr[0] + "." + arr[1].substring(0,n)
+                console.log(num,'nnnuuuummmm 11122333')
                 return num
             }else{
                 return usd
@@ -243,7 +244,7 @@ export default {
         /deep/.el-collapse{
             width: 100%;
             border: none;
-            padding: 15px;
+            padding: 15px 10px;
             background: #DCF9F9;
             border-radius: 10px;
             .el-collapse-item{
@@ -283,7 +284,7 @@ export default {
                     align-items: flex-start;
                     box-sizing: border-box;
                     .gasfee,.gaslimit{
-                        flex: 0 0 45%;
+                        flex: 0 0 47%;
                         .label{
                             font-size: 14px;
                             color: #101010;

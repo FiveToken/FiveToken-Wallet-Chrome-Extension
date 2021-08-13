@@ -194,7 +194,7 @@ class GlobalApi{
                         let all_gas_fee = Number(proxyRes.all_gas_fee)
                         let total_amount = Number(value) + Number(all_gas_fee)
                         let block_time = proxyRes.block_time ? formatDate(proxyRes.block_time,true):""
-                        console.log(proxyRes,'MessageDetails')
+                        
                         let type = 'pending'
                         if(proxyRes.height  && proxyRes.exit_code === 0){
                             type = 'success'
@@ -250,12 +250,13 @@ class GlobalApi{
                     if(filRes){
                         let all_gas_fee = Number(filRes.GasFeeCap) * Number(filRes.GasLimit)
                         let total_amount = Number(value) + all_gas_fee
-                        let type = 'pending'
-                        if(stateRes.ExitCode && stateRes.ExitCode === 0){
-                            type = 'success'
+                        let mType = 'pending'
+                        if(stateRes.ExitCode === 0){
+                            console.log(filRes,stateRes,mType,'MessageDetails 44444')
+                            mType = 'success'
                         }
                         if( stateRes.ExitCode && stateRes.ExitCode !== 0){
-                            type = 'error'
+                            mType = 'error'
                         }
                         let detail = {
                             from:filRes.From,
@@ -264,7 +265,7 @@ class GlobalApi{
                             value:filRes.Value,
                             all_gas_fee,
                             total_amount,
-                            type,
+                            type:mType,
                             signed_cid,
                             block_time:""
                         }
@@ -272,7 +273,6 @@ class GlobalApi{
                     }else{
                         return null
                     }
-                    console.log(filRes,'filRes MessageDetails')
                     break;
             }
         }catch(err){

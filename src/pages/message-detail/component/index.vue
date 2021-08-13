@@ -95,10 +95,10 @@ export default {
     ...mapState('app',['networkType','browser']),
     time() {
       let str = "";
-      if (this.detail && this.detail.type === "success") {
-        str = this.detail.block_time;
+      if (this.detail && this.detail.type === "pending") {
+        str = this.detail.create_time;
       } else {
-        str = formatDate(this.detail.create_time, true);
+        str = this.detail.block_time;
       }
       return str;
     },

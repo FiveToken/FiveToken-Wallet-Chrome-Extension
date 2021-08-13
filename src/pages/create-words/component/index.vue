@@ -102,7 +102,7 @@ export default {
             })
             for (let n of this.networks) {
                 if(n.rpc !== this.rpc){
-                    let oF1 = await getF1ByMne(this.mnemonicWords,this.password,n.networkType,this.filecoinAddress0)
+                    let oF1 = await getF1ByMne(this.mnemonicWords,this.password,n.networkType,n.filecoinAddress0)
                     MyGlobalApi.setRpc(n.rpc)
                     MyGlobalApi.setNetworkType(n.networkType)
                     let oRes = await MyGlobalApi.getBalance(oF1.address)

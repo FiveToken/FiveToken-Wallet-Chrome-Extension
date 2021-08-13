@@ -55,7 +55,8 @@ export default {
             net:'',
             networkVisible:false,
             mnePsd:null,
-            customNetworkType:''
+            customNetworkType:'',
+            customFilecoinAddress0:''
         }
     },
     computed: {
@@ -93,6 +94,7 @@ export default {
         async layoutMounted(){
             this.net = this.rpc
             this.customNetworkType = this.networkType
+            this.customFilecoinAddress0 = this.filecoinAddress0
         },
         privatekeyChange(val){
             this.privatekey = val
@@ -104,6 +106,7 @@ export default {
             console.log(val,'val 1234')
             this.net = val.rpc
             this.customNetworkType = val.networkType
+            this.customFilecoinAddress0 = val.filecoinAddress0
             this.networkVisible = false
         },
         closeNet(){
@@ -168,7 +171,7 @@ export default {
                         this.isFetch = false
                         window.location.href = './wallet.html'
                     }else{
-                        this.isFetch = true
+                        this.isFetch = false
                         this.$message.error(this.$t('importPrivatkey.exist'))
                     }
                 }else{
@@ -188,12 +191,12 @@ export default {
                         return null
                     }else{
                         let privateKey = keyStore.PrivateKey
-                        let f1 = await getF1ByPrivateKey(privateKey,password,this.customNetworkType,this.filecoinAddress0)
+                        let f1 = await getF1ByPrivateKey(privateKey,password,this.customNetworkType,this.customFilecoinAddress0)
                         return f1
                     }
                 }else{
                     let privateKey = this.privatekey
-                    let f1 = await getF1ByPrivateKey(privateKey,password,this.customNetworkType,this.filecoinAddress0)
+                    let f1 = await getF1ByPrivateKey(privateKey,password,this.customNetworkType,this.customFilecoinAddress0)
                     return f1
                 }
                 

@@ -116,7 +116,6 @@ export default {
         handle(){
             let that = this
             document.addEventListener('click',function(e){
-                console.log(e.target.parentNode.className,'e.target.parentNode.className')
                 if(e.target.parentNode && e.target.parentNode.className !== 'more-icon'){
                    that.walletMenuVisable = false;
                 }

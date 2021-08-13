@@ -13,7 +13,7 @@
                     <div class="backups-check">
                         <div class="backups-tips" v-if="backups === 'privateKey'">{{$t('settingBackups.pkTips')}}</div>
                         <div class="backups-tips" v-else>{{$t('settingBackups.mneTips')}}</div>
-                        <div class="input-item">
+                        <div class="input-item" :class="{error:passwordError}">
                             <div class="label">{{$t('settingBackups.inputPassword')}}</div>
                             <kyInput 
                                 :value="password"
@@ -22,6 +22,7 @@
                                 @changeInput="passwordChange"
                                 @changeEye="passwordEye"
                             ></kyInput>
+                            <div class="error" v-if="passwordError">{{$t('settingBackups.passwordError')}}</div>
                         </div>
                     </div>
                     
@@ -92,6 +93,7 @@ export default {
             backups:'',
             suffix:true,
             passwordType:'password',
+            passwordError:false,
             pk:''
         }
     },
@@ -137,6 +139,7 @@ export default {
             this.passwordType = eye ? 'text':'password'
         },
         async next(){
+            this.passwordError = false
             let walletKey = await window.filecoinwalletDb.walletKey.where({khazix:'khazix'}).toArray()
             if(walletKey.length){
                 let mnePsd = await deCodeMnePsd(walletKey[0].mnemonicWords,walletKey[0].password)
@@ -151,7 +154,8 @@ export default {
                         this.mnemonic = mnemonic
                     }
                 }else{
-                    this.$message.error(this.$t('settingBackups.passwordError'))
+                    this.passwordError = true
+                    // this.$message.error(this.$t('settingBackups.passwordError'))
                 }
             }
             
@@ -203,11 +207,23 @@ export default {
             .backups-check{
                 padding: 20px;
                 .input-item{
+                    &.error{
+                        /deep/.input-component{
+                            .el-input__inner{
+                                border:1px solid #EA0F0F;
+                            }
+                        }
+                    }
                     .label{
                         font-size: 14px;
                         color: #201F1F;
                         line-height: 20px;
                         margin-bottom: 5px;
+                    }
+                    .error{
+                        padding-top: 5px;
+                        font-size: 12px;
+                        color: #EA0F0F;
                     }
                 }
             }

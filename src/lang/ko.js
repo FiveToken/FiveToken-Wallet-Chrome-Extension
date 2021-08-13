@@ -7,14 +7,14 @@ const ko = {
     setting:'설정'
   },
   welcome: {
-    title:'Filecoin Wallet사용을 환영합니다.',
+    title:'FiveToken사용을 환영합니다.',
     subTitle1:'당신과 Filecoin 그리고 중심화 재거 네트워크를 연결합니다.',
     subTitle2:'당신과 만나서 우리는 매우 기쁩니다.',
     btn:'사용 시작합니다.'
   },
   firstWallet:{
     create:"계정 가져 오기",
-    question:'Filecoin Wallet을 처음 사용 하십니까?',
+    question:'FiveToken을 처음 사용 하십니까?',
     arr:[
       {
         icon:'el-icon-download',
@@ -47,8 +47,7 @@ const ko = {
     mnemonicWords:'계좌 도움말',
     placeholder:'클립보드에서 계좌 도움말을 붙여넣으십시요.',
     showWords:'계좌 도움말 보기',
-    password:'새 비밀번호',
-    passwordTips:'최소 8문자,숫자,대소문자들이 포함되여야 합니다.',
+    password:'새 비밀번호(최소 8문자,숫자,대소문자들이 포함되여야 합니다.)',
     confirmPassword:'비밀번호 확인',
     agree:'나는 이미 읽고 동의 합니다.',
     clause:'사용 조항',
@@ -64,8 +63,7 @@ const ko = {
     accountName:'계좌 명',
     back:'돌아가기',
     title:'비밀번호 만들기',
-    password:'새 비밀번호',
-    passwordTips:'최소 8문자,숫자,대소문자들이 포함되여야 합니다.',
+    password:'새 비밀번호(최소 8문자,숫자,대소문자들이 포함되여야 합니다.)',
     diffError:'비밀번호가 다릅니다.',
     correctPassword:'정확한 비밀번호를 입력하십시요.',
     confirmPassword:'비밀번호 확인',
@@ -98,10 +96,10 @@ const ko = {
     skillArr:[
       '백업 데이터를 여러 곳에 저장하여 주십시요',
       '이 계좌의 도움말을 누구에게도 공유하지 마십시요.',
-      '인테넷 피싱을 조심 하십시요. Filecoin Wallet는 절대로 당신에게 개인 계좌 도움말을 주동적으로 요구하지 않습니다.',
+      '인테넷 피싱을 조심 하십시요. FiveToken는 절대로 당신에게 개인 계좌 도움말을 주동적으로 요구하지 않습니다.',
       '계좌 도움말을 다시 백업하시려면 설정 통과 > 보안 옵션으로 조작 완성하십시요.'
     ],
-    warn:'Filecoin Wallet无法恢复你的账户助记词。',
+    warn:'FiveToken无法恢复你的账户助记词。',
     btn:' 모두 완료 되였습니다.'
   },
   wallet:{
@@ -112,7 +110,7 @@ const ko = {
       {name:'활동',type:'2'}
     ],
     title:'비밀 키 보이기',
-    label:'Filecoin Wallet비밀번호를 입력하십시요.',
+    label:'FiveToken비밀번호를 입력하십시요.',
     exportBtn:'비밀 키 내보내기',
     lookBtn:'Filscan(Filecoin 브라우저)에서 보기',
     cancel:'취소',
@@ -188,14 +186,13 @@ const ko = {
       {name:'주소부',url:'./setting-address.html'},
       {name:'백업',url:'./setting-backups.html'},
       {name:'대해서',url:'./setting-about.html'},
-      {name:'Network',url:'./setting-networks.html'}
    ]
   },
   settingAbout:{
     about:'대해서',
-    filVersion:'Filecoin Wallet버전',
+    filVersion:'FiveToken버전',
     version:'1.0.0',
-    tips:'Filecoin Wallet는 싱가포로에서 설계와 실현하였습니다.',
+    tips:'FiveToken는 싱가포로에서 설계와 실현하였습니다.',
     links:'링키지 합니다.',
     privacy:'개인정보 정책',
     useRule:'사용 조항'
@@ -240,7 +237,7 @@ const ko = {
   },
   settingAddress:{
     name:'명칭',
-    filAddress:'Filecoin Wallet주소',
+    filAddress:'FiveToken주소',
     ethereumAddress:'이태방Ethereum공개 주소',
     addressError:'주소 격식이 틀렸습니다.',
     edit:'편집',
@@ -268,7 +265,7 @@ const ko = {
     inputPassword:'계정 비밀번호를 입력하세요'
   },
   connect:{
-    title:'Filecoinwallet을 사용하여 연결합니다.  ',
+    title:'FiveToken을 사용하여 연결합니다.  ',
     cancel:'취소',
     connect:'연결합니다'
   }

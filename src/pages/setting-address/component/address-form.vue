@@ -1,35 +1,32 @@
 <template>
 <div class="address-form">
-    <div class="back-wrap">
-        <kyBack 
-            @pageBack="back" 
-            :name="pageName"
-        />
+    <div class="form-top">
+        <div class="back-s" @click="back"><i class="el-icon-arrow-left"></i></div>
+        <div class="top-name">{{pageName}}</div>
+        <div class="close" @click="close" v-if="pageType === 'list'"><i class="el-icon-close"></i></div>
     </div>
     <div class="form-content">
         <div class="add-content" v-if="pageType === 'add'">
             <div class="input-item">
                 <div class="label">{{$t('settingAddress.name')}}</div>
-                <kyInput :value="add.accountName" @changeInput="addFormChange(arguments,'accountName')"></kyInput>
+                <el-input v-model="add.name"></el-input>
             </div>
             <div class="input-item">
-                <div class="label">{{$t('settingAddress.address')}}</div>
-                <kyInput :value="add.address" 
-                    @changeInput="addFormChange(arguments,'address')">
-                </kyInput>
+                <div class="label">{{$t('settingAddress.filAddress')}}</div>
+                <el-input :placeholder="$t('settingAddress.placeholder')" v-model="add.address" @input="addAddressInput">
+                    <!-- <el-button slot="prepend" icon="el-icon-search"></el-button> -->
+                </el-input>
                 <div class="error" v-if="addAddressError">{{$t('settingAddress.addressError')}}</div>
             </div>
             <div class="position">
                 <div class="btn-box">
-                    <kyButton @btnClick="cancelAdd">{{$t('settingAddress.cancel')}}</kyButton>
-                    <kyButton type="primary" :active="addActive" @btnClick="addConfirm">
-                        {{$t('settingAddress.confirm')}}
-                    </kyButton>
+                    <el-button @click="cancelAdd">{{$t('settingAddress.cancel')}}</el-button>
+                    <el-button type="primary" :disabled="addDisabled" @click="addConfirm">{{$t('settingAddress.confirm')}}</el-button>
                 </div>
             </div>
         </div>
         <div class="detail-content"  v-if="pageType === 'detail'">
-            <div class="yt">{{$t('settingAddress.address')}}</div>
+            <div class="yt">{{$t('settingAddress.filAddress')}}</div>
             <div class="v-c copy-box" @click="copyAddress" :data-clipboard-text="detail.address">
                 <div class="value">{{detail.address | addressFormat}}</div>
                 <div class="copy">
@@ -37,31 +34,27 @@
                 </div>
             </div>
             <div class="notes">{{$t('settingAddress.name')}}</div>
-            <div class="notes-value">{{detail.accountName}}</div>
+            <div class="notes-value">{{detail.name}}</div>
             <div class="position">
                 <div class="edit-btn">
-                    <kyButton :type="'primary'" :active="true" @btnClick="editAddress">
-                        {{$t('settingAddress.edit')}}
-                    </kyButton>
+                    <el-button type="primary" @click="editAddress">{{$t('settingAddress.edit')}}</el-button>
                 </div>
             </div>
         </div>
         <div class="edit-content"  v-if="pageType === 'edit'">
             <div class="input-item">
                 <div class="label">{{$t('settingAddress.name')}}</div>
-                <kyInput :value="edit.accountName" @changeInput="editFormChange(arguments,'accountName')"></kyInput>
+                <el-input v-model="edit.name"></el-input>
             </div>
             <div class="input-item">
-                <div class="label">{{$t('settingAddress.address')}}</div>
-                <kyInput :value="edit.address" @changeInput="editFormChange(arguments,'address')"></kyInput>
+                <div class="label">{{$t('settingAddress.filAddress')}}</div>
+                <el-input v-model="edit.address" @input="editAddressInput"></el-input>
                 <div class="error" v-if="editAddressError">{{$t('settingAddress.addressError')}}</div>
             </div>
             <div class="position">
                 <div class="btn-box">
-                    <kyButton @click="btnClick">{{$t('settingAddress.cancel')}}</kyButton>
-                    <kyButton :type="'primary'" :active="editActive" @btnClick="confirmEdit">
-                        {{$t('settingAddress.confirm')}}
-                    </kyButton>
+                    <el-button @click="cancelEdit">{{$t('settingAddress.cancel')}}</el-button>
+                    <el-button type="primary" :disabled="editDisabled" @click="confirmEdit">{{$t('settingAddress.confirm')}}</el-button>
                 </div>
             </div>
             
@@ -73,23 +66,19 @@
 <script>
 import { isValidAddress} from '@/utils'
 import ClipboardJS from 'clipboard'
-import { mapState } from 'vuex'
-import kyBack from '@/components/back'
-import kyButton from '@/components/button'
-import kyInput from '@/components/input'
 export default {
     data(){
         return{
             add:{
-                accountName:'',
+                name:'',
                 address:''
             },
             detail:{
-                accountName:'',
+                name:'',
                 address:''
             },
             edit:{
-                accountName:'',
+                name:'',
                 address:''
             },
             editAddressError:'',
@@ -102,7 +91,6 @@ export default {
         to:String
     },
     computed:{
-        ...mapState('app',['rpc','networkType']),
         pageName(){
             let str = ''
             switch (this.pageType){
@@ -118,23 +106,28 @@ export default {
             }
             return str
         },
-        addActive(){
-            let vol = true
+        addDisabled(){
+            let disabled = true
             let values = Object.values(this.add)
-            vol = values.every( n=> n !=='')
-            return vol
+            
+            disabled = !values.every( n=> n !=='')
+            return disabled
         },
-        editActive(){
-            let vol = false
+        editDisabled(){
+            let disabled = true
             let values = Object.values(this.edit)
-            vol = values.every( n=> n !=='')
-            return vol
+            disabled = !values.every( n=> n !=='')
+            return disabled
         }
     },
-    components:{
-        kyBack,
-        kyButton,
-        kyInput
+    watch:{
+        detailObj:{
+            handler(newVal, oldVal) {
+                
+            },
+            immediate: true
+        }
+        
     },
     filters:{
         addressFormat(val){
@@ -147,41 +140,25 @@ export default {
     },
     mounted(){
         if(this.pageType === 'detail'){
-            let { accountName,address } = this.detailObj
-            this.detail = Object.assign({}, this.detail, { accountName, address})
-            console.log(this.detailObj,'this.detailObj')
+            let { name,address } = this.detailObj
+            this.detail = Object.assign({}, this.detail, { name, address})
         }
-        console.log(this.to,'this.to')
         if(this.pageType === 'add' && this.to){
             this.$set(this.add,'address',this.to)
         }
     },
     methods:{
-        addFormChange(arg,key){
-            console.log(arg,key,'aarrgg 112233')
-            if(arg){
-                let value = arg[0]
-                this.$set(this.add,key,value)
-            }
-            console.log(arg,key,'312312')
-        },
-        editFormChange(arg,key){
-            if(arg){
-                let value = arg[0]
-                this.$set(this.edit,key,value)
-            }
-            console.log(arg,key,'312312')
-        },
         addAddressInput(){
-            let voild = isValidAddress(this.add.address,this.networkType)
+            let voild = isValidAddress(this.add.address)
             if(!voild){
                 this.addAddressError = '1'
             }else{
                 this.addAddressError = ''
             }
+            
         },
         editAddressInput(){
-            let voild = isValidAddress(this.edit.address,this.networkType)
+            let voild = isValidAddress(this.edit.address)
             if(!voild){
                 this.editAddressError = '1'
             }else{
@@ -199,24 +176,23 @@ export default {
             this.$emit("update:pageType",'list')
         },
         async addConfirm(){
-            let voild = isValidAddress(this.add.address,this.networkType)
+            let voild = isValidAddress(this.add.address)
             if(voild){
                 let create_time =  parseInt(new Date().getTime() / 1000)
                 await window.filecoinwalletDb.addressBook.add({
                     address:this.add.address,
-                    accountName:this.add.accountName,
+                    name:this.add.name,
                     create_time,
-                    rpc:this.rpc,
-                    khazix:'khazix'
+                    kunyao:'kunyao'
                 })
-                this.$emit('addAddressCb')
+                this.$emit("update:pageType",'list')
             }else{
                 this.$message.error(this.$t('settingAddress.addressError')) 
             }
         },
         editAddress(){
-            let { accountName,address } = this.detailObj
-            this.edit = Object.assign({}, this.edit, { accountName, address})
+            let { name,address } = this.detailObj
+            this.edit = Object.assign({}, this.edit, { name, address})
             this.$emit("update:pageType",'edit')
         },
         copyAddress(){
@@ -234,14 +210,15 @@ export default {
             this.$emit("update:pageType",'detail')
         },
         confirmEdit(){
-            window.filecoinwalletDb.addressBook.where("address").equals(this.detail.address).modify({
-                    address:this.edit.address,
-                    accountName:this.edit.accountName
-                }).then(res=>{
-                console.log(this.detail,this.edit,'editeditedit')
-                this.detail = Object.assign({}, this.detail, { name:this.edit.accountName, address:this.edit.address})
+             window.filecoinwalletDb.addressBook.where("address").equals(this.detail.address).modify({
+                 address:this.edit.address,
+                 name:this.edit.name
+            }).then(res=>{
+                
+                this.detail = Object.assign({}, this.detail, { name:this.edit.name, address:this.edit.address})
                 this.$message.success(this.$t('settingAddress.editSuccess'))
                 this.$emit("update:pageType",'detail')
+                // window.location.href = './setting-address.html'
             })
         }
     }
@@ -250,11 +227,22 @@ export default {
 
 <style  lang="less" scoped>
 .address-form{
-    height: 100%;
-
-    .back-wrap{
-        padding:  15px 20px;
-        border-bottom: 1px solid #F6F7FF;
+    .form-top{
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        padding:10px 20px;
+        border-bottom: 1px solid #eee;
+        .top-name{
+            font-size: 18px;
+            color: #222;
+            flex-grow: 1;
+        }
+        i{
+            padding-right: 5px;
+            font-size: 18px;
+            cursor: pointer;
+        }
     }
     .form-content{
         padding: 20px;
@@ -317,7 +305,7 @@ export default {
         .edit-btn{
             width: 100%;
             display: flex;
-            /deep/.kyButton{
+            /deep/.el-button{
                 flex-grow: 1;
             }
         }
@@ -327,16 +315,15 @@ export default {
     }
     .position{
         position: absolute;
-        bottom:20px;
+        bottom:0;
         left: 20px;
         width: calc(100% - 40px);
         .btn-box{
             width: 100%;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            /deep/.button-wrap{
-                width: 150px;
+            /deep/.el-button{
+                flex-grow: 1;
             }
         }
     }

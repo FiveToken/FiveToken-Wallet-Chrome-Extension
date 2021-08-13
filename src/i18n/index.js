@@ -4,6 +4,7 @@ import en from "../lang/en"
 import zh from "../lang/zh"
 import ja from "../lang/ja"
 import ko from "../lang/ko"
+
 Vue.use(VueI18n)
 
 const messages = {
@@ -21,18 +22,14 @@ const messages = {
   }
 }
 
-let language = window.localStorage.getItem('fiveTokenLanguage')
-let currency = window.localStorage.getItem('fiveTokenCurrency')
-if(!language){
-  window.localStorage.setItem('fiveTokenLanguage','zh')
-}
+let locale = window.localStorage.getItem('filCurrentLang')
 
-if(!currency){
-  window.localStorage.setItem('fiveTokenCurrency','usd')
+if(!locale){
+  window.localStorage.setItem('filCurrentLang','en')
 }
 
 let i18n  = new VueI18n({
-  locale: language || 'zh',
+  locale: locale || 'en',
   messages,
   silentTranslationWarn: true
 })

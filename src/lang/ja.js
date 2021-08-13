@@ -7,14 +7,14 @@ const ja = {
     setting:'設定'
   },
   welcome: {
-    title:'Filecoin Walletをご利用いただきありがとうございます',
+    title:'FiveTokenをご利用いただきありがとうございます',
     subTitle1:'あなたをFilecoinと分散型ネットワークに接続します。',
     subTitle2:'お会いできて光栄です。',
     btn:'使用開始'
   },
   firstWallet:{
     create:'アカウントをインポートする',
-    question:'FilecoinWalletを初めてご利用ですか?',
+    question:'FiveTokenを初めてご利用ですか?',
     arr:[
       {
         icon:'el-icon-download',
@@ -47,8 +47,7 @@ const ja = {
     mnemonicWords:'アカウントニーモニック',
     placeholder:'クリップボードからアカウントニーモニック貼り付け',
     showWords:'アカウントニーモニック表示',
-    password:'新パスワード',
-    passwordTips:'数字、大文字・小文字ローマ字を含む8文字以上',
+    password:'新パスワード（数字、大文字・小文字ローマ字を含む8文字以上）',
     confirmPassword:'パスワード確認',
     agree:'私は読んだ後に同意します',
     clause:'使用規約',
@@ -64,8 +63,7 @@ const ja = {
     accountName:'アカウント名',
     back:'戻る',
     title:'パスワード作成',
-    password:'新パスワード',
-    passwordTips:'数字、大文字・小文字ローマ字を含む8文字以上',
+    password:'新パスワード（数字、大文字・小文字ローマ字を含む8文字以上）',
     diffError:'パスワードは一致していません',
     correctPassword:'パスワードを正しく入力してください',
     confirmPassword:'パスワード確認',
@@ -98,10 +96,10 @@ const ja = {
     skillArr:[
       '複数箇所にデータを保存しバックアップします',
       'いかなる人に対してもアカウントニーモニックを共有してはなりません',
-      'フィッシングを警戒してください。Filecoin Walletからは決して個人アカウントニーモニックの提供を求めることはありません',
+      'フィッシングを警戒してください。FiveTokenからは決して個人アカウントニーモニックの提供を求めることはありません',
       'アカウントニーモニックを再度バックアップする必要がある場合、設定 > セキュリティ オプションで当該操作を完成してください。'
     ],
-    warn:'Filecoin Walletは、アカウントニーモニックを復元できません。',
+    warn:'FiveTokenは、アカウントニーモニックを復元できません。',
     btn:' すべて完成'
   },
   wallet:{
@@ -112,7 +110,7 @@ const ja = {
       {name:'活動',type:'2'}
     ],
     title:'秘密鍵表示',
-    label:'Filecoin Walletパスワードを入力',
+    label:'FiveTokenパスワードを入力',
     exportBtn:'秘密鍵エクスポート',
     lookBtn:'Filscan (Filecoinブラウザ)で見る',
     cancel:'取り消し',
@@ -189,14 +187,13 @@ const ja = {
       {name:'アドレス帳',url:'./setting-address.html'},
       {name:'バックアップ',url:'./setting-backups.html'},
       {name:'について',url:'./setting-about.html'},
-      {name:'Network',url:'./setting-networks.html'}
    ]
   },
   settingAbout:{
     about:'について',
-    filVersion:'Filecoin Walletバージョン',
+    filVersion:'FiveTokenバージョン',
     version:'1.0.0',
-    tips:'Filecoin Walletはシンガポールで設計・実現されています',
+    tips:'FiveTokenはシンガポールで設計・実現されています',
     links:'リンク',
     privacy:'プライバシーポリシー',
     useRule:'利用規約'
@@ -241,7 +238,7 @@ const ja = {
   },
   settingAddress:{
     name:'名称',
-    filAddress:'Filecoin Wallet アドレス',
+    filAddress:'FiveToken アドレス',
     ethereumAddress:'イーサリアム　Ethereum 公開アドレス',
     addressError:'アドレスフォーマットは間違っています',
     edit:'編集',
@@ -256,7 +253,7 @@ const ja = {
     editSuccess:'編集に成功しました',
     addressBook:'アドレス帳',
     myWallet:'マイアカウントウォレット',
-    autoAdd:'作成されるすべてのFilecoin Walletアカウントは自動的にここへ追加されます',
+    autoAdd:'作成されるすべてのFiveTokenアカウントは自動的にここへ追加されます',
     lastRecord:'最近の記録',
     add:'追加'
   },
@@ -269,7 +266,7 @@ const ja = {
     inputPassword:'アカウントのパスワードを入力してください'
   },
   connect:{
-    title:'Filecoin Walletを使って接続します',
+    title:'FiveTokenを使って接続します',
     cancel:'取り消し',
     connect:'接続'
   }

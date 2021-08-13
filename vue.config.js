@@ -7,10 +7,13 @@ const pagesObj = {};
 
 const chromeName = [
   'filecoinwallet',
-  'welcome',
+  'welcome', 
+  'first-wallet',
+  'import-wallet',
   'create-wallet',
   'create-words',
   'check-words',
+  'create-success',
   'wallet',
   'send-fil',
   'setting',
@@ -19,13 +22,7 @@ const chromeName = [
   'setting-backups',
   'setting-about',
   'lock-user',
-  'filecoinwallet-connect',
-  'setting-networks',
-  'import-words',
-  'import-privatekey',
-  'account',
-  'message-detail',
-  'add-token'
+  'filecoinwallet-connect'
 ];
 
 
@@ -111,45 +108,45 @@ const plugins =
 
 module.exports = {
   pages: pagesObj,
-  // productionSourceMap: true,
-  // chainWebpack: config => {
-  //   config.resolve.alias.set('@', resolve('src')),
-  //   config.optimization.minimize(true)
-  //   config.optimization.splitChunks({
-  //     chunks: 'async',
-  //     minSize: 30000,
-  //     maxSize: 0,
-  //     minChunks: 1,
-  //     maxAsyncRequests: 6,
-  //     maxInitialRequests: 4,
-  //     automaticNameDelimiter: '~',
-  //     cacheGroups: {
-  //         vendors: {
-  //             name: `chunk-vendors`,
-  //             test: /[\\/]node_modules[\\/]/,
-  //             priority: -10,
-  //             chunks: 'initial'
-  //         },
-  //         common: {
-  //             name: `chunk-common`,
-  //             minChunks: 2,
-  //             priority: -20,
-  //             chunks: 'initial',
-  //             reuseExistingChunk: true
-  //         }
-  //     }
-  //   })
-  // },
+  productionSourceMap: false,
+  chainWebpack: config => {
+    config.resolve.alias.set('@', resolve('src')),
+    config.optimization.minimize(true)
+    config.optimization.splitChunks({
+      chunks: 'async',
+      minSize: 30000,
+      maxSize: 0,
+      minChunks: 1,
+      maxAsyncRequests: 6,
+      maxInitialRequests: 4,
+      automaticNameDelimiter: '~',
+      cacheGroups: {
+          vendors: {
+              name: `chunk-vendors`,
+              test: /[\\/]node_modules[\\/]/,
+              priority: -10,
+              chunks: 'initial'
+          },
+          common: {
+              name: `chunk-common`,
+              minChunks: 2,
+              priority: -20,
+              chunks: 'initial',
+              reuseExistingChunk: true
+          }
+      }
+    })
+  },
   configureWebpack: {
     plugins: [
       CopyWebpackPlugin(plugins),
-      // new UglifyJsPlugin({
-      //   uglifyOptions: {
-      //     compress: {
-      //       drop_console: true
-      //     }
-      //   }
-      // })
+      new UglifyJsPlugin({
+        uglifyOptions: {
+          compress: {
+            // drop_console: true
+          }
+        }
+      })
     ]
   },
 };

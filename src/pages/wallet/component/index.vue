@@ -1,257 +1,340 @@
 <template>
-    <layout @layoutMounted="layoutMounted">
-        <div class="wallet-page" >
-            <bHeader @networkChange="layoutMounted"/>
-            <div class="content">
-                <kyTop
-                    v-if="rpc"
-                    :balance="balance"
-                    :editNameVisable.sync="editNameVisable"
-                    :deleteUserVisible.sync="deleteUserVisible"
-                    :receiveVisible.sync="receiveVisible"
-                />
-                <kyList
-                    v-if="address && rpc"
-                    :price_currency="price_currency"
-                    :balance="balance"
-                    @tokenShow="tokenShow"
-                />
+<div class="wallet-page">
+    <bHeader :etitCount="etitCount"/>
+    <div class="content">
+        <div class="top">
+            <!-- <div class="connect-left" @click="openConnect">{{$t('wallet.connected')}}</div> -->
+            <div class="center">
+                <div class="account">{{accountName}}</div>
+                <el-popover
+                    v-model="copyAddressTips"
+                    placement="bottom"
+                    width="100"
+                    trigger="click"
+                    :content="$t('wallet.copySuccess')"
+                >
+                    <div class="copy-wrap" slot="reference">
+                        <div 
+                            class="address copy-address-box1" 
+                            @mouseover="mouseOverAddress"
+                            @mouseleave="mouseLeaveAddress" 
+                            @click="copyAddress1" 
+                            :data-clipboard-text="address"
+                        >
+                            {{address|addressFormat}}
+                        </div>
+                        <div class="copy-title" v-if="copyTitleVisable">{{$t('wallet.copyAddress')}}</div>
+                    </div>
+                    
+                </el-popover>
             </div>
-            <el-dialog
-                :visible.sync="editNameVisable"
-                width="300px"
-                :show-close="false"
-                :top="'31vh'"
-            >
-                <editName
-                    :addressName.sync="addressName"
-                    @confirmEdit="confirmEdit"
-                    @closeEdit="closeEdit"
-                />
-            </el-dialog>
-            
-            <el-dialog
-                :visible.sync="deleteUserVisible"
-                width="300px"
-                :top="'31vh'"
-                :show-close="false"
-            >
-                <deleteUser
-                    @confirmDelete="confirmDelete"
-                    @closeDelete="closeDelete"
-                />
-            </el-dialog>
-
-            <el-dialog
-                :visible.sync="receiveVisible"
-                width="100%"
-                :fullscreen='true'
-                :top="'0'"
-                :show-close="false"
-            >
-                <receive
-                    :QRUrl="QRUrl"
-                    :accountName.sync="accountName"
-                    :address="address"
-                    @closeReceive="closeReceive"
-                />
-            </el-dialog>
-
-            <el-dialog
-                :visible.sync="tokenVisible"
-                width="100%"
-                :fullscreen='true'
-                :top="'0'"
-                :show-close="false"
-            >
-                <kyToken
-                    :tokenDecimals="tokenDecimals"
-                    :tokenName="tokenName"
-                    :balance="balance"
-                    :price_currency="price_currency"
-                    :receiveVisible.sync="receiveVisible"
-                    :symbol="symbol"
-                    :tokenList="tokenList"
-                    @closeToken="tokenVisible = false"
-                />
-            </el-dialog>
         </div>
-    </layout>
+        <div class="middle">
+            <div class="logo">
+                <img class="img" :src="filLogo" />
+            </div>
+            <div class="fil">{{balance|formatBalance}} FIL</div>
+            <div class="usd">$ {{(balance*this.price_usd).toFixed(2)}}</div>
+            <div class="action">
+                <div class="receive" @click="openReceive">
+                    <div class="icon">
+                        <img class="img" :src="send" />
+                    </div>
+                    <div class="text">{{$t('wallet.receive')}}</div>
+                </div>
+                <div class="send" @click="sendFil">
+                    <div class="icon">
+                        <img class="img" :src="rec" />
+                    </div>
+                    <div class="text">{{$t('wallet.send')}}</div>
+                </div>
+            </div>
+        </div>
+        <list 
+            :address="address" 
+            :price_usd="price_usd"
+            :balance="balance" 
+            :walletNonce="walletNonce"
+            @openDetail="openDetail"
+        />
+    </div>
+    <div class="help">
+      <div class="text">Need help? </div>
+      <div class="link" @click="toDocs">Contact FiveToken Docs</div>
+    </div>
+    <el-dialog
+        :visible.sync="receiveVisible"
+        width="94%"
+        :show-close="false"
+    >
+        <receive 
+            :receiveVisible.sync="receiveVisible"
+            :exportSecretVisible.sync="exportSecretVisible"
+            :QRUrl="QRUrl"
+            :accountName.sync="accountName"
+            :etitCount.sync="etitCount"
+            :address="address"
+        />
+    </el-dialog>
+    <el-dialog
+        :visible.sync="exportSecretVisible"
+        width="94%"
+        :show-close="false"
+    >
+        <exportPKey
+            :accountName="accountName"
+            :address="address"
+            :exportSecretVisible.sync="exportSecretVisible"
+            :showPkVisible.sync="showPkVisible"
+            :encodePrivateKey="encodePrivateKey"
+            :digest="digest"
+            :hexPrivateKey.sync="hexPrivateKey"
+        />
+    </el-dialog>
+    <el-dialog
+        :visible.sync="showPkVisible"
+        width="94%"
+        top="10vh"
+        :show-close="false"
+    >
+        <showPKey 
+            :accountName="accountName"
+            :address="address"
+            :showPkVisible.sync="showPkVisible"
+            :hexPrivateKey.sync="hexPrivateKey"
+        />
+    </el-dialog>
+
+    <el-dialog
+        :visible.sync="transactionDetails"
+        width="94%"
+        top="8vh"
+        :show-close="false"
+    >
+        <detail 
+            :signed_cid="signed_cid" 
+            :transactionDetails.sync="transactionDetails" 
+            :detail="detail"
+        />
+    </el-dialog>
+
+    <el-dialog
+        :visible.sync="connectDialogVisable"
+        width="94%"
+        :show-close="false"
+    >
+        <connect />
+    </el-dialog>
+</div>
 </template>
+
 <script>
 import bHeader from '@/components/header'
-import layout from '@/components/layout'
-import editName from './edit-name.vue'
-import deleteUser from './delete-user.vue'
+import connect from './connect.vue'
+import detail from './detail.vue'
+import list from './list.vue'
 import receive from './receive.vue'
-import kyTop from './top.vue'
-import kyList from './transaction-list.vue'
-import kyToken from './token.vue'
-import { MyGlobalApi } from '@/utils/api'
+import exportPKey from './export-p-key.vue'
+import showPKey from './show-p-key.vue'
+import { BalanceNonceByAddress,FilPricePoints,MessageDetails } from '@/utils/api'
+import ClipboardJS from 'clipboard'
 import QRCode from 'qrcode'
-import { mapGetters, mapMutations, mapState } from 'vuex'
-import { formatDate } from '@/utils'
+import { getNowFormatDateEn,formatDate } from '@/utils'
 export default {
     data(){
         return{
-            addressName:'',
-            editNameVisable:false,
-            deleteUserVisible:false,
             receiveVisible:false,
-            tokenVisible:false,
+            exportSecretVisible:false,
+            showPkVisible:false,
+            transactionDetails:false,
+            connectDialogVisable:false,
+            copyTitleVisable:false,
+            copyAddressTips:false,
+            filLogo:require('@/assets/image/fil-w.png'),
+            logo:require('@/assets/image/logo.png'),
+            rec:require('@/assets/image/rec.png'),
+            send:require('@/assets/image/send.png'),
+            address:'',
+            encodePrivateKey:'',
+            digest:'',
+            walletNonce:0,
             balance:0,
-            price_currency:0,
+            accountName:'',
+            price_usd:0,
             QRUrl:'',
             signed_cid:'',
-            tokenName:'',
-            tokenDecimals:0,
-            tokenList:[]
+            hexPrivateKey:'',
+            etitCount:0,
+            detail:{
+                from:'',
+                to:'',
+                nonce:0,
+                fil:0,
+                all_gas_fee:0,
+                totalFil:0,
+                totalUsd:0,
+                create_time:'',
+                block_time:''
+            },
         }
     },
-    computed:{
-        ...mapState('app',[
-            'rpc',
-            'symbol',
-            'accountName',
-            'address',
-            'privateKey',
-            'ids',
-            'networkType',
-            'currency'
-        ]),
+    filters:{
+        addressFormat(val){
+            if(val.length>12){
+                return val.substr(0,6) + '...' + val.substr(val.length-6,6)
+            }else{
+                return val
+            } 
+        },
+        formatBalance(val){
+            let isZ = val%1 === 0
+            if(isZ) {
+                return val
+            }else{
+                return val.toFixed(8)
+            }
+        }
     },
     components:{
-        layout,
         bHeader,
-        editName,
-        deleteUser,
+        detail,
+        connect,
+        list,
         receive,
-        kyTop,
-        kyList,
-        kyToken
+        exportPKey,
+        showPKey
+    },
+    async mounted(){
+        this.getFilPricePoints()
+        let activeAccount = await window.filecoinwalletDb.activeAccount.where({ kunyao:'kunyao'}).toArray ()|| [];
+        if(activeAccount.length){
+            this.encodePrivateKey = activeAccount[0].privateKey
+            this.digest = activeAccount[0].digest
+            this.accountName = activeAccount[0].accountName
+            let address =  activeAccount[0].address
+            this.address = address
+            this.getBalanceNonce(address)
+            this.getQRCode(address)
+        }
     },
     methods:{
-        ...mapMutations('app',[
-            'SET_PRIVATEKEY',
-            'SET_ADDRESS',
-            'SET_DIGEST',
-            'SET_ACCOUNTNAME'
-        ]),
-        async layoutMounted(){
-            this.addressName = this.accountName
-            this.getPrice()
-            this.getBalanceNonce()
-            this.getQRCode()
+        toDocs(){
+            openUrl(`https://docs.filecoinwallet.com/`)
         },
-        confirmEdit(){
-            let address = this.address
-            let rpc = this.rpc
-            let addressName = this.addressName
-            this.SET_ACCOUNTNAME(addressName)
-            window.filecoinwalletDb.accountList.where({
-                address:address,
-                rpc:rpc
-            }).modify({
-                accountName:addressName
+        openConnect(){
+            this.connectDialogVisable = true
+        },
+        // get usd 
+        async getFilPricePoints(){
+             FilPricePoints(['real']).then(result=>{
+                let res = result.data
+                if(res && res.data && res.data.length){
+                    this.price_usd = Number(res.data[0].price_usd)
+                }
+            }).catch(err=>{
+                this.price_usd = 0
+                console.log(err,'FilPricePoints err')
             })
-            window.filecoinwalletDb.activeAccount.where({
-                address:address,
-                rpc:rpc
-            }).modify({
-                accountName:addressName
-            })
-            this.editNameVisable = false
-        },
-        closeEdit(){
-            this.editNameVisable = false
-        },
-        async confirmDelete(){
-            await window.filecoinwalletDb.activeAccount.where({khazix:'khazix'}).delete()
-            await window.filecoinwalletDb.accountList.where({
-                address:this.address,
-                rpc:this.rpc
-            }).delete()
-            let accountList = await window.filecoinwalletDb.accountList.where({ rpc:this.rpc }).toArray () || [];
-            if(accountList.length){
-                let first = accountList.filter((n,index)=>{
-                    return index === 0
-                })
-                let{privateKey,address,digest,accountName} = first
-                this.SET_PRIVATEKEY(privateKey)
-                this.SET_ADDRESS(address)
-                this.SET_DIGEST(digest)
-                this.SET_ACCOUNTNAME(accountName)
-                await window.filecoinwalletDb.activeAccount.bulkPut(first).then(res=>{
-                    window.location.href = './wallet.html'
-                })
-            }else{
-                window.location.href = './welcome.html'
-            }
-        },
-        closeDelete(){
-            this.deleteUserVisible = false
-        },
-        async getPrice(){
-            MyGlobalApi.setRpc(this.rpc)
-            MyGlobalApi.setNetworkType(this.networkType)
-            let res = await MyGlobalApi.getPrice(this.ids)
-            let { usd,cny } = res
-            console.log(this.currency,'this.currency 999999')
-            if(this.currency === 'cny'){
-                this.price_currency = cny
-            }else{
-                this.price_currency = usd
-            }
-            
         },
         sendFil(){
             window.location.href = './send-fil.html'
         },
-        async getBalanceNonce(){
-            let address = this.address
-            let rpc = this.rpc
-            MyGlobalApi.setRpc(rpc)
-            MyGlobalApi.setNetworkType(this.networkType)
-            let res = await MyGlobalApi.getBalance(address)
-            let { balance,nonce } = res
-            this.balance = balance
-            window.filecoinwalletDb.accountList.where({
-                address:address,
-                rpc:rpc
-            }).modify({
-                fil:balance,
-            }).then(res=>{
-                console.log(balance,'balance update')
+        // get balance and nonce
+        getBalanceNonce(address){
+            BalanceNonceByAddress([{address}]).then((result)=>{
+                if(result && result.data){
+                    let res = result && result.data
+                    let balance = Number(res.balance || 0) / Math.pow(10, 18)
+                    this.balance = balance
+                    this.walletNonce = res.nonce
+                    window.filecoinwalletDb.accountList.where("address").equals(this.address).modify({fil:balance}).then(res=>{
+                        this.etitCount += 1
+                    })
+                    window.filecoinwalletDb.activeAccount.where("address").equals(this.address).modify({fil:balance}).then(res=>{
+                        this.etitCount += 1
+                    })
+                }
+            }).catch(err=>{
+                 this.balance = 0
+                 this.walletNonce = 0
+                console.log(err,'BalanceNonceByAddressErr')
             })
         },
         openReceive(){
+            this.exportSecretVisible = false
             this.receiveVisible = true
         },
-        closeReceive(){
-            this.receiveVisible = false
-        },
-        getQRCode(){
-             QRCode.toDataURL(this.address).then(QRUrl => {
+        getQRCode(address){
+             QRCode.toDataURL(address).then(QRUrl => {
                 this.QRUrl = QRUrl
             }).catch(err => {
                 console.error(err)
             })
         },
-        async tokenShow(obj){
-            let {symbol,decimals} = obj
-            this.tokenName = symbol
-            this.tokenDecimals = Number(decimals)
-            let tokenList = await window.filecoinwalletDb.messageList.where({ 
-                rpc:this.rpc,
-                token:this.tokenName
-            }).toArray () || [];
-            this.tokenList = tokenList.map(n=>{
-                return {
-                    ...n,
-                    create_time:formatDate(n.create_time,true),
-                }
+        copyAddress1(){
+            this.copyTitleVisable = false
+            let that = this
+            const clipboard = new ClipboardJS('.copy-address-box1')
+            this.copyAddressTips = true
+            clipboard.on('success', function(e) {
+                that.copyAddressTips = true
+                console.log(that.copyAddressTips,'that.copyAddressTips 123')
+                setTimeout(()=>{
+                    that.copyAddressTips = false
+                },2000)
             })
-            this.tokenVisible = true
+            clipboard.on('error', function(e) {})
+        },
+        mouseOverAddress(){
+            this.copyTitleVisable = true
+        },
+        mouseLeaveAddress(){
+            this.copyTitleVisable = false
+        },
+        openDetail(signed_cid,obj){
+            this.signed_cid = signed_cid
+            this.getDetail(signed_cid,obj)
+        },
+        // get message Details
+        getDetail(signed_cid,itemObj){
+            MessageDetails([signed_cid]).then(async (result)=>{
+                console.log(result,'MessageDetails')
+                try{
+                    let res = result.data
+                    let fil = Number(res.value)/Math.pow(10, 18)
+                    let all_gas_fee = Number(res.all_gas_fee)/Math.pow(10, 18)
+                    let totalFil = fil + all_gas_fee
+                    let totalUsd = totalFil * this.price_usd
+                    this.$set(this.detail,'from',res.from)
+                    this.$set(this.detail,'to',res.to)
+                    this.$set(this.detail,'nonce',res.nonce)
+                    this.$set(this.detail,'fil',fil)
+                    this.$set(this.detail,'all_gas_fee',all_gas_fee)
+                    this.$set(this.detail,'totalFil',totalFil)
+                    this.$set(this.detail,'totalUsd',totalUsd.toFixed(2))
+                    this.$set(this.detail,'signed_cid',signed_cid)
+                    // signed_cid
+                    let messageList = await window.filecoinwalletDb.messageList.where({ kunyao:'kunyao'}).toArray () || [];
+                    let signedMess = messageList.find(n=>{
+                        return n.signed_cid === res.signed_cid
+                    })
+                    let create_time = signedMess.create_time ? formatDate(signedMess.create_time,true):''
+                    let block_time = res.block_time ? formatDate(res.block_time,true) : ""
+                    this.$set(this.detail,'block_time',block_time)
+                    this.$set(this.detail,'create_time',create_time)
+                    console.log(this.detail,signedMess,'this.detail 222')
+                }catch{
+                    let fil = Number(itemObj.value)/Math.pow(10, 18)
+                    this.$set(this.detail,'from',itemObj.from)
+                    this.$set(this.detail,'to',itemObj.to)
+                    this.$set(this.detail,'fil',fil)
+                    this.$set(this.detail,'signed_cid',signed_cid)
+                    console.log('MessageDetails try catch err')
+                }
+            }).catch(err=>{
+                console.log(err,'MessageDetails err')
+            })
+            this.transactionDetails = true
         },
     }
 }
@@ -263,16 +346,188 @@ export default {
     margin: 0 auto;
     background: #fff;
     box-sizing: border-box;
-    /deep/.el-dialog{
-        margin: 0 auto;
-        border-radius: 10px;
-        &.is-fullscreen{
-            border-radius: 0;
-            .el-dialog__body{
-                width: 100%;
-                height: 100%;
+    .content{
+        .top{
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            text-align: center;
+            border-bottom:1px solid #eee;
+            padding:15px 0;
+            .position{
+                position: absolute;
+                top: 50%;
+                right:20px;
+                transform: translateY(-50%);
+                font-size: 14px;
+                color: #222;
+            }
+            .connect-left{
+                padding-left: 15px;
+                position: absolute;
+                top: 50%;
+                left:20px;
+                transform: translateY(-50%);
+                color: #222;
+                font-size: 14px;
+                cursor: pointer;
+                &::after{
+                    content: '';
+                    width: 3px;
+                    height: 3px;
+                    background: #5CC1CB;
+                    border-radius: 2px;
+                    position: absolute;
+                    left: 3px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                }
+                &::before{
+                    content: '';
+                    width: 7px;
+                    height: 7px;
+                    background: transparent;
+                    border-radius: 7px;
+                    border: 1px solid #5CC1CB;
+                    position: absolute;
+                    left: 0px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                }
+            }
+            .center{
+                font-size: 14px;
+                color: #666;
+                .copy-wrap{
+                    position: relative;
+                    .copy-title{
+                        position: absolute;
+                        top: calc(100% + 10px);
+                        left: 50%;
+                        transform: translateX(-50%);
+                        padding: 3px 10px;
+                        background: rgba(0,0,0,0.8);
+                        color: #fff;
+                        border-radius: 5px;
+                        text-align: center;
+                        white-space:nowrap;
+                        &::after{
+                            content: '';
+                            width: 0;
+                            height: 0;
+                            border: 8px solid;
+                            border-color: transparent transparent rgba(0,0,0,0.8);
+                            position: absolute;
+                            bottom: 100%;
+                            left: 50%;
+                            transform: translateX(-50%);
+                        }
+                    }
+                }
+                .account{
+                    font-size: 24px;
+                    color: #222;
+                    font-weight: bolder;
+                    margin-bottom: 10px;
+                }
+                .address{
+                    cursor: pointer;
+                    background: #f2f2f2;
+                    padding: 5px 10px;
+                    border-radius: 5px;
+                    color: #999;
+                }
             }
         }
+        .middle{
+            padding: 20px 0;
+            .logo{
+                width: 60px;
+                height: 60px;
+                background: #5CC1CB;
+                margin:0 auto 20px;
+                border-radius: 30px;
+                .img{
+                    width: 60px;
+                    height: 60px;
+                }
+            }
+            .fil{
+                text-align: center;
+                font-size: 28px;
+                font-weight: bolder;
+                color: #222;
+                margin-bottom: 10px;
+                padding: 0 10px;
+                word-break: break-all;
+            }
+            .usd{
+                text-align: center;
+                font-size: 14px;
+                color: #999;
+                margin-bottom: 10px;
+            }
+            .action{
+                padding-top: 10px;
+                display: flex;
+                justify-content: center;
+                .receive{
+                    margin-right: 40px;
+                    .icon{
+                        background: #5CC1CB;
+                    }
+                }
+                .send{
+                    .icon{
+                        background: #5C8BCB;
+                    }
+                }
+                .receive,.send{
+                    text-align: center;
+                    cursor: pointer;
+                    .icon{
+                        width: 30px;
+                        height: 30px;
+                        border-radius: 15px;
+                        margin: 0 auto 10px;
+                        line-height: 30px;
+                        text-align: center;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        cursor: pointer;
+                        .img{
+                            width: 22px;
+                            height: 22px;
+                        }
+                    }
+                    .text{
+                        font-size: 14px;
+                        color: #999;
+
+                    }
+                }
+            }
+        }
+    }
+    .help{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px 20px 10px;
+        .text{
+            color: #222;
+            font-size: 14px;
+            margin-right: 8px;
+        }
+        .link{
+            font-size: 14px;
+            color:#5CC1CB;
+        }
+    }
+    /deep/.el-dialog{
+        margin: 0 auto;
     }
     /deep/.el-dialog__header{
         padding:0;

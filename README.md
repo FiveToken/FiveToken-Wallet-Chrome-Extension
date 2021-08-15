@@ -84,6 +84,7 @@ args :{
   method: string;
   params: object;
 }
+// Connect Wallet
 DAppLink.request({
     // open chrome plugins
     method: "openFilecoinWallet",
@@ -94,15 +95,41 @@ DAppLink.request({
         origin:'https://filscan.io'
     }
 })
+
+DAppLink.request({
+    method: 'uploadWeb3Stroage',
+    params: {
+        width: window.outerWidth,
+        origin: window.location.origin,
+        // Uploaded files
+        file,
+        info:{
+          // nickname
+          nickname,
+          // filecoin bsc eth address
+          address,
+          // describe
+          describe,
+          // rpc
+          rpc,
+          // account name
+          accountName
+        },
+        // Optional. An object whose properties define certain Web3.Storage options and metadata about the files being uploaded. See below for more details.
+        option:{
+
+        }
+    }
+})
 ```
 
 ### DAppLink.onMessage(tag,callback)
-tag
-filecoinWalletAddress:Listen to the result of connection address and return to the connection address
-scriptUpdateWeb3Storage:Listen to the result of data storage and return to CID
-scriptWeb3Storage:Listen to the result of accessing address information and return to the storage information of the address
+tag</br>
+filecoinWalletAddress:Listen to the result of connection address and return to the connection address.</br>
+scriptUpdateWeb3Storage:Listen to the result of data storage and return to CID.</br>
+responseWebStorange:Listen to the result of accessing address information and return to the storage information of the address.</br>
 
-data
+data</br>
 Return data
 
 Example:

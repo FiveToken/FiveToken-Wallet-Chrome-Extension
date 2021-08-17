@@ -66,8 +66,8 @@
             >
                 <kyToken
                     :tokenDecimals="tokenDecimals"
+                    :tokenBalance="tokenBalance"
                     :tokenName="tokenName"
-                    :balance="balance"
                     :price_currency="price_currency"
                     :receiveVisible.sync="receiveVisible"
                     :symbol="symbol"
@@ -105,7 +105,8 @@ export default {
             signed_cid:'',
             tokenName:'',
             tokenDecimals:0,
-            tokenList:[]
+            tokenList:[],
+            tokenBalance:0
         }
     },
     computed:{
@@ -196,7 +197,6 @@ export default {
             MyGlobalApi.setNetworkType(this.networkType)
             let res = await MyGlobalApi.getPrice(this.ids)
             let { usd,cny } = res
-            console.log(this.currency,'this.currency 999999')
             if(this.currency === 'cny'){
                 this.price_currency = cny
             }else{
@@ -238,11 +238,13 @@ export default {
             })
         },
         async tokenShow(obj){
-            let {symbol,decimals} = obj
+            let {symbol,decimals,balance} = obj
             this.tokenName = symbol
             this.tokenDecimals = Number(decimals)
+            this.tokenBalance = balance
             let tokenList = await window.filecoinwalletDb.messageList.where({ 
                 rpc:this.rpc,
+                address:this.address,
                 token:this.tokenName
             }).toArray () || [];
             this.tokenList = tokenList.map(n=>{

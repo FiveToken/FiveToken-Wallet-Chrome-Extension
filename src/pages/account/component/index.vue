@@ -71,7 +71,7 @@
 </template>
 <script>
 import layout from '@/components/layout'
-import { getQueryString,getF1ByMne,deCodeMnePsd } from '@/utils'
+import { getQueryString,formatNumber,getF1ByMne,deCodeMnePsd } from '@/utils'
 import { mapMutations, mapState } from 'vuex'
 import kyBack from '@/components/back'
 import kyAdd from './add.vue'
@@ -109,15 +109,8 @@ export default {
         },
         formatBalance(val,decimals){
             let dec = val / Math.pow(10,Number(decimals))
-            var str = String(dec);
-            let index = str.indexOf('.')
-            if(index > -1){
-                let arr = str.split(".")
-                let num = arr[0] + "." + arr[1].substring(0,8)
-                return num
-            }else{
-                return dec
-            }
+            let num = formatNumber(dec,8)
+            return num
         }
     },
     components:{

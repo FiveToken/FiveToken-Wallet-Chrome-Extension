@@ -2,7 +2,7 @@
 <div class="top-components">
     <div class="top">
         <div class="center">
-            <div class="account">{{ accountName }}</div>
+            <div class="account">{{ accountName.substring(0,8)}}</div>
             <div class="copy-row">
                 <div  class="address">
                     {{ address | addressFormat }}
@@ -29,7 +29,7 @@
         </div>
     </div>
     <div class="middle">
-        <div class="fil">{{balance|formatBalance(4,that)}} {{symbol}}</div>
+        <div class="fil">{{balance |formatBalance(4,that)}} {{symbol}}</div>
         <div class="action">
             <div class="receive" @click="openReceive">
                 <div class="icon">
@@ -50,7 +50,7 @@
 
 <script>
 import ClipboardJS from 'clipboard'
-import { isFilecoinChain } from '@/utils'
+import { isFilecoinChain,formatNumber } from '@/utils'
 import { mapGetters, mapMutations, mapState } from 'vuex'
 
 export default {
@@ -78,15 +78,8 @@ export default {
         formatBalance(val,n,that){
             if(that.decimals){
                 let dec = val / Math.pow(10,Number(that.decimals))
-                var str = String(dec);
-                let index = str.indexOf('.')
-                if(index > -1){
-                    let arr = str.split(".")
-                    let num = arr[0] + "." + arr[1].substring(0,n)
-                    return num
-                }else{
-                    return dec
-                }
+                let num = formatNumber(dec,n)
+                return num
             }else{
                 return 0
             }

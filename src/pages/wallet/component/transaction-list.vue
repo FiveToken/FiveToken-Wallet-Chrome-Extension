@@ -11,7 +11,7 @@
         </div>
         <div class="list">
             <div class="list-property" v-if="type === '1'">
-                <div class="list-item" @click="skipToToken(symbol,decimals)">
+                <div class="list-item" @click="skipToToken(symbol,decimals,balance)">
                     <div class="logo">
                         <img class="img" :src="filLogo" />
                     </div>
@@ -27,7 +27,7 @@
                     class="list-item" 
                     v-for="(item,index) in tokenList" 
                     :key="index" 
-                    @click="skipToToken(item.symbol,item.decimals)"
+                    @click="skipToToken(item.symbol,item.decimals,item.balance)"
                 >
                     <div class="logo">
                         <img class="img" :src="filLogo" />
@@ -60,7 +60,7 @@
 
 <script>
 import { mapState } from 'vuex'
-import { formatDate } from '@/utils'
+import { formatDate,getQueryString,formatNumber} from '@/utils'
 import transactionItem from './transaction-item.vue'
 import ABI from '@/utils/abi'
 import { ethers } from 'ethers'
@@ -90,15 +90,8 @@ export default {
         formatBalance(val,n,decimals){
             if(decimals){
                 let dec = val / Math.pow(10,Number(decimals))
-                var str = String(dec);
-                let index = str.indexOf('.')
-                if(index > -1){
-                    let arr = str.split(".")
-                    let num = arr[0] + "." + arr[1].substring(0,n)
-                    return num
-                }else{
-                    return str
-                }
+                let num = formatNumber(dec,n)
+                return num 
             }else{
                 return 0
             }
@@ -127,6 +120,10 @@ export default {
         }
     },
     async mounted(){
+        let fromPage = getQueryString('fromPage')
+        if(fromPage === 'sendFil' || fromPage === 'messageDetail'){
+            this.type = '2'
+        }
         // get assets list
         this.getTokenList()
         // get activity list
@@ -137,7 +134,6 @@ export default {
             let mesList = await window.filecoinwalletDb.messageList.where({ 
                 rpc:this.rpc
             }).reverse().sortBy('create_time')|| []
-            
             let myMesList = mesList.filter(n=>{
                 return n.from === this.address || n.to === this.address
             })
@@ -146,7 +142,7 @@ export default {
                 // Get status
                 if(n.type === 'pending'){
                     let itemRes = await this.getDetail(n.signed_cid,n)
-                    console.log(itemRes,'getDetail 555555')
+                    console.log(itemRes,'itemRes 555555')
                     if(itemRes){
                         list.push(
                             {
@@ -185,12 +181,13 @@ export default {
             })
             // delete same nonce （ type = pending）
             this.deleteSameNonce()
-            this.activityList = list.sort((a,b)=>{
-                return a.block_time - b.block_time
-            })
+            this.activityList = list
         },
         async getTokenList(){
-            let list = await window.filecoinwalletDb.tokenList.where({ rpc:this.rpc,address:this.address }).toArray () || [];
+            let list = await window.filecoinwalletDb.tokenList.where({ 
+                rpc:this.rpc,
+                address:this.address
+            }).toArray () || [];
             let tokenList = []
             let provider = ethers.getDefaultProvider(this.rpc);
             list.forEach(async (n)=>{
@@ -198,10 +195,12 @@ export default {
                     let contract = new ethers.Contract(n.contract, ABI, provider);
                     contract.balanceOf(this.address).then(res=>{
                         let balance = res.toString()
+                        let num = Number(balance) / Number(n.decimals)
+                        console.log(num,n.decimals,'n.decimals 333')
                         tokenList.push(
                             {
                                 ...n,
-                                balance
+                                balance:num
                             }
                         )
                     })
@@ -210,6 +209,7 @@ export default {
                 }
             })
             this.tokenList = tokenList
+            console.log(tokenList,'tokenList 9999')
             return tokenList
         },
         async getDetail(signed_cid,itemObj){
@@ -218,8 +218,8 @@ export default {
             let detail = await MyGlobalApi.getTransaction(signed_cid)
             return detail
         },
-        skipToToken(symbol,decimals){
-            this.$emit('tokenShow',{symbol,decimals})
+        skipToToken(symbol,decimals,balance){
+            this.$emit('tokenShow',{symbol,decimals,balance})
         },
         async deleteSameNonce(){
             let mesList = await window.filecoinwalletDb.messageList.where({ 
@@ -249,8 +249,34 @@ export default {
             this.type = type
         },
         showDetail(item){
-            let { from,to,fil,all_gas_fee,create_time,block_time,type,signed_cid,value,allGasFee,token,decimals } = item
-            let listObj = { from,to,fil,all_gas_fee,create_time,block_time,type,signed_cid,value,allGasFee,token,decimals }
+            let { 
+                from,
+                to,
+                fil,
+                all_gas_fee,
+                create_time,
+                block_time,
+                type,
+                signed_cid,
+                value,
+                allGasFee,
+                token,
+                decimals 
+            } = item
+            let listObj = { 
+                from,
+                to,
+                fil,
+                all_gas_fee,
+                create_time,
+                block_time,
+                type,
+                signed_cid,
+                value,
+                allGasFee,
+                token,
+                decimals 
+            }
             let listObjStr = JSON.stringify(listObj)
             window.location.href = `./message-detail.html?signed_cid=${signed_cid}&listObjStr=${listObjStr}`
         },

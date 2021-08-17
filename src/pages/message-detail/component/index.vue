@@ -56,7 +56,7 @@
 <script>
 import layout from "@/components/layout";
 import kyBack from "@/components/back";
-import { getQueryString, formatDate, isFilecoinChain } from "@/utils";
+import { getQueryString,formatNumber, formatDate, isFilecoinChain } from "@/utils";
 import { mapState } from "vuex";
 export default {
   data() {
@@ -67,28 +67,14 @@ export default {
   filters: {
     formatAmount(val, n,decimals) {
       let dec = val / Math.pow(10,Number(decimals))
-      var str = String(dec);
-      let index = str.indexOf(".");
-      if (index > -1) {
-        let arr = str.split(".");
-        let num = arr[0] + "." + arr[1].substring(0, n);
-        return Number(num)
-      } else {
-        return str
-      }
+      let num = formatNumber(dec,n)
+      return num
     },
     formatGas(val, n,decimals) {
       console.log(decimals,'decimals 77777')
       let dec = val / Math.pow(10,Number(decimals))
-      var str = String(dec);
-      let index = str.indexOf(".");
-      if (index > -1) {
-        let arr = str.split(".");
-        let num = arr[0] + "." + arr[1].substring(0, n);
-        return Number(num);
-      } else {
-        return str;
-      }
+      let num = formatNumber(dec,n)
+      return num
     },
   },
   computed: {
@@ -128,7 +114,7 @@ export default {
   },
   methods: {
     back() {
-      this.$router.go(-1);
+      window.location.href = './wallet.html?fromPage=messageDetail';
     },
     viewInBroswer() {
       if (this.browser) {

@@ -93,43 +93,42 @@ export default {
     kyButton,
     //kyCanvas
   },
-  async mounted() {
+   mounted() {
     let color = randomColor({
         count: 10,
         hue: 'green'
     });
     console.log(color,'color10')
-    let tokenList = await window.filecoinwalletDb.tokenList.where({ khazix:'khazix' }).toArray () || [];
-    this.tokenList = tokenList
   },
   methods: {
-     layoutMounted() {},
+    async layoutMounted() {
+      let tokenList = await window.filecoinwalletDb.tokenList.where({ rpc:this.rpc,address:this.address }).toArray () || [];
+      this.tokenList = tokenList
+    },
     contractInput(val){
         let that = this
         this.contract = val
         let isExists = this.tokenList.find(item => {return item.contract == this.contract}) != undefined
         this.isExists = isExists
-        if(!isExists){
-            let provider = ethers.getDefaultProvider(this.rpc);
-            let contract = new ethers.Contract(this.contract, ABI, provider);
-            let decimalsPromise = contract.decimals()
-            let namePromise = contract.name()
-            let symbolPromise = contract.symbol()
-            Promise.all([decimalsPromise, namePromise, symbolPromise]).then((values) => {
-                if(values.length === 3){
-                    that.contractEffective = true
-                    that.decimals = values[0].toString()
-                    that.name = values[1]
-                    that.symbol = values[2]
-                }
-            }).catch(err=>{
-                that.contractEffective = false
-                that.decimals = ''
-                that.name = ''
-                that.symbol = ''
-                console.log(err,'err contractInput')
-            })
-        }
+        let provider = ethers.getDefaultProvider(this.rpc);
+        let contract = new ethers.Contract(this.contract, ABI, provider);
+        let decimalsPromise = contract.decimals()
+        let namePromise = contract.name()
+        let symbolPromise = contract.symbol()
+        Promise.all([decimalsPromise, namePromise, symbolPromise]).then((values) => {
+            if(values.length === 3){
+                that.contractEffective = true
+                that.decimals = values[0].toString()
+                that.name = values[1]
+                that.symbol = values[2]
+            }
+        }).catch(err=>{
+            that.contractEffective = false
+            that.decimals = ''
+            that.name = ''
+            that.symbol = ''
+            console.log(err,'err contractInput')
+        })
         
     },
     back() {
@@ -137,7 +136,7 @@ export default {
     },
     async addContract() {
         // rpc,name,decimals,symbol,khazix
-        if(this.contractEffective){
+        if(this.contractEffective && !this.isExists){
             await window.filecoinwalletDb.tokenList.add({
                 chainName:this.name,
                 decimals:this.decimals,

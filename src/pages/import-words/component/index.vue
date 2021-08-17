@@ -8,8 +8,9 @@
             <div class="input-item" :class="{error}">
                 <kyInput 
                     :value="form.mnemonicWords" 
-                    type="textarea" 
-                    :rows="3" 
+                    type="textarea"
+                    :rows="3"
+                    @focus="focus"
                     @changeInput="mnemonicWordsChange"
                 >
                 </kyInput>
@@ -34,7 +35,7 @@
 </template>
 
 <script>
-import { getQueryString,getF1ByMne,enCodeMnePsd} from '@/utils'
+import { getQueryString,trimStr,getF1ByMne,enCodeMnePsd} from '@/utils'
 import { MyGlobalApi } from '@/utils/api'
 import layout from '@/components/layout'
 import kyButton from '@/components/button'
@@ -85,18 +86,18 @@ export default {
         async importWallet(){
             
             if(!this.active) return
-            let volid = bip39.validateMnemonic(this.form.mnemonicWords)
+            let mneWords = trimStr(this.form.mnemonicWords)
+            let volid = bip39.validateMnemonic(mneWords)
             if(volid){
                 this.isFetch = true
                 this.error = false
-                let f1 = await getF1ByMne(this.form.mnemonicWords,this.form.password,this.networkType,this.filecoinAddress0)
+                let f1 = await getF1ByMne(mneWords,this.form.password,this.networkType,this.filecoinAddress0)
                 let { address,privateKey,digest } = f1
-                
                 let create_time =  parseInt(new Date().getTime() / 1000)
-                MyGlobalApi.setRpc(this.rpc)
-                MyGlobalApi.setNetworkType(this.networkType)
-                let res = await MyGlobalApi.getBalance(address)
-                let { balance,nonce } = res
+                // MyGlobalApi.setRpc(this.rpc)
+                // MyGlobalApi.setNetworkType(this.networkType)
+                // let res = await MyGlobalApi.getBalance(address)
+                // let { balance,nonce } = res
                 let accountName = this.form.accountName
                 await window.filecoinwalletDb.accountList.add({
                     accountName,
@@ -106,16 +107,16 @@ export default {
                     create_time,
                     khazix:'khazix',
                     digest,
-                    fil:balance,
+                    fil:0,
                     rpc:this.rpc
                 })
                 for (let n of this.networks){
                     if(n.rpc !== this.rpc){
-                        let oF1 = await getF1ByMne(this.form.mnemonicWords,this.form.password,n.networkType,n.filecoinAddress0)
-                        MyGlobalApi.setRpc(n.rpc)
-                        MyGlobalApi.setNetworkType(n.networkType)
-                        let oRes = await MyGlobalApi.getBalance(oF1.address)
-                        let { balance:oBanalce,nonce } = oRes
+                        let oF1 = await getF1ByMne(mneWords,this.form.password,n.networkType,n.filecoinAddress0)
+                        // MyGlobalApi.setRpc(n.rpc)
+                        // MyGlobalApi.setNetworkType(n.networkType)
+                        // let oRes = await MyGlobalApi.getBalance(oF1.address)
+                        // let { balance:oBanalce,nonce } = oRes
                         await window.filecoinwalletDb.accountList.add({
                             accountName,
                             address:oF1.address,
@@ -124,7 +125,7 @@ export default {
                             create_time,
                             khazix:'khazix',
                             digest:oF1.digest,
-                            fil:oBanalce,
+                            fil:0,
                             rpc:n.rpc
                         })
                     }
@@ -137,12 +138,12 @@ export default {
                     create_time,
                     khazix:'khazix',
                     createType:'mnemonic',
-                    fil:balance,
+                    fil:0,
                     digest,
                     rpc:this.rpc
                 })
                 
-                let encode = await enCodeMnePsd(this.form.mnemonicWords,this.form.password)
+                let encode = await enCodeMnePsd(mneWords,this.form.password)
                 let { mnemonic,password } = encode
                 await window.filecoinwalletDb.walletKey.where({khazix:'khazix'}).delete()
                 await window.filecoinwalletDb.walletKey.add({
@@ -158,9 +159,13 @@ export default {
             }
             
         },
+        focus(){
+            console.log('this.error = false')
+            this.error = false
+        },
         mnemonicWordsChange(val){
             if(val === '') this.error = false
-            this.form.mnemonicWords = val
+            this.$set(this.form,'mnemonicWords',val)
         },
         getQuery(name) { 
             var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i"); 

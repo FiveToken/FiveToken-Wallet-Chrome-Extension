@@ -37,7 +37,7 @@
 
 <script>
 import { debounce } from 'lodash'
-import { getQueryString,getF1ByPrivateKey,deCodeMnePsd,isFilecoinChain } from '@/utils'
+import { getQueryString,trimStr,getF1ByPrivateKey,deCodeMnePsd,isFilecoinChain } from '@/utils'
 import { MyGlobalApi } from '@/utils/api'
 import layout from '@/components/layout'
 import kyInput from '@/components/input'
@@ -124,10 +124,10 @@ export default {
                     if(!isExist){
                         let accountName = `Account` + (this.accountList.length + 1)
                         let create_time =  parseInt(new Date().getTime() / 1000)
-                        MyGlobalApi.setRpc(this.rpc)
-                        MyGlobalApi.setNetworkType(this.customNetworkType)
-                        let res = await MyGlobalApi.getBalance(address)
-                        let { balance,nonce } = res
+                        // MyGlobalApi.setRpc(this.rpc)
+                        // MyGlobalApi.setNetworkType(this.customNetworkType)
+                        // let res = await MyGlobalApi.getBalance(address)
+                        // let { balance,nonce } = res
                         await window.filecoinwalletDb.accountList.add({
                             accountName,
                             address,
@@ -136,7 +136,7 @@ export default {
                             create_time,
                             khazix:'khazix',
                             digest,
-                            fil:balance,
+                            fil:0,
                             rpc:this.net
                         })
                         await window.filecoinwalletDb.activeAccount.where({khazix:'khazix'}).delete()
@@ -147,7 +147,7 @@ export default {
                             create_time,
                             khazix:'khazix',
                             createType:'privateKey',
-                            fil:balance,
+                            fil:0,
                             digest,
                             rpc:this.net
                         })
@@ -183,10 +183,11 @@ export default {
             }
         },
         async getf1ByCK(){
-            let { password } = this.mnePsd 
+            let { password } = this.mnePsd
+            let thisPk = trimStr(this.privatekey)
             try {
                 if(isFilecoinChain(this.customNetworkType)){
-                    let keyStore = JSON.parse(Buffer.from(this.privatekey, 'hex').toString())
+                    let keyStore = JSON.parse(Buffer.from(thisPk, 'hex').toString())
                     if(keyStore.Type === 'bls'){
                         return null
                     }else{
@@ -195,8 +196,7 @@ export default {
                         return f1
                     }
                 }else{
-                    let privateKey = this.privatekey
-                    let f1 = await getF1ByPrivateKey(privateKey,password,this.customNetworkType,this.customFilecoinAddress0)
+                    let f1 = await getF1ByPrivateKey(thisPk,password,this.customNetworkType,this.customFilecoinAddress0)
                     return f1
                 }
                 

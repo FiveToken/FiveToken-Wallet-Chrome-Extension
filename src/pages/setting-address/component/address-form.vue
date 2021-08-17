@@ -58,7 +58,7 @@
             </div>
             <div class="position">
                 <div class="btn-box">
-                    <kyButton @click="btnClick">{{$t('settingAddress.cancel')}}</kyButton>
+                    <kyButton @btnClick="cancelEdit">{{$t('settingAddress.cancel')}}</kyButton>
                     <kyButton :type="'primary'" :active="editActive" @btnClick="confirmEdit">
                         {{$t('settingAddress.confirm')}}
                     </kyButton>
@@ -99,10 +99,11 @@ export default {
     props:{
         pageType:String,
         detailObj:Object,
-        to:String
+        to:String,
+        addressBook:Array
     },
     computed:{
-        ...mapState('app',['rpc','networkType']),
+        ...mapState('app',['rpc','networkType','accountList']),
         pageName(){
             let str = ''
             switch (this.pageType){
@@ -200,16 +201,24 @@ export default {
         },
         async addConfirm(){
             let voild = isValidAddress(this.add.address,this.networkType)
+            let isExist = this.addressBook.filter(n => {
+                return n.address === this.add.address
+            })
+            console.log(isExist,this.addressBook,this.add.address,'isExist 333')
             if(voild){
-                let create_time =  parseInt(new Date().getTime() / 1000)
-                await window.filecoinwalletDb.addressBook.add({
-                    address:this.add.address,
-                    accountName:this.add.accountName,
-                    create_time,
-                    rpc:this.rpc,
-                    khazix:'khazix'
-                })
-                this.$emit('addAddressCb')
+                if(isExist.length){
+                    this.$message.error(this.$t('settingAddress.addressIsExist')) 
+                }else{
+                    let create_time =  parseInt(new Date().getTime() / 1000)
+                    await window.filecoinwalletDb.addressBook.add({
+                        address:this.add.address,
+                        accountName:this.add.accountName,
+                        create_time,
+                        rpc:this.rpc,
+                        khazix:'khazix'
+                    })
+                    this.$emit('addAddressCb')
+                }
             }else{
                 this.$message.error(this.$t('settingAddress.addressError')) 
             }
@@ -239,9 +248,9 @@ export default {
                     accountName:this.edit.accountName
                 }).then(res=>{
                 console.log(this.detail,this.edit,'editeditedit')
-                this.detail = Object.assign({}, this.detail, { name:this.edit.accountName, address:this.edit.address})
+                this.detail = Object.assign({}, this.detail, { accountName:this.edit.accountName, address:this.edit.address})
                 this.$message.success(this.$t('settingAddress.editSuccess'))
-                this.$emit("update:pageType",'detail')
+                this.$emit("editAddressCb")
             })
         }
     }

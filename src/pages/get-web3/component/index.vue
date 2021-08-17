@@ -37,8 +37,10 @@ export default {
             loading:require('@/assets/image/loading.png'),
             src:'',
             address:'',
+            isFetch:false,
             connectOrigin:'',
-            accountName:''
+            accountName:'',
+            active:true
         }
     },
     components:{
@@ -71,26 +73,33 @@ export default {
             popupWindowRemove()
         },
         async getValue(){
+            console.log(12312)
             let res = popupGetVal('getWeb3')
-            let {address,rpc} = res
-            let web3FileDb = await window.filecoinwalletDb.web3File.where({ rpc:rpc,address:address}).toArray () || [];
-            console.log(address,rpc,web3FileDb,'web3FileDb')
-            if(web3FileDb.length){
-                this.isFetch = true
-                const client = new Web3Storage({ token: this.apiToken })
-                let cid = web3FileDb[0].cid
-                let result = await client.get(cid)
-                const files = await result.files()
-                let file0 = await this.getBase64(files[0])
-                let file1 = await this.getBase64(files[1])
-                let data = [file0,file1]
-                console.log(file0,file1,'file0,file1 5555')
-                this.isFetch = false
-                popupToBackground('scriptWeb3Storage', data)
+            try{
+                let {address,rpc} = res
+                let web3FileDb = await window.filecoinwalletDb.web3File.where({ rpc:rpc,address:address}).toArray () || [];
+                console.log(address,rpc,web3FileDb,'web3FileDb')
+                if(web3FileDb.length){
+                    this.isFetch = true
+                    const client = new Web3Storage({ token: this.apiToken })
+                    let cid = web3FileDb[0].cid
+                    let result = await client.get(cid)
+                    const files = await result.files()
+                    let file0 = await this.getBase64(files[0])
+                    let file1 = await this.getBase64(files[1])
+                    let data = [file0,file1]
+                    console.log(file0,file1,'file0,file1 5555')
+                    this.isFetch = false
+                    popupToBackground('scriptWeb3Storage', data)
+                    this.canael()
+                }else{
+                    this.$message.error('Current account does not save data')
+                }
+            }catch(error){
+                
                 this.canael()
-            }else{
-                this.$message.error('Current account does not save data')
             }
+            
         },
         getBase64(file) {
             return new Promise((resolve, reject) => {

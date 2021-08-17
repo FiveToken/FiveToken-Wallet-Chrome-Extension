@@ -4,17 +4,13 @@
             <kyBack :name="tokenName" @pageBack='closeToken'/>
         </div>
         <div class="logo"></div>
-        <div class="balance">{{balance|formatBalance(tokenDecimals)}} {{symbol}}</div>
-        <div class="usd">
-            {{ currency === 'cny' ? "¥" : "$"}} 
-            {{balance|formatUsd(price_currency,tokenDecimals)}}
-        </div>
+        <div class="balance">{{tokenBalance|formatBalance(tokenDecimals)}} {{tokenName}}</div>
         <div class="action">
             <div class="receive" @click="openReceive">
                 <div class="icon">
                     <img class="img" :src="send" />
                 </div>
-                <div class="text">{{$t('wallet.receive')}}</div>
+                <div class="text">{{$t('wallet.received')}}</div>
             </div>
             <div class="send" @click="sendFil">
                 <div class="icon">
@@ -36,6 +32,7 @@
 import kyBack from '@/components/back'
 import { mapState } from 'vuex';
 import transactionItem from './transaction-item.vue'
+import {formatNumber} from '@/utils'
 export default {
     data(){
         return{
@@ -47,8 +44,8 @@ export default {
         ...mapState('app',['currency'])
     },
     props:{
+        tokenBalance:Number,
         tokenName:String,
-        balance:Number,
         price_currency:Number,
         receiveVisible:Boolean,
         tokenVisible:Boolean,
@@ -59,28 +56,8 @@ export default {
     filters:{
         formatBalance(val,decimals){
             let dec = val / Math.pow(10,Number(decimals))
-            var str = String(dec);
-            let index = str.indexOf('.')
-            if(index > -1){
-                let arr = str.split(".")
-                let num = arr[0] + "." + arr[1].substring(0,8)
-                return num
-            }else{
-                return dec
-            }
-        },
-        formatUsd(val,usd,decimals){
-            let num = val * usd
-            let dec = num / Math.pow(10,Number(decimals))
-            let str = String(dec)
-            let index = str.indexOf('.')
-            if(index > -1){
-                let arr = str.split(".")
-                let n = arr[0] + "." + arr[1].substring(0,2)
-                return n
-            }else{
-                return dec
-            }
+            let num = formatNumber(dec,8)
+            return num
         }
     },
     components:{

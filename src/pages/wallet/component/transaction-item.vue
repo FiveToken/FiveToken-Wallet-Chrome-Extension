@@ -41,6 +41,7 @@
 <script>
 import { mapState } from 'vuex'
 import transactionItem from './transaction-item.vue'
+import {formatNumber} from '@/utils'
 export default {
     data(){
         return{
@@ -70,15 +71,8 @@ export default {
         },
         formatBalance(val,n,decimals){
             let dec = val / Math.pow(10,Number(decimals))
-            var str = String(dec);
-            let index = str.indexOf('.')
-            if(index > -1){
-                let arr = str.split(".")
-                let num = arr[0] + "." + arr[1].substring(0,n)
-                return num
-            }else{
-                return str
-            }
+            let num = formatNumber(dec,n)
+            return num
         },
         formatStatusName(type,that){
             let name = ''

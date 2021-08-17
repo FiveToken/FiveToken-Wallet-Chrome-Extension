@@ -7,6 +7,18 @@ import { Wallet } from "ethers";
 const encodeKey = 'five'
 export const fiveTokenVersion = '1.1.0'
 
+export function formatNumber(value,n){
+  let str = '' + value
+  let index = str.indexOf('.')
+  if(index > -1){
+      let arr = str.split(".")
+      let num = arr[0] + "." + arr[1].substring(0,n)
+      return Number(num)
+  }else{
+      return Number(str)
+  }
+}
+
 export function isProxy(networkType){
   return networkType === 'proxy'
 }
@@ -136,15 +148,6 @@ export function getQueryString(name) {
   return null; 
 }
 
-export function getNowFormatDateEn() {
-  let date = new Date();
-  let seperator = "-";
-  let year = date.getFullYear();
-  let month = date.getMonth() + 1;
-  let day = date.getDate();
-  let currentdate = add0(month) + seperator + add0(day) + seperator + year  ;
-  return currentdate;
-}
 
 export function formatDate(timestamp,second){
   if(timestamp === '') return
@@ -162,43 +165,8 @@ export function formatDate(timestamp,second){
   }
 }
 
-export function formatDateEn(timestamp){
-  if(timestamp === '') return
-  let date = new Date(timestamp * 1000);
-  let y = date.getFullYear();
-  let m = date.getMonth()+1;
-  let d = date.getDate() ;
-  let h = date.getHours();
-  let mm = date.getMinutes();
-  let s = date.getSeconds();
-  return add0(m) + '-' + add0(d)+ '-' + y
-}
 
 export function add0(m){return m<10?'0'+m:m }
-
-export function formatFilNum(num, size = 5) {
-  num = parseE(String(num))
-  let dot = String(num).split('.')[1]
-  let zero = 1
-  if (dot) {
-      for (let v of dot) {
-          if (Number(v) !== 0) {
-              break
-          } else {
-              zero++
-          }
-      }
-      if (zero <= 5) {
-          return fixedFloat(num,size) + ' FIL'
-      } else if (zero > 5 && zero <= 13) {
-          return fixedFloat((Number(num) * Math.pow(10, 9)),size) + ' nanoFIL'
-      } else {
-          return fixedFloat((Number(num) * Math.pow(10, 18)),size) + ' attoFIL'
-      }
-  } else {
-      return num + ' FIL'
-  }
-}
 
 
 export function parseE(str) {
@@ -229,14 +197,6 @@ export function parseE(str) {
   return r 
 }
 
-function fixedFloat(num,size=2){
-  const [int,dot]=String(num).split('.')
-  if(dot){
-    return Number(int)- -parseFloat('0.'+dot).toPrecision(size)
-  }else{
-    return num
-  }
-}
 
 export function isValidAddress(v,networkType){
   console.log(v,networkType,'v,networkType')

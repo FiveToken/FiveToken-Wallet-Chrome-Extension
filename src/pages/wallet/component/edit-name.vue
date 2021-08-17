@@ -8,7 +8,7 @@
        <div class="add-content">
            <div class="input-item">
                <div class="label">{{ $t('wallet.editLabel') }}</div>
-               <kyInput :value="addressName" @changeInput="changeInput"/>
+               <kyInput :value="addressName" @changeInput="changeInput" maxlength='15'/>
            </div>
            <div class="tips">{{ $t('wallet.editTips') }}</div>
            <div class="btn-wrap">

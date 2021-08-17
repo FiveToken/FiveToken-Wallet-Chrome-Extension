@@ -8,8 +8,7 @@
                 <img :src="logo" alt="" class="img">
             </div>
             <div class="amount">
-                {{(formData.fil ) | formatBalance(8)}}
-                {{formData.symbol}}
+                {{ sendAmount }} {{formData.symbol}}
             </div>
             <div class="send-amount">{{$t('sendFil.sendAmount')}}</div>
             <div class="from-to">
@@ -27,7 +26,7 @@
                         <div class="fee-title">
                             <div class="label">{{$t('sendFil.maxGas')}}</div>
                             <div class="amount">
-                                <div class="token">{{ allGasFee | formatBalance(8)}} {{symbol}}</div>
+                                <div class="token">{{ allGasFee | formatGas(8)}} {{symbol}}</div>
                                 <div class="usd">
                                     {{ currency === 'cny' ? "¥" : "$"}} 
                                     {{ allGasFee | formatUSD(8,price_currency)}}
@@ -73,7 +72,7 @@ import { mapState } from 'vuex'
 import kyBack from '@/components/back'
 import kyInput from '@/components/input'
 import kyButton from '@/components/button'
-import { getGasFeeCap,isFilecoinChain } from '@/utils'
+import {isFilecoinChain,formatNumber } from '@/utils'
 export default {
     data(){
         return{
@@ -81,29 +80,14 @@ export default {
         }
     },
     filters:{
-        formatBalance(val,n){
-            var str = String(val);
-            let index = str.indexOf('.')
-            if(index > -1){
-                let arr = str.split(".")
-                let num = arr[0] + "." + arr[1].substring(0,n)
-                return num
-            }else{
-                return val
-            }
+        formatGas(val,n){
+            let num = formatNumber(val,n)
+            return num
         },
         formatUSD(val,n,price_currency){
             let usd = val * price_currency
-            var str = String(usd);
-            let index = str.indexOf('.')
-            if(index > -1){
-                let arr = str.split(".")
-                let num = arr[0] + "." + arr[1].substring(0,n)
-                console.log(num,'nnnuuuummmm 11122333')
-                return num
-            }else{
-                return usd
-            }
+            let num = formatNumber(usd,n)
+            return num
         },
         addressFormat(val){
             if(val.length>16){
@@ -115,8 +99,22 @@ export default {
     },
     computed:{
         ...mapState('app',['rpc','symbol','address','networkType','currency']),
+        sendAmount(){
+            let num = 0
+            if(this.formData.isAll){
+                if(this.formData.balance - this.allGasFee >= 0){
+                    num = this.formData.fil
+                }else{
+                    num = this.formData.balance
+                }
+            }else{
+                num = this.formData.fil
+            }
+            return num 
+        },
         allGasFee(){
             let gas = this.formData.gasFeeCap * this.formData.gasLimit / Math.pow(10,Number(9))
+            console.log(gas,'gasgasgas')
             return gas || 0
         },
         gasUnit(){
@@ -129,7 +127,12 @@ export default {
             return unit
         },
         total(){
-            let total = Number(this.formData.fil) + this.allGasFee
+            let total = 0
+            if(this.formData.isAll){
+                total = Number(this.formData.fil)
+            }else{
+                total = Number(this.formData.fil) + this.allGasFee
+            }
             return total
         },
         active(){
@@ -153,7 +156,19 @@ export default {
         },
         send(){
             if(this.active){
-                this.$emit('sendFil')
+                if(this.formData.isAll){
+                    let val = 0
+                    if(this.formData.fil > this.allGasFee){
+                        val = this.formData.fil - this.allGasFee
+                        this.$emit('formDataChange',{
+                            key:'fil',
+                            value:val,
+                        })
+                        this.$emit('sendFil')
+                    }else{
+                        this.$message.error(this.$t('sendFil.insufficientBalance'))
+                    }
+                }
             }
         },
         gasFeeCapChange(val){

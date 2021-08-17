@@ -21,7 +21,7 @@
             <div class="input-item">
                 <div class="label">{{$t('sendFil.toAddress')}}</div>
                 <div class="value">
-                    <div class="name" v-if="formData.toName">{{formData.toName}}</div>
+                    <div class="name" v-if="formData.toName">{{formData.toName.substring(0,8)}}</div>
                     <div class="address">
                         <kyInput :value="formData.to" @changeInput="toChange"/>
                     </div>
@@ -38,7 +38,7 @@
                 </div>
                 <div class="available">
                     {{ $t('sendFil.available') }} :
-                    {{ formData.balance | formatBalance(12,formData.decimals) }}
+                    {{ formData.balance }}
                     {{ formData.symbol }}
                 </div>
             </div>
@@ -85,7 +85,7 @@ import kyInput from '@/components/input'
 import kyButton from '@/components/button'
 import kyAddress from './address.vue'
 import kyToken from './token.vue'
-import { isValidAddress} from '@/utils'
+import { isValidAddress,formatNumber } from '@/utils'
 import { mapState } from 'vuex'
 export default {
     data(){
@@ -110,17 +110,10 @@ export default {
         },
     },
     filters:{
-        formatBalance(val,n,decimals){
-            let dec = val / Math.pow(10,Number(decimals))
-            var str = String(dec);
-            let index = str.indexOf('.')
-            if(index > -1){
-                let arr = str.split(".")
-                let num = arr[0] + "." + arr[1].substring(0,n)
-                return num
-            }else{
-                return dec
-            }
+        formatBalance(val,n){
+            let dec = Number(val)
+            let num = formatNumber(dec,n)
+            return num
         },
     },
     components:{

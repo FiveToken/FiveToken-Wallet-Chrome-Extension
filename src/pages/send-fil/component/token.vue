@@ -21,7 +21,7 @@
                 </div>
                 <div class="info">
                     <div class="b-s">
-                        <div class="balance">{{item.balance / Math.pow(10,Number(item.decimals))}}</div>
+                        <div class="balance">{{item.balance }}</div>
                         <div class="symbol">{{item.symbol}}</div>
                     </div>
                     <div class="name">{{item.chainName}}</div>
@@ -35,7 +35,7 @@
                 </div>
                 <div class="info">
                     <div class="b-s">
-                        <div class="balance">{{item.balance/ Math.pow(10,Number(item.decimals))}}</div>
+                        <div class="balance">{{item.balance }}</div>
                         <div class="symbol">{{item.symbol}}</div>
                     </div>
                     <div class="name">{{item.chainName}}</div>

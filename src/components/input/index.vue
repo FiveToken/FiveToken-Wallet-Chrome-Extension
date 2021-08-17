@@ -1,7 +1,7 @@
 <template>
     <div class="input-component" :class="{'error-input':error}">
-        <el-input v-model.trim="currentValue" v-bind="$attrs" v-on="$listeners">
-            <i v-if="suffix" slot="suffix" class="el-icon-view" :class="{eye}" @click="toggleEyes"></i>
+        <el-input v-model="currentValue" v-bind="$attrs" v-on="$listeners">
+            <i v-if="suffix" slot="suffix" class="el-icon-view" :class="{eye:!eye}" @click="toggleEyes"></i>
         </el-input>
     </div>
 </template>

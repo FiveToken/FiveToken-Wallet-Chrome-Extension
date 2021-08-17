@@ -24,8 +24,8 @@
         </div>
         <div class="select-wrap" v-else>
             <el-collapse :value="collapse">
-                <el-collapse-item :title="$t('sendFil.recordLast')" name="1">
-                    <div class="address-list" v-if="addressRecordLast">
+                <el-collapse-item :title="$t('sendFil.recordLast')" name="1" v-if="addressRecordLast.length">
+                    <div class="address-list">
                         <div class="address-item" v-for="(item,index) in addressRecordLast" :key="index" @click="addressClick(item,'record')">
                             <div class="address">{{item.address}}</div>
                         </div>
@@ -39,8 +39,8 @@
                         </div>
                     </div>
                 </el-collapse-item>
-                <el-collapse-item :title="$t('sendFil.addressBook')" name="3">
-                    <div class="address-list" v-if="addressBook">
+                <el-collapse-item :title="$t('sendFil.addressBook')" name="3" v-if="addressBook.length">
+                    <div class="address-list">
                         <div class="address-item" v-for="(item,index) in addressBook" :key="index" @click="addressClick(item,'book')">
                             <div class="addressName">{{item.accountName}}</div>
                             <div class="address">{{item.address}}</div>
@@ -62,7 +62,7 @@ export default {
         return{
             search:'',
             searchList:[],
-            collapse:''
+            collapse:['1','3']
         }
     },
     computed:{
@@ -172,6 +172,9 @@ export default {
     .select-wrap{
         /deep/.el-collapse-item__header{
             padding: 0 20px;
+            background: #AFE0E5;
+            height: 44px;
+            line-height: 44px;
         }
         /deep/.el-collapse-item__content{
             padding-bottom: 0;

@@ -3,7 +3,7 @@ import { ethers } from 'ethers'
 import { fil2atto,formatDate } from '@/utils'
 import { getGasFeeCap,getGasLimit } from '@/utils'
 import { getT1SignedMsg } from '@/utils/message'
-import { Message } from 'element-ui';
+import { Message } from 'element-ui'
 import { 
     BalanceNonceByAddress,
     MessagePush,
@@ -252,7 +252,7 @@ class GlobalApi{
                         let total_amount = Number(value) + all_gas_fee
                         let mType = 'pending'
                         if(stateRes.ExitCode === 0){
-                            console.log(filRes,stateRes,mType,'MessageDetails 44444')
+                            console.log(filRes,'888888222222')
                             mType = 'success'
                         }
                         if( stateRes.ExitCode && stateRes.ExitCode !== 0){
@@ -598,6 +598,7 @@ class FilecoinAPI{
             let gasLimit = 0
             let gasPremium = 0
             let gasFeeCap = 0
+            console.log(res,'getBaseFeeAndGas res')
             if(res && res.result){
                 gasLimit = res.result.GasLimit
                 gasPremium = res.result.GasPremium
@@ -609,12 +610,12 @@ class FilecoinAPI{
                 gasFeeCap
             }
         }catch(error){
+            console.log(error,'getBaseFeeAndGas err')
             return {
                 gasLimit:0,
                 gasPremium:0,
                 gasFeeCap:0
             }
-            console.log(error,'getBaseFeeAndGas err')
         }
     }
     async getNonce(address){

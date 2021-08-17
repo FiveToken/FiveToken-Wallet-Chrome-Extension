@@ -41,13 +41,13 @@ const zh = {
   importWords:{
     title:'导入助记词',
     subTitle:'请输入您的助记词，以恢复您的钱包',
-    tips:'单词使用空格分割',
+    tips:'单词使用空格分隔',
     btn:'导入',
     error:'助记词错误',
     exist:'账户已存在'
   },
   importPrivatkey:{
-    title:'导入钱包',
+    title:'导入私钥',
     label1:'请选择支持的网络',
     label2:'请输入您的私钥，以恢复您的钱包',
     btn:'导入',
@@ -183,10 +183,11 @@ const zh = {
   },
   settingAbout:{
     about:'关于',
-    filVersion:'FiveToken 版本',
+    filVersion:'FiveToken',
+    Version:'Version',
     tips:'Filecoin生态领域的连接器，多链融合，未来存储世界的入口。',
     privacy:'隐私政策',
-    useRule:'使用条款'
+    useRule:'用户使用协议'
   },
   settingBackups:{
     backupsCheck:'备份验证',
@@ -216,6 +217,7 @@ const zh = {
     editAddress:'编辑地址',
     copySuccess:'复制成功',
     editSuccess:'编辑成功',
+    addressIsExist:'地址已存在',
     add:'添加'
   },
   lock:{

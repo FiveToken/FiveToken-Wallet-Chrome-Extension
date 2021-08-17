@@ -115,16 +115,16 @@ export default {
                 let { address,privateKey,digest } = f1
                 let accountName = this.accountName
                 let create_time =  parseInt(new Date().getTime() / 1000)
-                MyGlobalApi.setRpc(this.rpc)
-                MyGlobalApi.setNetworkType(this.networkType)
-                let res = await MyGlobalApi.getBalance(address)
-                let { balance,nonce } = res
+                // MyGlobalApi.setRpc(this.rpc)
+                // MyGlobalApi.setNetworkType(this.networkType)
+                // let res = await MyGlobalApi.getBalance(address)
+                // let { balance,nonce } = res
                 await window.filecoinwalletDb.accountList.add({
                     address,
                     accountName,
                     createType:'mnemonic',
                     privateKey,
-                    fil:balance,
+                    fil:0,
                     create_time,
                     khazix:'khazix',
                     digest,
@@ -133,10 +133,10 @@ export default {
                 for (let n of this.networks){
                     if(n.rpc !== this.rpc){
                         let oF1 = await getF1ByMne(mne,this.password,n.networkType,n.filecoinAddress0)
-                        MyGlobalApi.setRpc(n.rpc)
-                        MyGlobalApi.setNetworkType(n.networkType)
-                        let oRes = await MyGlobalApi.getBalance(oF1.address)
-                        let { balance:oBanalce,nonce } = oRes
+                        // MyGlobalApi.setRpc(n.rpc)
+                        // MyGlobalApi.setNetworkType(n.networkType)
+                        // let oRes = await MyGlobalApi.getBalance(oF1.address)
+                        // let { balance:oBanalce,nonce } = oRes
                         await window.filecoinwalletDb.accountList.add({
                             accountName,
                             address:oF1.address,
@@ -145,7 +145,7 @@ export default {
                             create_time,
                             khazix:'khazix',
                             digest:oF1.digest,
-                            fil:oBanalce,
+                            fil:0,
                             rpc:n.rpc
                         })
                     }
@@ -158,7 +158,7 @@ export default {
                     createType:'mnemonic',
                     create_time,
                     khazix:'khazix',
-                    fil:balance,
+                    fil:0,
                     digest,
                     rpc:this.rpc
                 })

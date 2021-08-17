@@ -9,8 +9,10 @@
                 :addressBook="addressBook"
             />
             <addressFrom 
-                v-else 
-                @addAddressCb="addAddressCb" 
+                v-else
+                :addressBook="addressBook"
+                @addAddressCb="addAddressCb"
+                @editAddressCb="editAddressCb"
                 :pageType.sync="pageType" 
                 :detailObj="detailObj" 
                 :to="to"
@@ -70,6 +72,12 @@ export default {
             let addressBook = await window.filecoinwalletDb.addressBook.where({ rpc:rpc}).toArray () || [];
             this.addressBook = addressBook
             this.pageType = 'list'
+        },
+        async editAddressCb(){
+            let rpc = this.rpc
+            let addressBook = await window.filecoinwalletDb.addressBook.where({ rpc:rpc}).toArray () || [];
+            this.addressBook = addressBook
+            this.pageType = 'detail'
         }
     }
 }

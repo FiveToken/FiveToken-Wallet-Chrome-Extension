@@ -9,7 +9,7 @@
                     <img class="img" :src="logo" />
                 </div>
                 <div class="fivetoken">{{$t('settingAbout.filVersion')}}</div>
-                <div class="version">{{version}}</div>
+                <div class="version">{{$t('settingAbout.Version')}}{{version}}</div>
                 <div class="tips">{{$t('settingAbout.tips')}}</div>
                 <div class="privacy-policy" @click="toPrivacy">{{$t('settingAbout.privacy')}}</div>
                 <div class="use-rule" @click="toService">{{$t('settingAbout.useRule')}}</div>

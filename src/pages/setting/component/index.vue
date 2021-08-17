@@ -10,6 +10,7 @@
                         <div class="link">
                             <div class="left">{{$t('setting.currency')}}</div>
                             <div class="right">
+                                <div class="text">{{currencyName}}</div>
                                 <i class="el-icon-arrow-right"></i>
                             </div>
                         </div>
@@ -18,6 +19,7 @@
                         <div class="link">
                             <div class="left">{{$t('setting.language')}}</div>
                             <div class="right">
+                                <div class="text">{{languageName}}</div>
                                 <i class="el-icon-arrow-right"></i>
                             </div>
                         </div>
@@ -58,7 +60,7 @@ import layout from '@/components/layout'
 import kyBack from '@/components/back'
 import kyCurrency from './currency.vue'
 import kyLanguage from './language.vue'
-import { mapMutations } from 'vuex'
+import { mapMutations, mapState } from 'vuex'
 
 export default {
     data(){
@@ -66,6 +68,33 @@ export default {
             createType:'',
             currencyVisible:false,
             languageVisible:false
+        }
+    },
+    computed:{
+        ...mapState('app',['currency','language']),
+        currencyName(){
+            let str = ''
+            let obj = {
+                usd:'USD',
+                cny:'CNY'
+            }
+            if(obj.hasOwnProperty(this.currency)){
+                str = obj[this.currency]
+            }
+            return str
+        },
+        languageName(){
+            let str = ''
+            let obj = {
+                zh:'中文',
+                en:'English',
+                ko:'한국어',
+                ja:'日本語'
+            }
+            if(obj.hasOwnProperty(this.language)){
+                str = obj[this.language]
+            }
+            return str
         }
     },
     components:{
@@ -126,6 +155,7 @@ export default {
                 height: 50px;
                 line-height: 50px;
                 border-bottom: 1px solid #eee;
+                position: relative;
                 .link{
                     color: #222;
                     text-decoration: none;
@@ -137,6 +167,14 @@ export default {
                         font-size: 14px;
                         color: #222;
                         text-decoration: none;
+                    }
+                    .right{
+                        .text{
+                            position: absolute;
+                            right: 40px;
+                            top: 50%;
+                            transform: translateY(-50%);
+                        }
                     }
                 }
             }

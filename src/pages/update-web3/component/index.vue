@@ -53,8 +53,10 @@ export default {
             nickname:'',
             address:'',
             describe:'',
+            isFetch:false,
             connectOrigin:'',
-            accountName:''
+            accountName:'',
+            active:true
         }
     },
     components:{
@@ -90,33 +92,39 @@ export default {
             popupWindowRemove()
         },
         async updateValue(){
-            this.isFetch = true
-            let res = popupGetVal('uploadWeb3')
-            let { file,info,option } = res
-            let web3File = this.dataURLtoFile(file,'web3File')
-            const infoFile = new File([JSON.stringify(info)], 'info')
-            const client = new Web3Storage({ token: this.apiToken })
-            console.log(info,'info 999999')
-            let result = await client.put([web3File,infoFile],option)
-            console.log(result,'result 44444444')
-            // web3File:'address,rpc,nickname,describe,cid,create_time,khazix'
-            await window.filecoinwalletDb.web3File.where({ 
-                address:info.address,
-                rpc:info.rpc,
-            }).delete()
-            let create_time =  parseInt(new Date().getTime() / 1000)
-            await window.filecoinwalletDb.web3File.add({
-                address:info.address,
-                rpc:info.rpc,
-                nickname:info.nickname,
-                describe:info.describe,
-                cid:result,
-                create_time,
-                khazix:'khazix',
-            })
-            this.isFetch = false
-            popupToBackground('scriptUpdateWeb3Storage', result)
-            this.cancel()
+            try{
+                this.isFetch = true
+                let res = popupGetVal('uploadWeb3')
+                let { file,info,option } = res
+                let web3File = this.dataURLtoFile(file,'web3File')
+                const infoFile = new File([JSON.stringify(info)], 'info')
+                const client = new Web3Storage({ token: this.apiToken })
+                console.log(info,'info 999999')
+                let result = await client.put([web3File,infoFile],option)
+                console.log(result,'result 44444444')
+                // web3File:'address,rpc,nickname,describe,cid,create_time,khazix'
+                await window.filecoinwalletDb.web3File.where({ 
+                    address:info.address,
+                    rpc:info.rpc,
+                }).delete()
+                let create_time =  parseInt(new Date().getTime() / 1000)
+                await window.filecoinwalletDb.web3File.add({
+                    address:info.address,
+                    rpc:info.rpc,
+                    nickname:info.nickname,
+                    describe:info.describe,
+                    cid:result,
+                    create_time,
+                    khazix:'khazix',
+                })
+                this.isFetch = false
+                popupToBackground('scriptUpdateWeb3Storage', result)
+                this.cancel()
+            }catch(error){
+                console.log(error,12312312)
+                // this.isFetch = false
+            }
+            
         },
         dataURLtoFile: function(dataurl, filename) { 
             var arr = dataurl.split(','),

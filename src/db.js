@@ -55,7 +55,7 @@ window.filecoinwalletDb.networks.where({ khazix:'khazix'}).toArray().then(res=>{
                 chainID:'',
                 symbol:'FIL',
                 ids:'filecoin',
-                browser:'https://calibration.filscan.io/#',
+                browser:'https://calibration.filscan.io/',
                 khazix:'khazix',
                 networkType:'filecoin',
                 filecoinAddress0:'t',

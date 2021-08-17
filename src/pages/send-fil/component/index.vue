@@ -31,7 +31,7 @@
 import stepOne from './step-1'
 import stepTwo from './step-2'
 import layout from '@/components/layout'
-import { validatePassword,getPrivateKey,deCodeMnePsd} from '@/utils'
+import { validatePassword,getPrivateKey,deCodeMnePsd,formatNumber} from '@/utils'
 import { MyGlobalApi } from '@/utils/api'
 import { BaseFeeAndGas } from '@/utils/fil-api'
 import { mapMutations, mapState } from 'vuex'
@@ -134,10 +134,11 @@ export default {
                     let contract = new ethers.Contract(n.contract, ABI, provider);
                     contract.balanceOf(this.address).then(res=>{
                         let balance = res.toString()
+                        let num = Number(balance) / Number(n.decimals)
                         tokenList.push(
                             {
                                 ...n,
-                                balance,
+                                balance:num,
                                 isMain:0
                             }
                         )
@@ -160,9 +161,8 @@ export default {
                     break;
                 case 'isAll':
                     if(value === 1){
-                        let fil = this.formData.balance / Math.pow(10,Number(this.formData.decimals))
-                        let gas = (this.formData.gasFeeCap * this.formData.gasLimit) / Math.pow(10, 9)
-                        this.$set(this.formData,'fil',fil - gas)
+                        let fil = this.formData.balance
+                        this.$set(this.formData,'fil',fil)
                     }
                     break;
                 case 'token':
@@ -207,8 +207,10 @@ export default {
             MyGlobalApi.setNetworkType(this.networkType)
             let res = await MyGlobalApi.getBalance(this.address)
             let { balance,nonce } = res
-            this.$set(this.formData,'balance',balance)
-            this.$set(this.formData,'balance',balance)
+            console.log(balance,'balance res')
+            let dec = balance / Math.pow(10,Number(this.decimals))
+            let num = formatNumber(dec,12)
+            this.$set(this.formData,'balance',num)
             this.nonce = nonce
             this.getNextNonce()
         },
@@ -216,7 +218,6 @@ export default {
             MyGlobalApi.setRpc(this.rpc)
             MyGlobalApi.setNetworkType(this.networkType)
             let res = await MyGlobalApi.getGasFee(from,to,nonce)
-            console.log(res,'getBaseFeeAndGas')
             let { gasLimit, gasPremium ,gasFeeCap } = res
             this.$set(this.formData,'gasLimit',gasLimit)
             this.$set(this.formData,'gasPremium',gasPremium)
@@ -224,9 +225,8 @@ export default {
             this.baseFeeCap = gasFeeCap
             this.baseLimit = gasLimit
             if(this.formData.isAll === 1){
-                let fil = this.formData.balance / Math.pow(10,Number(this.formData.decimals))
-                let gas = (this.formData.gasFeeCap * this.formData.gasLimit) / Math.pow(10, 9)
-                this.$set(this.formData,'fil',fil - gas)
+                let fil = this.formData.balance
+                this.$set(this.formData,'fil',fil)
             }
         },
         async getFilPricePoints(){
@@ -241,15 +241,14 @@ export default {
             }
         },
         next(){
-            let balance = this.formData.balance / Math.pow(10, Number(this.formData.decimals))
-            let gas = (this.formData.gasFeeCap * this.formData.gasLimit) / Math.pow(10, 9)
+            let balance = this.formData.balance
+            // let gas = (this.formData.gasFeeCap * this.formData.gasLimit) / Math.pow(10, 9)
             let fil = Number(this.formData.fil)
-            console.log(gas,'this.formData.fil + gas balance')
-            if( fil + gas > balance){
+            if( fil > balance){
                 this.$message.error(this.$t('sendFil.insufficientBalance'))
             }else{
                 if(this.formData.isAll === 1){
-                    let fil = balance - gas
+                    let fil = balance
                     this.$set(this.formData,'fil',fil)
                 }
                 this.step = 2
@@ -294,7 +293,7 @@ export default {
                             rpc:this.rpc,
                             khazix:'khazix',
                         })
-                        window.location.href = './wallet.html'
+                        window.location.href = './wallet.html?fromPage=sendFil'
                 }
                 this.isFetch = false
             }catch(error){
@@ -308,6 +307,14 @@ export default {
             }
         },
         async sendFil(){
+            let balance = Number(this.formData.balance)
+            let gas = (this.formData.gasFeeCap * this.formData.gasLimit) / Math.pow(10, 9)
+            let fil = Number(this.formData.fil)
+            if( fil + gas > balance) {
+                this.$message.error(this.$t('sendFil.insufficientBalance'))
+                return
+            }
+
             if(this.formData.isMain === 1){
                 try{
                     this.isFetch = true
@@ -327,7 +334,7 @@ export default {
                     MyGlobalApi.setRpc(this.rpc)
                     MyGlobalApi.setNetworkType(this.networkType)
                     let result = await MyGlobalApi.sendTransaction(tx)
-                    console.log(result,'result 8888888888')
+                    
                     let allGasFee = this.formData.gasFeeCap * this.formData.gasLimit * Math.pow(10, 9)
                     if(result){
                         let create_time =  parseInt(new Date().getTime() / 1000)
@@ -353,7 +360,7 @@ export default {
                             rpc:this.rpc,
                             khazix:'khazix',
                         })
-                       // window.location.href = './wallet.html'
+                       window.location.href = './wallet.html?fromPage=sendFil'
                     }
                     this.isFetch = false
                 }catch(err){
@@ -363,7 +370,7 @@ export default {
             }else{
                 this.sendToken()
             }
-        }
+        },
     }
 }
 </script>

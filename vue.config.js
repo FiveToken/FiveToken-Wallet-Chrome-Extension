@@ -30,9 +30,6 @@ const chromeName = [
   'update-web3'
 ];
 
-
-
-
 chromeName.forEach(name => {
   pagesObj[name] = {
     entry: `src/pages/${name}/index.js`,
@@ -41,84 +38,40 @@ chromeName.forEach(name => {
   };
 });
 
-const plugins =
-  process.env.NODE_ENV === "production"
-    ? [
-      {
-        from: path.resolve("src/web3.min.js"),
-        to: `${path.resolve("dist")}/web3.min.js`
-      },
-        {
-          from: path.resolve("src/popup.js"),
-          to: `${path.resolve("dist")}/popup.js`
-        },
-        {
-          from: path.resolve("src/script-content.js"),
-          to: `${path.resolve("dist")}/script-content.js`
-        },
-        {
-          from: path.resolve("src/manifest.production.json"),
-          to: `${path.resolve("dist")}/manifest.json`
-        },
-        {
-          from: path.resolve("src/assets/image"),
-          to: `${path.resolve("dist")}/assets/image`
-        },
-        {
-          from: path.resolve("src/background.js"),
-          to: `${path.resolve("dist")}/background.js`
-        },
-        {
-          from: path.resolve("src/db.js"),
-          to: `${path.resolve("dist")}/db.js`
-        },
-        {
-          from: path.resolve("src/dexie.js"),
-          to: `${path.resolve("dist")}/dexie.js`
-        }
-      ]
-    : [
-      
-        {
-          from: path.resolve("src/web3.min.js"),
-          to: `${path.resolve("dist")}/web3.min.js`
-        },
-        {
-          from: path.resolve("src/popup.js"),
-          to: `${path.resolve("dist")}/popup.js`
-        },
-        {
-          from: path.resolve("src/script-content.js"),
-          to: `${path.resolve("dist")}/script-content.js`
-        },
-        {
-          from: path.resolve("src/utils/hot-reload.js"),
-          to: `${path.resolve("dist")}/hot-reload.js`
-        },
-        {
-          from: path.resolve("src/manifest.development.json"),
-          to: `${path.resolve("dist")}/manifest.json`
-        },
-        {
-          from: path.resolve("src/assets/image"),
-          to: `${path.resolve("dist")}/assets/image`
-        },
-        {
-          from: path.resolve("src/background.js"),
-          to: `${path.resolve("dist")}/background.js`
-        },
-        {
-          from: path.resolve("src/db.js"),
-          to: `${path.resolve("dist")}/db.js`
-        },
-        {
-          from: path.resolve("src/dexie.js"),
-          to: `${path.resolve("dist")}/dexie.js`
-        }
-      ];
-      function resolve(dir) {
-        return path.join(__dirname, dir)
-      }
+const plugins = [
+  {
+    from: path.resolve("src/popup.js"),
+    to: `${path.resolve("dist")}/popup.js`
+  },
+  {
+    from: path.resolve("src/script-content.js"),
+    to: `${path.resolve("dist")}/script-content.js`
+  },
+  {
+    from: path.resolve("src/manifest.production.json"),
+    to: `${path.resolve("dist")}/manifest.json`
+  },
+  {
+    from: path.resolve("src/assets/image"),
+    to: `${path.resolve("dist")}/assets/image`
+  },
+  {
+    from: path.resolve("src/background.js"),
+    to: `${path.resolve("dist")}/background.js`
+  },
+  {
+    from: path.resolve("src/db.js"),
+    to: `${path.resolve("dist")}/db.js`
+  },
+  {
+    from: path.resolve("src/dexie.js"),
+    to: `${path.resolve("dist")}/dexie.js`
+  }
+]
+  
+function resolve(dir) {
+  return path.join(__dirname, dir)
+}
 
 module.exports = {
   pages: pagesObj,

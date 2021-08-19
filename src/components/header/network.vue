@@ -7,7 +7,11 @@
        </div>
        <div class="network-list">
            <div class="netwotk-item" v-for="(item,index) in networks" :key="index" @click="confirmNet(item)">
-               {{ item.name }}
+               <div class="img-wrap">
+                   <!-- {{item.image}} -->
+                   <img class="img" :src="require(`@/assets/svg/${item.image}`)" alt="">
+               </div>
+               <div class="name">{{ item.name }}</div>
                <i class="el-icon-check check" v-if="rpc === item.rpc"></i>
             </div>
        </div>
@@ -25,6 +29,12 @@ export default {
             'rpc',
             'networks'
         ]),
+    },
+    filter:{
+        imageFormat(val){
+            let src = require(`@/assets/image/${val}`)
+            return src
+        }
     },
     methods:{
         confirmNet(val){
@@ -73,15 +83,30 @@ export default {
             cursor: pointer;
             color: #131313;
             font-size: 14px;
-            padding: 0 10px;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             &::before{
-                width: calc(100% - 20px);
+                width: calc(100% - 40px);
                 height: 1px;
                 content: '';
                 position: absolute;
                 bottom: 0;
-                left: 10px;
+                left: 20px;
                 background: #E6F0F0;
+            }
+            .img-wrap{
+                width: 26px;
+                height: 26px;
+                .img{
+                   width: 26px;
+                    height: 26px; 
+                }
+            }
+            .name{
+                padding-left: 10px;
+                flex-grow: 1;
             }
             &:hover{
                 background: #f5f5f5;
@@ -89,7 +114,7 @@ export default {
             .check{
                 position: absolute;
                 top: 50%;
-                right: 15px;
+                right: 20px;
                 color: #4EC1C9;
                 font-size: 18px;
                 transform: translateY(-50%);

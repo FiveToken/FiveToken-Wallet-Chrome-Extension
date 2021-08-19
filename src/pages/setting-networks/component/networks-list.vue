@@ -45,9 +45,6 @@ export default {
             window.location.href = './wallet.html'
         },
         networksItem(obj){
-            if(obj.disabled){
-                return
-            }
             this.$emit('networksItemClick',obj)
         },
         addNetwork(){

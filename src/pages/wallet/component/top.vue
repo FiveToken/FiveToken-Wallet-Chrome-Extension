@@ -2,7 +2,7 @@
 <div class="top-components">
     <div class="top">
         <div class="center">
-            <div class="account">{{ accountName.substring(0,8)}}</div>
+            <div class="account">{{ accountName | nameFormat }}</div>
             <div class="copy-row">
                 <div  class="address">
                     {{ address | addressFormat }}
@@ -82,6 +82,13 @@ export default {
                 return num
             }else{
                 return 0
+            }
+        },
+        nameFormat(val){
+            if(val.length >8){
+                return val.substring(0,8) + '...'
+            }else{
+                return val
             }
         }
     },

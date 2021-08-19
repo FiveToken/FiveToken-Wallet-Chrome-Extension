@@ -1,7 +1,7 @@
 <template>               
     <div class="transaction-item-components" >
         <div class="block-time">
-            {{item.type === 'pending' ? item.create_time : item.block_time}}
+            {{time}}
         </div>
         <div class="info-wrap">
             <div class="icon reveiced" v-if="item.type === 'success' && item.to === address">
@@ -41,7 +41,7 @@
 <script>
 import { mapState } from 'vuex'
 import transactionItem from './transaction-item.vue'
-import {formatNumber} from '@/utils'
+import { formatNumber,formatDate } from '@/utils'
 export default {
     data(){
         return{
@@ -95,6 +95,17 @@ export default {
     },
     computed:{
         ...mapState('app',['address']),
+        time(){
+            let t = ''
+            if(this.item){
+                if(this.item.type === 'pending'){
+                    t = formatDate(this.item.create_time,true) 
+                }else{
+                    t = this.item.block_time
+                }
+            }
+            return t
+        }
     },
     methods:{
         skipToToken(item){

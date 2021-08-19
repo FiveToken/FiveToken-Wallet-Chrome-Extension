@@ -77,7 +77,8 @@
     </layout>
 </template>
 <script>
-import { validatePassword,getPrivateKey,getQueryString,deCodeMnePsd} from '@/utils'
+import { validatePassword,getDecodePrivateKey,getQueryString} from '@/utils'
+import { genKek } from '@/utils/key'
 import ClipboardJS from 'clipboard'
 import layout from '@/components/layout'
 import kyBack from '@/components/back'
@@ -94,7 +95,8 @@ export default {
             suffix:true,
             passwordType:'password',
             passwordError:false,
-            pk:''
+            pk:'',
+            salt:null
         }
     },
     components:{
@@ -122,6 +124,11 @@ export default {
         }
     },
     async mounted(){
+        let walletKey = await window.filecoinwalletDb.walletKey.where({khazix:'khazix'}).toArray()
+        if(walletKey.length){
+            let salt = walletKey[0].salt
+            this.salt = salt
+        }
         let backups = getQueryString("backups")
         this.backups = backups
     },
@@ -140,15 +147,14 @@ export default {
         },
         async next(){
             this.passwordError = false
-            let walletKey = await window.filecoinwalletDb.walletKey.where({khazix:'khazix'}).toArray()
-            if(walletKey.length){
-                let mnePsd = await deCodeMnePsd(walletKey[0].mnemonicWords,walletKey[0].password)
-                let { mnemonic,password } = mnePsd
-                let voild = await validatePassword(this.password,password)
+            if(this.salt){
+                let voild = await validatePassword(this.password,this.salt)
                 if(voild){
                     this.step = 2
                     if(this.backups === 'privateKey'){
-                        let pk = await getPrivateKey(this.privateKey,this.address,password,this.networkType,true)
+                        let kek = genKek(this.password)
+                        let pk = getDecodePrivateKey(this.privateKey,kek,this.networkType,true)
+                        console.log(pk,'pk 11111')
                         this.pk = pk
                     }else{
                         this.mnemonic = mnemonic

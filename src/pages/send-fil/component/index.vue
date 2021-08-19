@@ -31,9 +31,8 @@
 import stepOne from './step-1'
 import stepTwo from './step-2'
 import layout from '@/components/layout'
-import { validatePassword,getPrivateKey,deCodeMnePsd,formatNumber} from '@/utils'
+import { getDecodePrivateKey,formatNumber,getGlobalKek } from '@/utils'
 import { MyGlobalApi } from '@/utils/api'
-import { BaseFeeAndGas } from '@/utils/fil-api'
 import { mapMutations, mapState } from 'vuex'
 import ABI from '@/utils/abi'
 import { ethers } from 'ethers'
@@ -46,9 +45,9 @@ export default {
             price_currency:0,
             nonce:0,
             maxNonce:0,
-            mnePsd:null,
             baseFeeCap:0,
             baseLimit:0,
+            pkk:'',
             formData:{
                 balance:0,
                 to:'',
@@ -84,13 +83,6 @@ export default {
         layout,
         stepTwo
     },
-    async mounted(){
-        let walletKey = await window.filecoinwalletDb.walletKey.where({khazix:'khazix'}).toArray()
-        if(walletKey.length){
-            let mnePsd = await deCodeMnePsd(walletKey[0].mnemonicWords,walletKey[0].password)
-            this.mnePsd = mnePsd
-        }
-    },
     methods:{
         ...mapMutations('send-fil',[
             'SET_ACCOUNTLIST',
@@ -99,6 +91,8 @@ export default {
             'SET_TOKENLIST'
         ]),
         async layoutMounted(){
+            let kek = getGlobalKek()
+            this.pkk = getDecodePrivateKey(this.privateKey,kek,this.networkType)
             let recordLast = await window.filecoinwalletDb.addressRecordLast.where({ rpc:this.rpc }).toArray () || [];
             let myRecordLast = recordLast.filter(n=>{
                 return n.address === this.address
@@ -169,7 +163,7 @@ export default {
                     let { balance ,symbol,chainName,decimals,isMain,contract } = value
                     this.formData = Object.assign({},this.formData,{
                         balance,
-                        fil:0,
+                        fil:'',
                         symbol,
                         chainName,
                         decimals,
@@ -240,16 +234,21 @@ export default {
                 this.price_currency = usd
             }
         },
-        next(){
+        async next(){
             let balance = this.formData.balance
             // let gas = (this.formData.gasFeeCap * this.formData.gasLimit) / Math.pow(10, 9)
             let fil = Number(this.formData.fil)
             if( fil > balance){
                 this.$message.error(this.$t('sendFil.insufficientBalance'))
             }else{
+                await this.getBaseFeeAndGas(this.address,this.formData.to,this.maxNonce)
                 if(this.formData.isAll === 1){
                     let fil = balance
                     this.$set(this.formData,'fil',fil)
+                }
+                if(this.formData.isMain !== 1){
+                    let double = this.formData.gasLimit * 2
+                    this.$set(this.formData,'gasLimit',double)
                 }
                 this.step = 2
             }
@@ -257,10 +256,8 @@ export default {
         async sendToken(){
             try{
                 this.isFetch = true
-                let { password } = this.mnePsd
-                let privateKey = getPrivateKey(this.privateKey,this.address,password,this.networkType)
                 let provider = ethers.getDefaultProvider(this.rpc);
-                let wallet = new ethers.Wallet(privateKey, provider);
+                let wallet = new ethers.Wallet(this.pkk, provider);
                 let contractSigner = new ethers.Contract(this.formData.contract, ABI, wallet);
 
                 let numberOfTokens = ethers.utils.parseUnits(this.formData.fil, this.formData.decimals);
@@ -297,6 +294,7 @@ export default {
                 }
                 this.isFetch = false
             }catch(error){
+                console.log(error,'sendtoken error')
                 this.isFetch = false
                 if(error.error && error.error.message){
                     this.$message({
@@ -310,6 +308,7 @@ export default {
             let balance = Number(this.formData.balance)
             let gas = (this.formData.gasFeeCap * this.formData.gasLimit) / Math.pow(10, 9)
             let fil = Number(this.formData.fil)
+            console.log(fil , gas, balance,'fil + gas > balance')
             if( fil + gas > balance) {
                 this.$message.error(this.$t('sendFil.insufficientBalance'))
                 return
@@ -319,13 +318,11 @@ export default {
                 try{
                     this.isFetch = true
                     let address = this.address
-                    let { password } = this.mnePsd
-                    let privateKey = getPrivateKey(this.privateKey,address,password,this.networkType)
                     let tx = {
                         from:address,
                         to:this.formData.to,
                         value:this.formData.fil,
-                        privateKey,
+                        privateKey:this.pkk,
                         nonce:this.maxNonce,
                         GasPremium: this.formData.gasPremium,
                         GasFeeCap: this.formData.gasFeeCap * Math.pow(10, 9),
@@ -336,7 +333,7 @@ export default {
                     let result = await MyGlobalApi.sendTransaction(tx)
                     
                     let allGasFee = this.formData.gasFeeCap * this.formData.gasLimit * Math.pow(10, 9)
-                    if(result){
+                    if(result && result.signed_cid){
                         let create_time =  parseInt(new Date().getTime() / 1000)
                         await window.filecoinwalletDb.messageList.add({
                             signed_cid:result.signed_cid,

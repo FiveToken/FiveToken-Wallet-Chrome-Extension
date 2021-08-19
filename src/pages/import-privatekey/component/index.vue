@@ -37,7 +37,7 @@
 
 <script>
 import { debounce } from 'lodash'
-import { getQueryString,trimStr,getF1ByPrivateKey,deCodeMnePsd,isFilecoinChain } from '@/utils'
+import { getQueryString,trimStr,getF1ByPrivateKey,isFilecoinChain,getGlobalKek } from '@/utils'
 import { MyGlobalApi } from '@/utils/api'
 import layout from '@/components/layout'
 import kyInput from '@/components/input'
@@ -56,7 +56,8 @@ export default {
             networkVisible:false,
             mnePsd:null,
             customNetworkType:'',
-            customFilecoinAddress0:''
+            customFilecoinAddress0:'',
+            kek:null
         }
     },
     computed: {
@@ -83,12 +84,8 @@ export default {
         kyNetwork
     },
     async mounted(){
-        let walletKey = await window.filecoinwalletDb.walletKey.where({khazix:'khazix'}).toArray()
-        if(walletKey.length){
-            let mnePsd = await deCodeMnePsd(walletKey[0].mnemonicWords,walletKey[0].password)
-            this.mnePsd = mnePsd
-            console.log(mnePsd,'mnePsd')
-        }
+        let kek = getGlobalKek()
+        this.kek = kek
     },
     methods:{
         async layoutMounted(){
@@ -155,7 +152,7 @@ export default {
                         let obj = this.networks.find(n=>{
                             return n.rpc === this.net
                         })
-                        let {name, rpc,chainID,symbol,browser,networkType,filecoinAddress0,ids,decimals} = obj
+                        let {name, rpc,chainID,symbol,browser,networkType,filecoinAddress0,ids,decimals,image} = obj
                         await window.filecoinwalletDb.activenNetworks.add({
                             name,
                             rpc,
@@ -166,6 +163,7 @@ export default {
                             filecoinAddress0,
                             ids,
                             decimals,
+                            image,
                             khazix:'khazix'
                         })
                         this.isFetch = false
@@ -175,6 +173,7 @@ export default {
                         this.$message.error(this.$t('importPrivatkey.exist'))
                     }
                 }else{
+                    this.isFetch = false
                     this.$message.error(this.$t('importPrivatkey.importError'))
                 }
             }catch(err){
@@ -183,7 +182,6 @@ export default {
             }
         },
         async getf1ByCK(){
-            let { password } = this.mnePsd
             let thisPk = trimStr(this.privatekey)
             try {
                 if(isFilecoinChain(this.customNetworkType)){
@@ -192,11 +190,11 @@ export default {
                         return null
                     }else{
                         let privateKey = keyStore.PrivateKey
-                        let f1 = await getF1ByPrivateKey(privateKey,password,this.customNetworkType,this.customFilecoinAddress0)
+                        let f1 = await getF1ByPrivateKey(privateKey,this.kek,this.customNetworkType,this.customFilecoinAddress0)
                         return f1
                     }
                 }else{
-                    let f1 = await getF1ByPrivateKey(thisPk,password,this.customNetworkType,this.customFilecoinAddress0)
+                    let f1 = await getF1ByPrivateKey(thisPk,this.kek,this.customNetworkType,this.customFilecoinAddress0)
                     return f1
                 }
                 

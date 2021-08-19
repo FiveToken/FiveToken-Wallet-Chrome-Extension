@@ -24,7 +24,7 @@
 </template>
 
 <script>
-import { validatePassword,deCodeMnePsd } from '@/utils'
+import { validatePassword } from '@/utils'
 import layout from '@/components/layout'
 import kyInput from '@/components/input'
 import kyButton from '@/components/button'
@@ -35,7 +35,7 @@ export default {
         suffix:true,
         password:'',
         passwordType:'password',
-        mnePsd:null
+        salt:null
       }
     },
     computed:{
@@ -50,8 +50,9 @@ export default {
     },
     async mounted(){
         let walletKey = await window.filecoinwalletDb.walletKey.where({khazix:'khazix'}).toArray()
-        let mnePsd = await deCodeMnePsd(walletKey[0].mnemonicWords,walletKey[0].password)
-        this.mnePsd = mnePsd
+        if(walletKey.length){
+            this.salt = walletKey[0].salt
+        }
     },
     methods:{
       passwordChange(val){
@@ -61,14 +62,14 @@ export default {
          this.passwordType = val ? 'text':'password'
       },
       async unlocking(){
-        let { password } = this.mnePsd
-        let voild = await validatePassword(this.password,password)
-        console.log(voild,'voildvoild')
-        if(voild){
-          window.location.href = './wallet.html'
-          await window.filecoinwalletDb.lockUser.where({ khazix:'khazix'}).delete();
-        }else{
-          this.$message.error(this.$t('lock.passwordError')) 
+        if(this.salt){
+          let voild = await validatePassword(this.password,this.salt)
+          if(voild){
+            window.location.href = './wallet.html'
+            await window.filecoinwalletDb.lockUser.where({ khazix:'khazix'}).delete();
+          }else{
+            this.$message.error(this.$t('lock.passwordError')) 
+          }
         }
       }
     }

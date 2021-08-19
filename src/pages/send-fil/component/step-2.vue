@@ -36,12 +36,36 @@
                     </template>
                     <div class="fee-detail">
                         <div class="gasfee">
-                            <div class="label">{{$t('sendFil.networkGas')}}（{{gasUnit}})</div>
+                            <div class="label">
+                                {{$t('sendFil.networkGas')}}（{{gasUnit}})
+                                <div class="question">
+                                    <el-popover
+                                        placement="bottom"
+                                        width="200"
+                                        trigger="click"
+                                        :content="baseFeeTips">
+                                        <i slot="reference" class="el-icon-question"></i>
+                                    </el-popover>
+                                </div>
+                                
+                            </div>
                             <kyInput :value="formData.gasFeeCap" @changeInput='gasFeeCapChange'></kyInput>
                             <div class="tips" v-if="formData.gasFeeCap < baseFeeCap">{{$t('sendFil.gasFeeError')}}</div>
                         </div>
                         <div class="gaslimit">
-                            <div class="label">Gas Limit</div>
+                            <div class="label">
+                                {{$t('sendFil.gasLimit')}}
+                                <div class="question">
+                                    <el-popover
+                                        placement="bottom"
+                                        width="200"
+                                        trigger="click"
+                                        :content="$t('sendFil.gasLimitTips')"
+                                    >
+                                        <i slot="reference" class="el-icon-question"></i>
+                                    </el-popover>
+                                </div>
+                            </div>
                             <kyInput :value="formData.gasLimit" @changeInput='gasLimitChange'></kyInput>
                             <div class="tips" v-if="formData.gasLimit < baseLimit">{{$t('sendFil.gasLimitError')}}</div>
                         </div>
@@ -114,7 +138,6 @@ export default {
         },
         allGasFee(){
             let gas = this.formData.gasFeeCap * this.formData.gasLimit / Math.pow(10,Number(9))
-            console.log(gas,'gasgasgas')
             return gas || 0
         },
         gasUnit(){
@@ -133,10 +156,20 @@ export default {
             }else{
                 total = Number(this.formData.fil) + this.allGasFee
             }
-            return total
+            let str = formatNumber(total,12)
+            return str
         },
         active(){
             return this.formData.gasFeeCap !== "" && this.formData.gasLimit !== ""
+        },
+        baseFeeTips(){
+             let str = ''
+            if(isFilecoinChain(this.networkType)){
+                str = this.$t('sendFil.filBaseFeeTips')
+            }else{
+                str = this.$t('sendFil.baseFeeTips')
+            }
+            return str
         }
     },
     props:{
@@ -158,17 +191,17 @@ export default {
             if(this.active){
                 if(this.formData.isAll){
                     let val = 0
-                    if(this.formData.fil > this.allGasFee){
-                        val = this.formData.fil - this.allGasFee
+                    if(this.formData.balance > this.allGasFee){
+                        val = this.formData.balance - this.allGasFee
                         this.$emit('formDataChange',{
                             key:'fil',
                             value:val,
                         })
-                        this.$emit('sendFil')
                     }else{
                         this.$message.error(this.$t('sendFil.insufficientBalance'))
                     }
                 }
+                this.$emit('sendFil')
             }
         },
         gasFeeCapChange(val){
@@ -193,10 +226,10 @@ export default {
     position: relative;
     .back-wrap{
         border-bottom: 1px solid #eee;
-        padding: 15px 20px;
+        padding: 15px;
     }
     .send-info{
-        padding: 30px 20px;
+        padding: 30px 15px;
         .logo{
             width: 32px;
             height: 32px;
@@ -253,13 +286,13 @@ export default {
         }
     }
     .service-fee{
-        padding: 0 20px;
+        padding: 0 15px;
         display: flex;
         align-items: center;
         /deep/.el-collapse{
             width: 100%;
             border: none;
-            padding: 15px 10px;
+            padding: 15px 0;
             background: #DCF9F9;
             border-radius: 10px;
             .el-collapse-item{
@@ -305,6 +338,17 @@ export default {
                             color: #101010;
                             line-height: 20px;
                             margin-bottom: 3px;
+                            position: relative;
+                            .question{
+                                position: absolute;
+                                right: 0;
+                                top: 50%;
+                                transform: translateY(-50%);
+                                color: #5BC1CA;
+                                font-size: 16px;
+                                font-weight: bold;
+                                cursor: pointer;
+                            }
                         }
                         .tips{
                             font-size: 12px;
@@ -318,7 +362,7 @@ export default {
         }
     }
     .total{
-        padding: 20px;
+        padding: 15px;
         font-size: 14px;
         color: #101010;
         .total-tips{

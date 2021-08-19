@@ -6,7 +6,7 @@
       </div>
       <div class="content" v-if="detail">
         <div class="icon-wrap">
-          <i class="el-icon-time"></i>
+          <i class="icon" :class="iconName"></i>
         </div>
         <div class="status">{{ statusName }}</div>
         <div class="time">{{ time }}</div>
@@ -82,7 +82,7 @@ export default {
     time() {
       let str = "";
       if (this.detail && this.detail.type === "pending") {
-        str = this.detail.create_time;
+        str = formatDate(this.detail.create_time,true);
       } else {
         str = this.detail.block_time;
       }
@@ -91,16 +91,43 @@ export default {
     statusName() {
       let name = "";
       if (this.detail) {
-        if (this.detail.type === "success") {
-          name = this.$t("messageDetail.success");
-        } else if (this.detail.type === "error") {
-          name = this.$t("messageDetail.error");
-        } else {
-          name = this.$t("messageDetail.pending");
+        switch (this.detail.type){
+          case "success":
+            name = this.$t("messageDetail.success");
+            break;
+          case "error":
+            name = this.$t("messageDetail.error");
+            break;
+          case "pending":
+            name = this.$t("messageDetail.pending");
+            break;
         }
       }
       return name;
     },
+    iconName(){
+      let name = {};
+      if (this.detail) {
+        switch (this.detail.type){
+          case "success":
+            name = {
+              'el-icon-circle-check':true
+            }
+            break;
+          case "error":
+            name = {
+              'el-icon-circle-close':true
+            };
+            break;
+          case "pending":
+            name = {
+              'el-icon-time':true
+            };
+            break;
+        }
+      }
+      return name;
+    }
   },
   components: {
     layout,
@@ -148,10 +175,18 @@ export default {
       display: flex;
       justify-content: center;
       margin-bottom: 20px;
-      i {
-        color: #5cc1cb;
+      .icon {
         font-weight: bold;
         font-size: 48px;
+        &.el-icon-time{
+          color: #5cc1cb;
+        }
+        &.el-icon-circle-check{
+          color:#7BC65E;
+        }
+        &.el-icon-circle-close{
+          color: #EA0F0F;
+        }
       }
     }
     .status {

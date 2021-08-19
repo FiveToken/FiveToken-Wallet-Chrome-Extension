@@ -1,9 +1,19 @@
 
 
 import {trim,toFixed} from 'mytoolkit'
-import { genT1WalletByMne,genT1WalletByCK,AESEncrypt,AESDecrypt,genPrivateKeyFromMne } from '@/utils/f1'
-import { privateKeyEncode,privateKeyDecode ,genPrivateKeyDigest,validatePrivateKey} from '@/utils/key'
+import { 
+  genT1WalletByMne,
+  genT1WalletByCK,
+  genPrivateKeyFromMne,
+  genPrivateKeyDigest,
+} from '@/utils/f1'
+import {
+  privateKeyEncode,
+  privateKeyDecode,
+  genSalt
+} from '@/utils/key'
 import { Wallet } from "ethers";
+
 const encodeKey = 'five'
 export const fiveTokenVersion = '1.1.0'
 
@@ -27,31 +37,23 @@ export function isFilecoinChain(networkType){
   return (networkType === 'proxy' || networkType === 'filecoin')
 }
 
-export async function enCodeMnePsd(mne,psd){
-  let mnemonic = await AESEncrypt(mne,encodeKey)
-  let password = await AESEncrypt(psd,encodeKey)
-  return {
-    mnemonic,
-    password
-  }
+export function getGlobalKek(){
+  let kek = window.localStorage.getItem('ftKek');
+  return kek
 }
 
-export async function deCodeMnePsd(mne,psd){
-  let mnemonic = AESDecrypt(mne,encodeKey)
-  let password = AESDecrypt(psd,encodeKey)
-  return {
-    mnemonic,
-    password
-  }
+export function setGlabolKek(kek){
+  window.localStorage.setItem('ftKek', kek);
 }
 
-export async function getF1ByMne(mnemonic,password,networkType,filecoinAddress0,index) {
+export async function getF1ByMne(mnemonic,kek,networkType,filecoinAddress0,index) {
   if(isFilecoinChain(networkType)){
     let path = "m/44'/461'/0'/0"
     let f1 = genT1WalletByMne(mnemonic,filecoinAddress0,path,index)
     let { address,privateKey } = f1
-    let pk = privateKeyDecode(privateKey,address,password)
+    let pk = privateKeyEncode(privateKey,kek)
     let digest = await genPrivateKeyDigest(privateKey)
+    console.log(pk,'abc 99999999')
     return {
       address,
       privateKey:pk,
@@ -63,7 +65,7 @@ export async function getF1ByMne(mnemonic,password,networkType,filecoinAddress0,
     let privateKey = ck.toString("hex")
     let f1 = new Wallet(privateKey)
     let { address } = f1
-    let pk = AESEncrypt(privateKey,password)
+    let pk = privateKeyEncode(privateKey,kek)
     let digest = await genPrivateKeyDigest(privateKey)
     return {
       address,
@@ -73,12 +75,12 @@ export async function getF1ByMne(mnemonic,password,networkType,filecoinAddress0,
   }
 }
 
-export async function getF1ByPrivateKey(privateKey,password,networkType,filecoinAddress0) { 
+export async function getF1ByPrivateKey(privateKey,kek,networkType,filecoinAddress0) { 
   try{
     if(isFilecoinChain(networkType)){
       let f1 = genT1WalletByCK(privateKey,filecoinAddress0,[])
       let { address } = f1
-      let pk = privateKeyDecode(privateKey,address,password)
+      let pk = privateKeyEncode(privateKey,kek)
       let digest = await genPrivateKeyDigest(privateKey)
       return {
         address,
@@ -87,7 +89,7 @@ export async function getF1ByPrivateKey(privateKey,password,networkType,filecoin
       }
     }else{
       let walletMnemonic = new Wallet(privateKey)
-      let pk = AESEncrypt(privateKey,password)
+      let pk = privateKeyEncode(privateKey,kek)
       let digest = await genPrivateKeyDigest(privateKey)
       return {
         address:walletMnemonic.address,
@@ -100,9 +102,10 @@ export async function getF1ByPrivateKey(privateKey,password,networkType,filecoin
   }
 }
 
-export async function validatePassword(psd,password) {
+export async function validatePassword(password,salt) {
   try{
-    if(psd === password){
+    let _salt = genSalt(password)
+    if(_salt === salt){
       return true
     }else{
       return false
@@ -126,9 +129,11 @@ function strToHexCharCode(pk) {
 　　return hexCharCode.join("");
 }
 
-export function getPrivateKey(encodePrivateKey,address,password,networkType,hex) { 
+export function getDecodePrivateKey(encodePrivateKey,kek,networkType,hex) { 
   if(isFilecoinChain(networkType)){
-    let pk = privateKeyDecode(encodePrivateKey,address,password)
+    let pk = privateKeyDecode(encodePrivateKey,kek)
+    let privateKey1 = strToHexCharCode(pk)
+    console.log(privateKey1,'privateKey 123456')
     if(hex){
       let privateKey = strToHexCharCode(pk)
       return privateKey
@@ -136,7 +141,7 @@ export function getPrivateKey(encodePrivateKey,address,password,networkType,hex)
       return pk
     }
   }else{
-    let pk = AESDecrypt(encodePrivateKey,password)
+    let pk = privateKeyDecode(encodePrivateKey,kek)
     return pk
   }
 }

@@ -7,10 +7,10 @@ filecoinwalletDb.version(2).stores({
     addressBook:'id++,address,accountName,create_time,khazix,rpc',
     addressRecordLast:'id++,address,create_time,khazix,rpc',
     lockUser:'id++,address,privateKey,create_time,khazix,digest,rpc',
-    networks:'id++,rpc,create_time,name,chainID,symbol,browser,decimals,ids,khazix,networkType,filecoinAddress0,disabled',
-    activenNetworks:'id++,rpc,name,chainID,symbol,ids,browser,decimals,networkType,filecoinAddress0,khazix',
+    networks:'id++,rpc,image,create_time,name,chainID,symbol,browser,decimals,ids,khazix,networkType,filecoinAddress0,disabled',
+    activenNetworks:'id++,rpc,name,image,chainID,symbol,ids,browser,decimals,networkType,filecoinAddress0,khazix',
     tokenList:'id++,rpc,chainName,decimals,symbol,contract,address,khazix',
-    walletKey:'id++,mnemonicWords,password,khazix,rpc',
+    walletKey:'id++,mnemonicWords,salt,khazix,rpc',
     web3File:'id++,address,rpc,create_time,nickname,describe,cid,khazix'
 
 });
@@ -33,22 +33,24 @@ window.filecoinwalletDb.networks.where({ khazix:'khazix'}).toArray().then(res=>{
                 networkType:'proxy',
                 filecoinAddress0:'f',
                 decimals:18,
+                disabled:true,
+                image:'fil.svg'
+            },
+            {
+                name:'Filcoin TEST',
+                rpc:'https://1w1cJziPEPGNpMlwFjxyj8f7dhd:87323bed6d5a3aa3eb3cbd7ee1d28407@filecoin.infura.io',
+                chainID:'',
+                symbol:'FIL TEST',
+                ids:'filecoin',
+                browser:'https://filscan.io',
+                khazix:'khazix',
+                create_time:create_time,
+                networkType:'filecoin',
+                filecoinAddress0:'f',
+                decimals:18,
+                image:'fil.svg',
                 disabled:true
             },
-            // {
-            //     name:'Filcoin TEST',
-            //     rpc:'https://1w1cJziPEPGNpMlwFjxyj8f7dhd:87323bed6d5a3aa3eb3cbd7ee1d28407@filecoin.infura.io',
-            //     chainID:'',
-            //     symbol:'FIL TEST',
-            //     ids:'filecoin',
-            //     browser:'https://filscan.io',
-            //     khazix:'khazix',
-            //     create_time:create_time,
-            //     networkType:'filecoin',
-            //     filecoinAddress0:'f',
-            //     decimals:18,
-            //     disabled:true
-            // },
             {
                 name:'Calibration Testnet',
                 rpc:'https://calibration.node.glif.io',
@@ -61,6 +63,7 @@ window.filecoinwalletDb.networks.where({ khazix:'khazix'}).toArray().then(res=>{
                 filecoinAddress0:'t',
                 create_time:create_time+1,
                 decimals:18,
+                image:'fil.svg',
                 disabled:true
             },
             {
@@ -75,6 +78,7 @@ window.filecoinwalletDb.networks.where({ khazix:'khazix'}).toArray().then(res=>{
                 filecoinAddress0:'',
                 create_time:create_time+2,
                 decimals:18,
+                image:'bnb.svg',
                 disabled:true
             },
             {
@@ -89,6 +93,7 @@ window.filecoinwalletDb.networks.where({ khazix:'khazix'}).toArray().then(res=>{
                 filecoinAddress0:'',
                 create_time:create_time+3,
                 decimals:18,
+                image:'eth.svg',
                 disabled:true
             },
             {
@@ -103,6 +108,7 @@ window.filecoinwalletDb.networks.where({ khazix:'khazix'}).toArray().then(res=>{
                 filecoinAddress0:'',
                 create_time:create_time+4,
                 decimals:18,
+                image:'bnb.svg',
                 disabled:true
             },
         ]
@@ -121,6 +127,7 @@ window.filecoinwalletDb.activenNetworks.where({ khazix:'khazix'}).toArray().then
             networkType:'proxy',
             filecoinAddress0:'f',
             decimals:18,
+            image:'bnb.png',
             khazix:'khazix'
         })
     }

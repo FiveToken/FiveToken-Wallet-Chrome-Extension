@@ -35,7 +35,8 @@
 </template>
 
 <script>
-import { getQueryString,trimStr,getF1ByMne,enCodeMnePsd} from '@/utils'
+import { getQueryString,trimStr,getF1ByMne,setGlabolKek} from '@/utils'
+import { genSalt,genKek,AESEncrypt } from '@/utils/key'
 import { MyGlobalApi } from '@/utils/api'
 import layout from '@/components/layout'
 import kyButton from '@/components/button'
@@ -142,13 +143,14 @@ export default {
                     digest,
                     rpc:this.rpc
                 })
-                
-                let encode = await enCodeMnePsd(mneWords,this.form.password)
-                let { mnemonic,password } = encode
+                let salt = genSalt(this.form.password)
+                let kek = genKek(this.form.password)
+                setGlabolKek(kek)
+                let mnemonic = AESEncrypt(mneWords,kek)
                 await window.filecoinwalletDb.walletKey.where({khazix:'khazix'}).delete()
                 await window.filecoinwalletDb.walletKey.add({
                     mnemonicWords:mnemonic,
-                    password,
+                    salt,
                     rpc:this.rpc,
                     khazix:'khazix'
                 })

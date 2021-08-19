@@ -108,8 +108,8 @@ export default {
     contractInput(val){
         let that = this
         this.contract = val
-        let isExists = this.tokenList.find(item => {return item.contract == this.contract}) != undefined
-        this.isExists = isExists
+        // let isExists = this.tokenList.find(item => {return item.contract == this.contract}) != undefined
+        // this.isExists = isExists
         let provider = ethers.getDefaultProvider(this.rpc);
         let contract = new ethers.Contract(this.contract, ABI, provider);
         let decimalsPromise = contract.decimals()

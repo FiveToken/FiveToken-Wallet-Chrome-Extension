@@ -28,7 +28,6 @@
 </template>
 
 <script>
-import { validatePrivateKey} from '@/utils/key'
 import welcome from '@/pages/welcome/component/index.vue'
 import lockUser from '@/pages/lock-user/component/index.vue'
 import layout from '@/components/layout'

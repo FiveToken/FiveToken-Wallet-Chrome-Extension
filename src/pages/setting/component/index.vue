@@ -28,6 +28,7 @@
                         <a class="link" :href="item.url">
                             <div class="left">{{ item.name }}</div>
                             <div class="right">
+                                <div class="text" v-if="item.url === './setting-networks.html'">{{rpcName}}</div>
                                 <i class="el-icon-arrow-right"></i>
                             </div>
                         </a>
@@ -71,7 +72,7 @@ export default {
         }
     },
     computed:{
-        ...mapState('app',['currency','language']),
+        ...mapState('app',['currency','language','rpcName']),
         currencyName(){
             let str = ''
             let obj = {

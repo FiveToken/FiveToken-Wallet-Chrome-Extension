@@ -107,6 +107,7 @@ class GlobalApi{
                         ...signedMsg
                     }]
                     let proxyRes = await MessagePush(objparams,this.rpc)
+                    console.log(proxyRes,'proxyRes   12312')
                     if(proxyRes && proxyRes.data){
                         let signed_cid = proxyRes.data['/']
                         return {
@@ -131,7 +132,7 @@ class GlobalApi{
                     this.BSCChainAPI.setProvider(this.rpc)
                     this.BSCChainAPI.setWalletWithProvider(privateKey)
                     let ethRes = await this.BSCChainAPI.sendTransaction(ransaction)
-                    if(ethRes && ethRes.hash){
+                    if(ethRes && ethRes.hash && ethRes.nonce){
                         return {
                             signed_cid:ethRes.hash,
                             nonce:ethRes.nonce + 1
@@ -139,7 +140,7 @@ class GlobalApi{
                     }else{
                         return {
                             signed_cid:'',
-                            nonce:ethRes.nonce + 1
+                            nonce:0
                         }
                     }
                     break;
@@ -223,6 +224,7 @@ class GlobalApi{
                     this.BSCChainAPI.setProvider(this.rpc)
                     let ethRes = await this.BSCChainAPI.getTransaction(signed_cid)
                     let rptRes = await this.BSCChainAPI.getTransactionReceipt(signed_cid)
+                    
                     let block = await this.BSCChainAPI.getBlock(ethRes.blockNumber)
                     let type = rptRes.status === 1 ? 'success' : 'error'
                     let block_time = formatDate(block.timestamp,true)
@@ -458,6 +460,7 @@ class BSCChainAPI{
     async getTransaction(hash){
         try{
             let res = await this.provider.getTransaction(hash)
+            console.log(res,hash,'bsc res3444')
             return res
         }catch(error){
             console.log(error,'BSCChainAPI.getTransaction error')

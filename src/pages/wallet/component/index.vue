@@ -65,6 +65,7 @@
                 :show-close="false"
             >
                 <kyToken
+                    :tokenIsMain="tokenIsMain"
                     :tokenDecimals="tokenDecimals"
                     :tokenBalance="tokenBalance"
                     :tokenName="tokenName"
@@ -106,7 +107,8 @@ export default {
             tokenName:'',
             tokenDecimals:0,
             tokenList:[],
-            tokenBalance:0
+            tokenBalance:0,
+            tokenIsMain:0
         }
     },
     computed:{
@@ -221,7 +223,16 @@ export default {
             }).modify({
                 fil:balance,
             }).then(res=>{
-                console.log(balance,'balance update')
+                // console.log(balance,'balance update1')
+            })
+            
+            await window.filecoinwalletDb.activeAccount.where({
+                address:address,
+                rpc:rpc
+            }).modify({
+                fil:balance,
+            }).then(res=>{
+                // console.log(balance,'balance update2')
             })
         },
         openReceive(){
@@ -238,15 +249,18 @@ export default {
             })
         },
         async tokenShow(obj){
-            let {symbol,decimals,balance} = obj
+            let {symbol,decimals,balance,isMain} = obj
             this.tokenName = symbol
             this.tokenDecimals = Number(decimals)
             this.tokenBalance = balance
-            let tokenList = await window.filecoinwalletDb.messageList.where({ 
-                rpc:this.rpc,
-                address:this.address,
-                token:this.tokenName
-            }).toArray () || [];
+            this.tokenIsMain = isMain
+            let mesList = await window.filecoinwalletDb.messageList.where({ 
+                rpc:this.rpc
+            }).reverse().sortBy('create_time')|| []
+            let tokenList = mesList.filter(n=>{
+                return (n.from === this.address) && (n.token === symbol) || (n.to === this.address) && (n.token === symbol)
+            })
+            console.log(tokenList,' tokenList 2222')
             this.tokenList = tokenList.map(n=>{
                 return {
                     ...n,

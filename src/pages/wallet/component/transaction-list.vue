@@ -11,7 +11,7 @@
         </div>
         <div class="list">
             <div class="list-property" v-if="type === '1'">
-                <div class="list-item" @click="skipToToken(symbol,decimals,balance)">
+                <div class="list-item" @click="skipToToken(symbol,decimals,balance,1)">
                     <div class="logo">
                         <img class="img" :src="filLogo" />
                     </div>
@@ -27,7 +27,7 @@
                     class="list-item" 
                     v-for="(item,index) in tokenList" 
                     :key="index" 
-                    @click="skipToToken(item.symbol,item.decimals,item.balance)"
+                    @click="skipToToken(item.symbol,item.decimals,item.balance,0)"
                 >
                     <div class="logo">
                         <img class="img" :src="filLogo" />
@@ -60,7 +60,7 @@
 
 <script>
 import { mapState } from 'vuex'
-import { formatDate,getQueryString,formatNumber} from '@/utils'
+import { getQueryString,formatNumber } from '@/utils'
 import transactionItem from './transaction-item.vue'
 import ABI from '@/utils/abi'
 import { ethers } from 'ethers'
@@ -126,10 +126,39 @@ export default {
         }
         // get assets list
         this.getTokenList()
+        // update activity list
+        this.updateActivityList()
         // get activity list
         this.getActivityList()
     },
     methods:{
+        async updateActivityList(){
+            let mesList = await window.filecoinwalletDb.messageList.where({ 
+                rpc:this.rpc
+            }).toArray ()
+            let myMesList = mesList.filter(n=>{
+                return n.from === this.address || n.to === this.address
+            })
+            myMesList.forEach(async (n)=>{
+                // Get status
+                if(n.type === 'pending'){
+                    let itemRes = await this.getDetail(n.signed_cid,n)
+                    console.log(itemRes,'itemRes 33333')
+                    if(itemRes){
+                        // get detail, update db messageList (type,allGasFee,block_time)
+                        if(itemRes){
+                            await window.filecoinwalletDb.messageList.where("signed_cid").equals(n.signed_cid).modify({
+                                type:itemRes.type,
+                                allGasFee:itemRes.all_gas_fee,
+                                block_time:itemRes.block_time
+                            })
+                        }
+                    }
+                }
+            })
+            // delete same nonce （ type = pending）
+            this.deleteSameNonce()
+        },
         async getActivityList(){
             let mesList = await window.filecoinwalletDb.messageList.where({ 
                 rpc:this.rpc
@@ -137,51 +166,8 @@ export default {
             let myMesList = mesList.filter(n=>{
                 return n.from === this.address || n.to === this.address
             })
-            let list = []
-            myMesList.forEach(async (n)=>{
-                // Get status
-                if(n.type === 'pending'){
-                    let itemRes = await this.getDetail(n.signed_cid,n)
-                    console.log(itemRes,'itemRes 555555')
-                    if(itemRes){
-                        list.push(
-                            {
-                                ...n,
-                                type:itemRes.type,
-                                create_time:formatDate(n.create_time,true),
-                                block_time:itemRes.block_time,
-                                allGasFee:itemRes.all_gas_fee
-                            }
-                        )
-                        // get detail, update db messageList (type,allGasFee,block_time)
-                        if(itemRes){
-                            window.filecoinwalletDb.messageList.where("signed_cid").equals(n.signed_cid).modify({
-                                type:itemRes.type,
-                                allGasFee:itemRes.all_gas_fee,
-                                block_time:itemRes.block_time
-                            })
-                        }
-                    }else{
-                        list.push(
-                            {
-                                ...n,
-                                create_time:formatDate(n.create_time,true),
-                                type:'pending'
-                            }
-                        )
-                    }
-                }else{
-                    list.push(
-                        {
-                            ...n,
-                            create_time:formatDate(n.create_time,true),
-                        }
-                    )
-                }
-            })
-            // delete same nonce （ type = pending）
-            this.deleteSameNonce()
-            this.activityList = list
+            console.log(myMesList,'myMesList 888')
+            this.activityList = myMesList
         },
         async getTokenList(){
             let list = await window.filecoinwalletDb.tokenList.where({ 
@@ -195,8 +181,8 @@ export default {
                     let contract = new ethers.Contract(n.contract, ABI, provider);
                     contract.balanceOf(this.address).then(res=>{
                         let balance = res.toString()
+                        console.log(balance,'balance token')
                         let num = Number(balance) / Number(n.decimals)
-                        console.log(num,n.decimals,'n.decimals 333')
                         tokenList.push(
                             {
                                 ...n,
@@ -209,7 +195,6 @@ export default {
                 }
             })
             this.tokenList = tokenList
-            console.log(tokenList,'tokenList 9999')
             return tokenList
         },
         async getDetail(signed_cid,itemObj){
@@ -218,8 +203,8 @@ export default {
             let detail = await MyGlobalApi.getTransaction(signed_cid)
             return detail
         },
-        skipToToken(symbol,decimals,balance){
-            this.$emit('tokenShow',{symbol,decimals,balance})
+        skipToToken(symbol,decimals,balance,isMain){
+            this.$emit('tokenShow',{symbol,decimals,balance,isMain})
         },
         async deleteSameNonce(){
             let mesList = await window.filecoinwalletDb.messageList.where({ 

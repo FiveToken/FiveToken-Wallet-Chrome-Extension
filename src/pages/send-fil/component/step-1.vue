@@ -159,6 +159,7 @@ export default {
             this.$emit('formDataChange',{key:'isAll',value:1})
         },
         next(){
+            console.log(this.formData,9999)
             if(this.active){
                 let volid = isValidAddress(this.formData.to,this.networkType)
                 if(volid){
@@ -179,11 +180,11 @@ export default {
         height: 100%;
         position: relative;
         .back-wrap{
-            padding: 15px 20px;
+            padding: 15px;
             border-bottom: 1px solid #F6F7FF;
         }
         .send-content{
-            padding: 20px;
+            padding: 20px 15px;
             .input-item{
                 margin-bottom: 20px;
                 .label{

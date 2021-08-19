@@ -80,7 +80,7 @@ export default {
         ]),
         networksChange(obj){
             window.filecoinwalletDb.activenNetworks.where({ khazix:'khazix'}).delete()
-            let {name,rpc,chainID,symbol,browser,ids,networkType,filecoinAddress0,decimals } = obj
+            let {name,rpc,chainID,symbol,browser,ids,networkType,filecoinAddress0,decimals,image } = obj
             console.log(networkType,'networkType 1234')
             window.filecoinwalletDb.activenNetworks.add({
                 name,
@@ -92,6 +92,7 @@ export default {
                 networkType,
                 filecoinAddress0,
                 decimals,
+                image,
                 khazix:'khazix'
             }).then(async (res)=>{
                 let accountList = await window.filecoinwalletDb.accountList.where({ rpc:rpc }).toArray ()|| [];

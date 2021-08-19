@@ -71,7 +71,7 @@
 </template>
 <script>
 import layout from '@/components/layout'
-import { getQueryString,formatNumber,getF1ByMne,deCodeMnePsd } from '@/utils'
+import { getQueryString,formatNumber,getF1ByMne,getGlobalKek } from '@/utils'
 import { mapMutations, mapState } from 'vuex'
 import kyBack from '@/components/back'
 import kyAdd from './add.vue'
@@ -85,7 +85,7 @@ export default {
             mneAccount:[],
             pkAccount:[],
             addName:'',
-            mnePsd:null
+            walletKey:[]
         }
     },
     computed:{
@@ -120,11 +120,7 @@ export default {
     },
     async mounted(){
         let walletKey = await window.filecoinwalletDb.walletKey.where({khazix:'khazix'}).toArray()
-        if(walletKey.length){
-            let mnePsd = await deCodeMnePsd(walletKey[0].mnemonicWords,walletKey[0].password)
-            this.mnePsd = mnePsd
-            console.log(mnePsd,'mnePsd')
-        }
+        this.walletKey = walletKey
     },
     methods:{
         ...mapMutations('app',[
@@ -147,14 +143,14 @@ export default {
             try{
                 this.isFetch = true
                 this.addAccountVisable = false
-                let { mnemonic,password } = this.mnePsd
                 let index = this.accountList.length + 1
-                let f1 = await getF1ByMne(mnemonic,password,this.networkType,this.filecoinAddress0,index)
+                let kek = getGlobalKek()
+                let f1 = await getF1ByMne(mnemonic,kek,this.networkType,this.filecoinAddress0,index)
                 let { address,privateKey,digest } = f1
-                MyGlobalApi.setRpc(this.rpc)
-                MyGlobalApi.setNetworkType(this.networkType)
-                let res = await MyGlobalApi.getBalance(address)
-                let { balance } = res
+                // MyGlobalApi.setRpc(this.rpc)
+                // MyGlobalApi.setNetworkType(this.networkType)
+                // let res = await MyGlobalApi.getBalance(address)
+                // let { balance } = res
                 let accountName = this.addName
                 let create_time =  parseInt(new Date().getTime() / 1000)
                 await window.filecoinwalletDb.accountList.add({
@@ -166,7 +162,7 @@ export default {
                 khazix:'khazix',
                 digest,
                 rpc:this.rpc,
-                fil:balance
+                fil:0
             })
             await window.filecoinwalletDb.activeAccount.where({khazix:'khazix'}).delete()
             await window.filecoinwalletDb.activeAccount.add({
@@ -176,7 +172,7 @@ export default {
                 create_time,
                 khazix:'khazix',
                 rpc:this.rpc,
-                fil:balance,
+                fil:0,
                 createType:'mnemonic',
                 digest
             })

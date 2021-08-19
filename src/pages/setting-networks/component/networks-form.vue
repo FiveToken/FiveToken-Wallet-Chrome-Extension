@@ -41,7 +41,7 @@ import kyBack from '@/components/back'
 import kyInput from '@/components/input'
 import kyButton from '@/components/button'
 import { MyGlobalApi } from '@/utils/api'
-import { getF1ByMne,deCodeMnePsd } from '@/utils'
+import { getF1ByMne,getGlobalKek } from '@/utils'
 import { mapState } from 'vuex'
 export default {
     data(){
@@ -51,16 +51,29 @@ export default {
                 rpc:'',
                 chainID:'',
                 tokenSymbol:'',
-                browser:''
+                browser:'',
+                disabled:false
             },
             loading:require('@/assets/image/loading.png'),
             isFetch:false,
-            mnePsd:null
+            kek:'',
+            mnemonicWords:''
         }
     },
     props:{
         detail:Object,
         pageType:String
+    },
+    watch:{
+        detail:{
+            handler(val){
+                if(val){
+                    this.$set(this.form,'disabled',val.disabled)
+                }
+            },
+            deep:true,
+            immediate:true
+        }
     },
     computed:{
         ...mapState('app',[
@@ -68,7 +81,7 @@ export default {
             'filecoinAddress0'
         ]),
         active(){
-            return this.form.name !== '' && this.form.rpc !== '' && this.form.chainID !== '' && this.form.tokenSymbol !== ''
+            return this.form.name !== '' && this.form.rpc !== '' && this.form.chainID !== '' && this.form.tokenSymbol !== '' && !this.form.disabled
         }
     },
     watch:{
@@ -86,12 +99,14 @@ export default {
         kyButton
     },
     async mounted(){
+        let kek = getGlobalKek()
+        this.kek = kek
         let walletKey = await window.filecoinwalletDb.walletKey.where({khazix:'khazix'}).toArray()
         if(walletKey.length){
-            let mnePsd = await deCodeMnePsd(walletKey[0].mnemonicWords,walletKey[0].password)
-            this.mnePsd = mnePsd
+            let nme = walletKey[0].mnemonicWords
+            let mnemonicWords = AESDecrypt(nme,kek)
+            this.mnemonicWords = mnemonicWords
         }
-            console.log(walletKey,this.mnePsd,'mnePsd123')
     },
     methods:{
         back(){
@@ -104,7 +119,6 @@ export default {
                 MyGlobalApi.setRpc(this.form.rpc)
                 MyGlobalApi.setNetworkType(this.networkType)
                 let create_time =  parseInt(new Date().getTime() / 1000)
-                // 'https://bsc-dataseed.binance.org'
                 let filRec = await MyGlobalApi.getFIleCoinChainHead(this.form.rpc)
                 let ethRec = await MyGlobalApi.getBlockNumber(this.form.rpc)
                 if(filRec && filRec.networkType === 'filecoin'){
@@ -120,6 +134,7 @@ export default {
                         networkType,
                         filecoinAddress0,
                         decimals:18,
+                        image:'na.svg',
                         khazix:'khazix'
                     })
                     await this.addUser(networkType,filecoinAddress0,create_time)
@@ -136,6 +151,7 @@ export default {
                         networkType,
                         filecoinAddress0,
                         decimals:9,
+                        image:'na.svg',
                         khazix:'khazix'
                     })
                     await this.addUser(networkType,filecoinAddress0,create_time)
@@ -149,8 +165,7 @@ export default {
             }
         },
         async addUser(networkType,filecoinAddress0,create_time){
-            let { mnemonic,password } = this.mnePsd
-                let f1 = await getF1ByMne(mnemonic,password,networkType,filecoinAddress0)
+                let f1 = await getF1ByMne(this.mnemonicWords,this.kek,networkType,filecoinAddress0)
                 let { address,privateKey,digest } = f1
                 let rpcAccount = await window.filecoinwalletDb.accountList.where({rpc:this.form.rpc}).toArray() || []
                 let accountName = `Account` + (rpcAccount.length + 1)

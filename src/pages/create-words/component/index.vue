@@ -30,12 +30,13 @@
 
 <script>
 import ClipboardJS from 'clipboard'
-import { getQueryString,getF1ByMne,enCodeMnePsd } from '@/utils'
 import layout from '@/components/layout'
 import kyButton from '@/components/button'
 import kyBack from '@/components/back'
 import { mapState } from 'vuex'
 import { MyGlobalApi } from '@/utils/api'
+import { getQueryString,getF1ByMne,setGlabolKek } from '@/utils'
+import { genSalt,genKek,AESEncrypt } from '@/utils/key'
 export default {
     data(){
         return{
@@ -133,13 +134,14 @@ export default {
                 createType:'mnemonic',
                 digest
             })
-            let encode = await enCodeMnePsd(this.mnemonicWords,this.password)
-            let { mnemonic,password } = encode
-            console.log(encode,'encodeencodeencode 123')
+            let salt = genSalt(this.password)
+            let kek = genKek(this.password)
+            setGlabolKek(kek)
+            let mnemonic = AESEncrypt(this.mnemonicWords,kek)
             await window.filecoinwalletDb.walletKey.where({khazix:'khazix'}).delete()
             await window.filecoinwalletDb.walletKey.add({
                 mnemonicWords:mnemonic,
-                password,
+                salt,
                 rpc:this.rpc,
                 khazix:'khazix'
             })

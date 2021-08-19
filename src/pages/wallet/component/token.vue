@@ -4,7 +4,11 @@
             <kyBack :name="tokenName" @pageBack='closeToken'/>
         </div>
         <div class="logo"></div>
-        <div class="balance">{{tokenBalance|formatBalance(tokenDecimals)}} {{tokenName}}</div>
+        <div class="balance">{{tokenBalance|formatBalance(tokenDecimals,8)}} {{tokenName}}</div>
+        <div class="usd" v-if="tokenIsMain">
+            {{ currency === 'cny' ? "¥" : "$"}} 
+            {{tokenBalance*price_currency | formatBalance(tokenDecimals,2)}}
+        </div>
         <div class="action">
             <div class="receive" @click="openReceive">
                 <div class="icon">
@@ -44,6 +48,7 @@ export default {
         ...mapState('app',['currency'])
     },
     props:{
+        tokenIsMain:Number,
         tokenBalance:Number,
         tokenName:String,
         price_currency:Number,
@@ -54,9 +59,9 @@ export default {
         tokenList:Array
     },
     filters:{
-        formatBalance(val,decimals){
+        formatBalance(val,decimals,n){
             let dec = val / Math.pow(10,Number(decimals))
-            let num = formatNumber(dec,8)
+            let num = formatNumber(dec,n)
             return num
         }
     },

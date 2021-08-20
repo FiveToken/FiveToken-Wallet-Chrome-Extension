@@ -85,20 +85,17 @@ export default {
         async layoutMounted(){
         },
         async importWallet(){
-            
             if(!this.active) return
             let mneWords = trimStr(this.form.mnemonicWords)
             let volid = bip39.validateMnemonic(mneWords)
             if(volid){
+                let index = 1
                 this.isFetch = true
                 this.error = false
-                let f1 = await getF1ByMne(mneWords,this.form.password,this.networkType,this.filecoinAddress0)
+                let kek = genKek(this.form.password)
+                let f1 = await getF1ByMne(mneWords,kek,this.networkType,this.filecoinAddress0,index)
                 let { address,privateKey,digest } = f1
                 let create_time =  parseInt(new Date().getTime() / 1000)
-                // MyGlobalApi.setRpc(this.rpc)
-                // MyGlobalApi.setNetworkType(this.networkType)
-                // let res = await MyGlobalApi.getBalance(address)
-                // let { balance,nonce } = res
                 let accountName = this.form.accountName
                 await window.filecoinwalletDb.accountList.add({
                     accountName,
@@ -113,11 +110,8 @@ export default {
                 })
                 for (let n of this.networks){
                     if(n.rpc !== this.rpc){
-                        let oF1 = await getF1ByMne(mneWords,this.form.password,n.networkType,n.filecoinAddress0)
-                        // MyGlobalApi.setRpc(n.rpc)
-                        // MyGlobalApi.setNetworkType(n.networkType)
-                        // let oRes = await MyGlobalApi.getBalance(oF1.address)
-                        // let { balance:oBanalce,nonce } = oRes
+                        let oF1 = await getF1ByMne(mneWords,kek,n.networkType,n.filecoinAddress0,index)
+                        
                         await window.filecoinwalletDb.accountList.add({
                             accountName,
                             address:oF1.address,
@@ -144,7 +138,6 @@ export default {
                     rpc:this.rpc
                 })
                 let salt = genSalt(this.form.password)
-                let kek = genKek(this.form.password)
                 setGlabolKek(kek)
                 let mnemonic = AESEncrypt(mneWords,kek)
                 await window.filecoinwalletDb.walletKey.where({khazix:'khazix'}).delete()
@@ -162,7 +155,6 @@ export default {
             
         },
         focus(){
-            console.log('this.error = false')
             this.error = false
         },
         mnemonicWordsChange(val){

@@ -42,6 +42,7 @@
 import { mapState } from 'vuex'
 import transactionItem from './transaction-item.vue'
 import { formatNumber,formatDate } from '@/utils'
+import { BigNumber } from "bignumber.js";
 export default {
     data(){
         return{
@@ -71,7 +72,8 @@ export default {
         },
         formatBalance(val,n,decimals){
             let dec = val / Math.pow(10,Number(decimals))
-            let num = formatNumber(dec,n)
+            let big = new BigNumber(dec).toFixed()
+            let num = formatNumber(big,n)
             return num
         },
         formatStatusName(type,that){

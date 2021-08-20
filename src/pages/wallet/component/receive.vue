@@ -22,6 +22,7 @@
             <img :src="logo1" class="img" alt="">
         </div>
         <div class="ft">FiveToken</div>
+        <div class="mask" v-if="mask"></div>
     </div>
 </template>
 
@@ -32,6 +33,7 @@ import kyBack from '@/components/back'
 export default {
     data(){
         return{
+            mask:false,
             logo1:require('@/assets/image/logo-white.png'),
          }
     },
@@ -48,10 +50,14 @@ export default {
             this.$emit('closeReceive')
         },
         copyAddress2(){
+            this.mask = true
             let that = this
             const clipboard = new ClipboardJS('.copy-address-box2')
             clipboard.on('success', function(e) {
                 that.$message.success(that.$t('wallet.copySuccess'))
+                setTimeout(()=>{
+                    that.mask = false
+                },3000)
             })
             clipboard.on('error', function(e) {})
         },
@@ -68,6 +74,18 @@ export default {
     box-sizing: border-box;
     /deep/.back-component{
         margin-bottom: 20px;
+    }
+    .mask{
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 999;
     }
     .dialog-content{
         position: relative;

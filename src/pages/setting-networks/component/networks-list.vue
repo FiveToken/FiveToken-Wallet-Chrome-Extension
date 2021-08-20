@@ -6,6 +6,10 @@
     <div class="list">
         <div class="list-item" :class="{disabled:item.disabled}" v-for="(item,index) in networks" :key="index" @click="networksItem(item)">
             <i class="el-icon-check check" v-if="rpc === item.rpc"></i>
+            <div class="img-wrap" v-if="item.disabled">
+                <img class="img" :src="require(`@/assets/svg/${item.image}`)" alt="">
+            </div>
+            <div class="custom-img" v-else>{{item.name.substring(0,1)}}</div>
             <div class="name">{{item.name}}</div>
             <i class="el-icon-lock lock" v-if="item.disabled"></i>
         </div>
@@ -93,6 +97,9 @@ export default {
             border-bottom:1px solid #eee;
             cursor: pointer;
             position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
             .check{
                 position: absolute;
                 top: 50%;
@@ -100,6 +107,39 @@ export default {
                 color: #4EC1C9;
                 font-size: 14px;
                 transform: translateY(-50%);
+            }
+            .img-wrap{
+                width: 26px;
+                height: 26px;
+                .img{
+                    width: 26px;
+                    height: 26px;
+                }
+            }
+            &:nth-child(even){
+                .custom-img{
+                    background: #9261E8;
+                }
+            }
+            &:nth-child(odd){
+                .custom-img{
+                    background: #5BC1CA;
+                }
+            }
+            .custom-img{
+                width: 26px;
+                height: 26px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 18px;
+                color: #fff;
+                border-radius: 13px;
+                
+            }
+            .name{
+                flex-grow: 1;
+                padding-left: 15px;
             }
             &.disabled{
                 color: #ccc;

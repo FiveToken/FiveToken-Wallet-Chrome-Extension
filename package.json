@@ -27,6 +27,7 @@
     "axios": "^0.21.1",
     "base32-decode": "^1.0.0",
     "base32-encode": "^1.1.1",
+    "bignumber.js": "^9.0.1",
     "bip39": "^3.0.2",
     "blakejs": "^1.1.0",
     "blsv2": "^0.1.1",

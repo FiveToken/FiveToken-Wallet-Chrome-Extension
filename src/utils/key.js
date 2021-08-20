@@ -20,6 +20,7 @@ export function privateKeyEncode(sk,kek){
 export function privateKeyDecode(encodePrivateKey, kek){
   // let salt = genSalt(password)
   // let kek = genKek(password)
+  console.log(encodePrivateKey,kek,'12345678')
   let pk = AESDecrypt(encodePrivateKey,kek)
   return pk
 
@@ -42,7 +43,6 @@ export function genKek(password) {
     keySize: 256 / 32
   });
   let kekString = CryptoJS.enc.Base64.stringify(kek);
-  console.log(kekString,'kekString 22222')
   return kekString
 }
 

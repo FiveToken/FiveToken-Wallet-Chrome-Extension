@@ -52,7 +52,7 @@
 import ClipboardJS from 'clipboard'
 import { isFilecoinChain,formatNumber } from '@/utils'
 import { mapGetters, mapMutations, mapState } from 'vuex'
-
+import { BigNumber } from "bignumber.js";
 export default {
     data(){
         return{
@@ -78,7 +78,8 @@ export default {
         formatBalance(val,n,that){
             if(that.decimals){
                 let dec = val / Math.pow(10,Number(that.decimals))
-                let num = formatNumber(dec,n)
+                let big = new BigNumber(dec).toFixed();
+                let num = formatNumber(big,n)
                 return num
             }else{
                 return 0

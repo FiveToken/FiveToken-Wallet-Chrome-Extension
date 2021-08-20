@@ -249,12 +249,12 @@ class GlobalApi{
                     this.FilecoinAPI.setRpc(this.rpc)
                     let filRes = await this.FilecoinAPI.chainGetMessage(signed_cid)
                     let stateRes = await this.FilecoinAPI.stateGetReceipt(signed_cid)
+                    console.log(filRes,stateRes,'888888222222')
                     if(filRes){
                         let all_gas_fee = Number(filRes.GasFeeCap) * Number(filRes.GasLimit)
                         let total_amount = Number(value) + all_gas_fee
                         let mType = 'pending'
                         if(stateRes.ExitCode === 0){
-                            console.log(filRes,'888888222222')
                             mType = 'success'
                         }
                         if( stateRes.ExitCode && stateRes.ExitCode !== 0){

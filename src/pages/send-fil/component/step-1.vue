@@ -38,7 +38,7 @@
                 </div>
                 <div class="available">
                     {{ $t('sendFil.available') }} :
-                    {{ formData.balance }}
+                    {{ formData.balance | formatBalance(12)}}
                     {{ formData.symbol }}
                 </div>
             </div>
@@ -87,6 +87,7 @@ import kyAddress from './address.vue'
 import kyToken from './token.vue'
 import { isValidAddress,formatNumber } from '@/utils'
 import { mapState } from 'vuex'
+import { BigNumber } from "bignumber.js";
 export default {
     data(){
         return{
@@ -112,7 +113,9 @@ export default {
     filters:{
         formatBalance(val,n){
             let dec = Number(val)
-            let num = formatNumber(dec,n)
+            let big = new BigNumber(dec)
+            let str = big.toFixed()
+            let num = formatNumber(str,n)
             return num
         },
     },

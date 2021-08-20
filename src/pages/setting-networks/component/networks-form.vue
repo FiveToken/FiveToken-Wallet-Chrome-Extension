@@ -19,7 +19,7 @@
         </div>
         <div class="input-item">
             <div class="label">{{$t('settingNetworks.symbol')}}</div>
-            <kyInput :value="form.tokenSymbol" @changeInput="changeForm(arguments,'tokenSymbol')"/>
+            <kyInput :value="form.symbol" @changeInput="changeForm(arguments,'symbol')"/>
         </div>
         <div class="input-item">
             <div class="label">{{$t('settingNetworks.browser')}}</div>
@@ -50,7 +50,7 @@ export default {
                 name:'',
                 rpc:'',
                 chainID:'',
-                tokenSymbol:'',
+                symbol:'',
                 browser:'',
                 disabled:false
             },
@@ -81,7 +81,7 @@ export default {
             'filecoinAddress0'
         ]),
         active(){
-            return this.form.name !== '' && this.form.rpc !== '' && this.form.chainID !== '' && this.form.tokenSymbol !== '' && !this.form.disabled
+            return this.form.name !== '' && this.form.rpc !== '' && this.form.chainID !== '' && this.form.symbol !== '' && !this.form.disabled
         }
     },
     watch:{
@@ -127,7 +127,7 @@ export default {
                         name:this.form.name,
                         rpc:this.form.rpc,
                         chainID:this.form.chainID,
-                        symbol:this.form.tokenSymbol,
+                        symbol:this.form.symbol,
                         browser:this.form.browser,
                         disabled:false,
                         create_time,
@@ -144,7 +144,7 @@ export default {
                         name:this.form.name,
                         rpc:this.form.rpc,
                         chainID:this.form.chainID,
-                        symbol:this.form.tokenSymbol,
+                        symbol:this.form.symbol,
                         browser:this.form.browser,
                         disabled:false,
                         create_time,
@@ -165,10 +165,10 @@ export default {
             }
         },
         async addUser(networkType,filecoinAddress0,create_time){
-                let f1 = await getF1ByMne(this.mnemonicWords,this.kek,networkType,filecoinAddress0)
-                let { address,privateKey,digest } = f1
                 let rpcAccount = await window.filecoinwalletDb.accountList.where({rpc:this.form.rpc}).toArray() || []
                 let accountName = `Account` + (rpcAccount.length + 1)
+                let f1 = await getF1ByMne(this.mnemonicWords,this.kek,networkType,filecoinAddress0,rpcAccount.length + 1)
+                let { address,privateKey,digest } = f1
                 let res = await MyGlobalApi.getBalance(address)
                 let { balance,nonce } = res
                 await window.filecoinwalletDb.accountList.add({

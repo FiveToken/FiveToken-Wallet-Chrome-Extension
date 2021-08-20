@@ -10,36 +10,39 @@
             </div>
         </div>
         <div class="list">
-            <div class="list-property" v-if="type === '1'">
-                <div class="list-item" @click="skipToToken(symbol,decimals,balance,1)">
-                    <div class="logo">
-                        <img class="img" :src="filLogo" />
+            <div class="list-property-wrap" v-if="type === '1'">
+                <div class="list-property">
+                    <div class="list-item" @click="skipToToken(symbol,decimals,balance,1)">
+                        <div class="logo">
+                            <img class="img" :src="filLogo" />
+                        </div>
+                        <div class="fil-amount">{{balance|formatBalance(8,decimals)}} {{symbol}}</div>
+                        <div class="amount">
+                            <div class="usd">
+                                {{ currency === 'cny' ? "¥" : "$"}} 
+                                {{(balance)|formatUsd(2,decimals,price_currency)}}
+                            </div>
+                        </div>
                     </div>
-                    <div class="fil-amount">{{balance|formatBalance(8,decimals)}} {{symbol}}</div>
-                    <div class="amount">
-                        <div class="usd">
-                            {{ currency === 'cny' ? "¥" : "$"}} 
-                            {{(balance*price_currency)|formatBalance(2,decimals)}}
+                    <div 
+                        class="list-item" 
+                        v-for="(item,index) in tokenList" 
+                        :key="index" 
+                        @click="skipToToken(item.symbol,item.decimals,item.balance,0)"
+                    >
+                        <div class="logo">
+                            <img class="img" :src="filLogo" />
+                        </div>
+                        <div class="fil-amount">{{item.balance|formatBalance(8,item.decimals)}} {{item.symbol}}</div>
+                        <div class="amount">
+                            <div class="usd">
+                                {{ currency === 'cny' ? "¥" : "$"}} 
+                                {{(item.balance)|formatUsd(2,item.decimals,price_currency)}}
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div 
-                    class="list-item" 
-                    v-for="(item,index) in tokenList" 
-                    :key="index" 
-                    @click="skipToToken(item.symbol,item.decimals,item.balance,0)"
-                >
-                    <div class="logo">
-                        <img class="img" :src="filLogo" />
-                    </div>
-                    <div class="fil-amount">{{item.balance|formatBalance(8,item.decimals)}} {{item.symbol}}</div>
-                    <div class="amount">
-                        <div class="usd">
-                            {{ currency === 'cny' ? "¥" : "$"}} 
-                            {{(item.balance*price_currency)|formatBalance(2,item.decimals)}}
-                        </div>
-                    </div>
-                </div>
+
                 <div class="add-token" v-if="networkType === 'ethereum'" @click="addToken">
                     <i class="el-icon-plus"></i>
                 </div>
@@ -60,11 +63,12 @@
 
 <script>
 import { mapState } from 'vuex'
-import { getQueryString,formatNumber } from '@/utils'
+import { getQueryString,formatNumber,minimumPrecision } from '@/utils'
 import transactionItem from './transaction-item.vue'
 import ABI from '@/utils/abi'
 import { ethers } from 'ethers'
 import { MyGlobalApi } from '@/utils/api'
+import { BigNumber } from "bignumber.js";
 export default {
     data(){
         return{
@@ -90,8 +94,31 @@ export default {
         formatBalance(val,n,decimals){
             if(decimals){
                 let dec = val / Math.pow(10,Number(decimals))
-                let num = formatNumber(dec,n)
-                return num 
+                let big = new BigNumber(dec)
+                let str = big.toFixed()
+                if( dec !== 0 && dec < minimumPrecision){
+                    return "<" + minimumPrecision
+                }else{
+                    let num = formatNumber(str,n)
+                    return num 
+                }
+            }else{
+                return 0
+            }
+        },
+        formatUsd(val,n,decimals,price_currency){
+            if(decimals){
+                let dec = val / Math.pow(10,Number(decimals))
+                let big = new BigNumber(dec)
+                let str = big.toFixed()
+                if(dec < minimumPrecision ){
+                    return 0
+                }else{
+                    let dep = dec * price_currency
+                    let ss = new BigNumber(dep).toFixed()
+                    let num = formatNumber(ss,n)
+                    return num
+                }
             }else{
                 return 0
             }
@@ -141,7 +168,7 @@ export default {
             })
             myMesList.forEach(async (n)=>{
                 // Get status
-                if(n.type === 'pending'){
+                if(n.type !== 'pending'){
                     let itemRes = await this.getDetail(n.signed_cid,n)
                     console.log(itemRes,'itemRes 33333')
                     if(itemRes){
@@ -309,7 +336,7 @@ export default {
             }
         }
         .list{
-            .list-property{
+            .list-property-wrap{
                 position: relative;
                 height: 240px;
                 padding-bottom: 50px;
@@ -333,6 +360,10 @@ export default {
                         margin-bottom: 3px;
                     }
                 }
+            }
+            .list-property{
+                height: 235px;
+                overflow-y: auto;
                 .list-item{
                     display: flex;
                     justify-content: space-between;
@@ -371,8 +402,6 @@ export default {
                 }
             }
             .list-activity{
-                height: 440px;
-                overflow-y: auto;
                 .no-data{
                     padding: 15px 0;
                     font-size: 16px;

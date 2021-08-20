@@ -223,7 +223,7 @@ export default {
             }).modify({
                 fil:balance,
             }).then(res=>{
-                // console.log(balance,'balance update1')
+                console.log(balance,'balance update1')
             })
             
             await window.filecoinwalletDb.activeAccount.where({
@@ -264,7 +264,6 @@ export default {
             this.tokenList = tokenList.map(n=>{
                 return {
                     ...n,
-                    create_time:formatDate(n.create_time,true),
                 }
             })
             this.tokenVisible = true

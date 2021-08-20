@@ -112,10 +112,11 @@ export default {
             let mneArr = mne.split(' ')
             let bol = this.arrayEquals(this.selected,mneArr)
             if(bol){
+                let index = 1
                 this.isFetch = true
                 this.error = false
                 let kek = genKek(this.password)
-                let f1 = await getF1ByMne(mne,kek,this.networkType,this.filecoinAddress0)
+                let f1 = await getF1ByMne(mne,kek,this.networkType,this.filecoinAddress0,index)
                 let { address,privateKey,digest } = f1
                 let accountName = this.accountName
                 let create_time =  parseInt(new Date().getTime() / 1000)
@@ -133,7 +134,7 @@ export default {
                 })
                 for (let n of this.networks){
                     if(n.rpc !== this.rpc){
-                        let oF1 = await getF1ByMne(mne,kek,n.networkType,n.filecoinAddress0)
+                        let oF1 = await getF1ByMne(mne,kek,n.networkType,n.filecoinAddress0,index)
                         await window.filecoinwalletDb.accountList.add({
                             accountName,
                             address:oF1.address,

@@ -103,7 +103,7 @@ module.exports = {
   //         }
   //     }
   //   })
-  // },
+  //},
   configureWebpack: {
     plugins: [
       CopyWebpackPlugin(plugins),

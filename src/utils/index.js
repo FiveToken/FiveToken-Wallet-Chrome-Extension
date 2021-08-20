@@ -17,8 +17,9 @@ import { Wallet } from "ethers";
 const encodeKey = 'five'
 export const fiveTokenVersion = '1.1.0'
 
-export function formatNumber(value,n){
-  let str = '' + value
+export const minimumPrecision = 0.00000001
+
+export function formatNumber(str,n){
   let index = str.indexOf('.')
   if(index > -1){
       let arr = str.split(".")
@@ -52,8 +53,7 @@ export async function getF1ByMne(mnemonic,kek,networkType,filecoinAddress0,index
     let f1 = genT1WalletByMne(mnemonic,filecoinAddress0,path,index)
     let { address,privateKey } = f1
     let pk = privateKeyEncode(privateKey,kek)
-    let digest = await genPrivateKeyDigest(privateKey)
-    console.log(pk,'abc 99999999')
+    let digest = await genPrivateKeyDigest(pk)
     return {
       address,
       privateKey:pk,
@@ -62,14 +62,14 @@ export async function getF1ByMne(mnemonic,kek,networkType,filecoinAddress0,index
   }else{
     let path = "m/44'/60'/0'/0"
     let ck = await genPrivateKeyFromMne(mnemonic,path,index)
-    let privateKey = ck.toString("hex")
-    let f1 = new Wallet(privateKey)
-    let { address } = f1
-    let pk = privateKeyEncode(privateKey,kek)
-    let digest = await genPrivateKeyDigest(privateKey)
+    let pk = ck.toString("hex")
+    let f1 = new Wallet(pk)
+    let { address,privateKey } = f1
+    let pkk = privateKeyEncode(privateKey,kek)
+    let digest = await genPrivateKeyDigest(pkk)
     return {
       address,
-      privateKey:pk,
+      privateKey:pkk,
       digest
     }
   }
@@ -81,7 +81,7 @@ export async function getF1ByPrivateKey(privateKey,kek,networkType,filecoinAddre
       let f1 = genT1WalletByCK(privateKey,filecoinAddress0,[])
       let { address } = f1
       let pk = privateKeyEncode(privateKey,kek)
-      let digest = await genPrivateKeyDigest(privateKey)
+      let digest = await genPrivateKeyDigest(pk)
       return {
         address,
         privateKey:pk,
@@ -90,7 +90,7 @@ export async function getF1ByPrivateKey(privateKey,kek,networkType,filecoinAddre
     }else{
       let walletMnemonic = new Wallet(privateKey)
       let pk = privateKeyEncode(privateKey,kek)
-      let digest = await genPrivateKeyDigest(privateKey)
+      let digest = await genPrivateKeyDigest(pk)
       return {
         address:walletMnemonic.address,
         privateKey:pk,
@@ -99,6 +99,23 @@ export async function getF1ByPrivateKey(privateKey,kek,networkType,filecoinAddre
     }
   }catch(err){
     return null
+  }
+}
+
+export function getDecodePrivateKey(encodePrivateKey,kek,networkType,hex) {
+  if(isFilecoinChain(networkType)){
+    let pk = privateKeyDecode(encodePrivateKey,kek)
+    let privateKey1 = strToHexCharCode(pk)
+    console.log(privateKey1,'privateKey 123456')
+    if(hex){
+      let privateKey = strToHexCharCode(pk)
+      return privateKey
+    }else{
+      return pk
+    }
+  }else{
+    let pk = privateKeyDecode(encodePrivateKey,kek)
+    return pk
   }
 }
 
@@ -127,23 +144,6 @@ function strToHexCharCode(pk) {
 　　　　hexCharCode.push((str.charCodeAt(i)).toString(16));
 　　}
 　　return hexCharCode.join("");
-}
-
-export function getDecodePrivateKey(encodePrivateKey,kek,networkType,hex) { 
-  if(isFilecoinChain(networkType)){
-    let pk = privateKeyDecode(encodePrivateKey,kek)
-    let privateKey1 = strToHexCharCode(pk)
-    console.log(privateKey1,'privateKey 123456')
-    if(hex){
-      let privateKey = strToHexCharCode(pk)
-      return privateKey
-    }else{
-      return pk
-    }
-  }else{
-    let pk = privateKeyDecode(encodePrivateKey,kek)
-    return pk
-  }
 }
 
 export function getQueryString(name) { 

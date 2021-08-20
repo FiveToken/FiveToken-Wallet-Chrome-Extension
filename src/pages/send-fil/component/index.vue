@@ -1,7 +1,6 @@
 <template>
     <layout @layoutMounted="layoutMounted">
         <div class="send-fil">
-            <!-- <bHeader /> -->
             <stepOne 
                 v-if="step === 1"
                 :formData="formData"
@@ -27,7 +26,6 @@
 </template>
 
 <script>
-// import bHeader from '@/components/header'
 import stepOne from './step-1'
 import stepTwo from './step-2'
 import layout from '@/components/layout'
@@ -36,6 +34,7 @@ import { MyGlobalApi } from '@/utils/api'
 import { mapMutations, mapState } from 'vuex'
 import ABI from '@/utils/abi'
 import { ethers } from 'ethers'
+import { BigNumber } from "bignumber.js";
 export default {
     data(){
         return{
@@ -201,17 +200,19 @@ export default {
             MyGlobalApi.setNetworkType(this.networkType)
             let res = await MyGlobalApi.getBalance(this.address)
             let { balance,nonce } = res
-            console.log(balance,'balance res')
             let dec = balance / Math.pow(10,Number(this.decimals))
-            let num = formatNumber(dec,12)
+            let big = new BigNumber(dec).toFixed()
+            let num = formatNumber(big,12)
             this.$set(this.formData,'balance',num)
             this.nonce = nonce
             this.getNextNonce()
         },
         async getBaseFeeAndGas(from,to,nonce){
+            this.isFetch = true
             MyGlobalApi.setRpc(this.rpc)
             MyGlobalApi.setNetworkType(this.networkType)
             let res = await MyGlobalApi.getGasFee(from,to,nonce)
+            this.isFetch = false
             let { gasLimit, gasPremium ,gasFeeCap } = res
             this.$set(this.formData,'gasLimit',gasLimit)
             this.$set(this.formData,'gasPremium',gasPremium)
@@ -236,22 +237,35 @@ export default {
         },
         async next(){
             let balance = this.formData.balance
-            // let gas = (this.formData.gasFeeCap * this.formData.gasLimit) / Math.pow(10, 9)
             let fil = Number(this.formData.fil)
-            if( fil > balance){
-                this.$message.error(this.$t('sendFil.insufficientBalance'))
+            let reg = /^((0)?|[1-9]*) + (.)? + [1-9]*$/
+            let isNumber =  new BigNumber(fil).isPositive()
+            console.log(isNumber,'isNumber 123')
+            if(isNumber){
+                if( fil > balance){
+                    this.$message.error(this.$t('sendFil.insufficientBalance'))
+                }else{
+                    await this.getBaseFeeAndGas(this.address,this.formData.to,this.maxNonce)
+                    let gas = (this.formData.gasFeeCap * this.formData.gasLimit) / Math.pow(10, 9)
+                    // all banance > gas 
+                    if(this.formData.isAll === 1){
+                        if(balance > gas){
+                            let fil = balance - gas
+                            this.$set(this.formData,'fil',fil)
+                        }else{
+                            this.$message.error(this.$t('sendFil.insufficientBalance'))
+                        }
+                    }
+                    if(this.formData.isMain !== 1){
+                        let double = this.formData.gasLimit * 2.3
+                        this.$set(this.formData,'gasLimit',double)
+                    }
+                    this.step = 2
+                }
             }else{
-                await this.getBaseFeeAndGas(this.address,this.formData.to,this.maxNonce)
-                if(this.formData.isAll === 1){
-                    let fil = balance
-                    this.$set(this.formData,'fil',fil)
-                }
-                if(this.formData.isMain !== 1){
-                    let double = this.formData.gasLimit * 2
-                    this.$set(this.formData,'gasLimit',double)
-                }
-                this.step = 2
+                this.$message.error(this.$t('sendFil.vaildNumber'))
             }
+            
         },
         async sendToken(){
             try{

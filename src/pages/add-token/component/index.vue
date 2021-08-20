@@ -11,6 +11,9 @@
           <div class="error" v-if="isExists">{{ $t("addToken.error") }}</div>
         </div>
         <div class="info" v-if="contractEffective">
+          <div class="logo">
+            <kyCanvas :contract="contract"/>
+          </div>
           <div class="info-item">
             <div class="label">{{ $t("addToken.contractAddress") }}:</div>
             <div class="value">
@@ -58,9 +61,8 @@ import layout from "@/components/layout";
 import kyBack from "@/components/back";
 import kyInput from "@/components/input";
 import kyButton from "@/components/button";
-// import kyCanvas from "@/components/canvas";
+import kyCanvas from "@/components/canvas";
 import { ethers } from 'ethers'
-import randomColor from 'randomcolor'
 import ABI from '@/utils/abi'
 import { mapState } from 'vuex';
 export default {
@@ -91,15 +93,9 @@ export default {
     kyBack,
     kyInput,
     kyButton,
-    //kyCanvas
+    kyCanvas
   },
-   mounted() {
-    let color = randomColor({
-        count: 10,
-        hue: 'green'
-    });
-    console.log(color,'color10')
-  },
+   mounted() {},
   methods: {
     async layoutMounted() {
       let tokenList = await window.filecoinwalletDb.tokenList.where({ rpc:this.rpc,address:this.address }).toArray () || [];
@@ -108,8 +104,8 @@ export default {
     contractInput(val){
         let that = this
         this.contract = val
-        // let isExists = this.tokenList.find(item => {return item.contract == this.contract}) != undefined
-        // this.isExists = isExists
+        let isExists = this.tokenList.find(item => {return item.contract == this.contract}) != undefined
+        this.isExists = isExists
         let provider = ethers.getDefaultProvider(this.rpc);
         let contract = new ethers.Contract(this.contract, ABI, provider);
         let decimalsPromise = contract.decimals()

@@ -71,11 +71,13 @@
 </template>
 <script>
 import layout from '@/components/layout'
-import { getQueryString,formatNumber,getF1ByMne,getGlobalKek } from '@/utils'
+import { getQueryString,formatNumber,getF1ByMne,getGlobalKek,minimumPrecision } from '@/utils'
+import { AESDecrypt } from '@/utils/key'
 import { mapMutations, mapState } from 'vuex'
 import kyBack from '@/components/back'
 import kyAdd from './add.vue'
 import { MyGlobalApi } from '@/utils/api'
+import { BigNumber } from "bignumber.js";
 export default {
     data(){
         return{
@@ -85,7 +87,7 @@ export default {
             mneAccount:[],
             pkAccount:[],
             addName:'',
-            walletKey:[]
+            nme:''
         }
     },
     computed:{
@@ -109,8 +111,14 @@ export default {
         },
         formatBalance(val,decimals){
             let dec = val / Math.pow(10,Number(decimals))
-            let num = formatNumber(dec,8)
-            return num
+            let big = new BigNumber(dec)
+            let str = big.toFixed()
+            if( dec !== 0 && dec < minimumPrecision){
+                return "<" + minimumPrecision
+            }else{
+                let num = formatNumber(str,8)
+                return num 
+            }
         }
     },
     components:{
@@ -120,7 +128,9 @@ export default {
     },
     async mounted(){
         let walletKey = await window.filecoinwalletDb.walletKey.where({khazix:'khazix'}).toArray()
-        this.walletKey = walletKey
+        if(walletKey.length){
+            this.nme = walletKey[0].mnemonicWords
+        }
     },
     methods:{
         ...mapMutations('app',[
@@ -145,6 +155,7 @@ export default {
                 this.addAccountVisable = false
                 let index = this.accountList.length + 1
                 let kek = getGlobalKek()
+                let mnemonic = AESDecrypt(this.nme)
                 let f1 = await getF1ByMne(mnemonic,kek,this.networkType,this.filecoinAddress0,index)
                 let { address,privateKey,digest } = f1
                 // MyGlobalApi.setRpc(this.rpc)
@@ -357,7 +368,7 @@ export default {
                     }
                     &:nth-child(odd){
                         .icon{
-                            background: #AFE0E5;
+                            background: #5BC1CA;
                         }
                     }
                     .check{

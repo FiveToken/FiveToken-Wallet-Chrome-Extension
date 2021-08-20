@@ -61,7 +61,6 @@ export default {
     async mounted(){
         let mnemonicWords = getQueryString('mnemonicWords')
         this.mnemonicWords = mnemonicWords
-
         let mnemonicArr = mnemonicWords.split(' ')
         this.mnemonicArr = mnemonicArr
         let accountName = this.getQuery('accountName')
@@ -81,15 +80,13 @@ export default {
             return context == null || context == "" || context == "undefined" ? "" : context; 
         },
         async skip(){
+            let index = 1
             this.isFetch = true
-            let f1 = await getF1ByMne(this.mnemonicWords,this.password,this.networkType,this.filecoinAddress0)
+            let kek = genKek(this.password)
+            let f1 = await getF1ByMne(this.mnemonicWords,kek,this.networkType,this.filecoinAddress0,index)
             let { address,privateKey,digest } = f1
             let accountName = this.accountName
             let create_time =  parseInt(new Date().getTime() / 1000)
-            // MyGlobalApi.setRpc(this.rpc)
-            // MyGlobalApi.setNetworkType(this.networkType)
-            // let res = await MyGlobalApi.getBalance(address)
-            // let { balance,nonce } = res
             await window.filecoinwalletDb.accountList.add({
                 accountName,
                 address,
@@ -103,12 +100,7 @@ export default {
             })
             for (let n of this.networks) {
                 if(n.rpc !== this.rpc){
-                    let oF1 = await getF1ByMne(this.mnemonicWords,this.password,n.networkType,n.filecoinAddress0)
-                    // MyGlobalApi.setRpc(n.rpc)
-                    // MyGlobalApi.setNetworkType(n.networkType)
-                    // let oRes = await MyGlobalApi.getBalance(oF1.address)
-                    // let { balance:oBanalce,nonce } = oRes
-                    console.log(n.rpc,'n.rpc')
+                    let oF1 = await getF1ByMne(this.mnemonicWords,kek,n.networkType,n.filecoinAddress0,index)
                     await window.filecoinwalletDb.accountList.add({
                         accountName,
                         address:oF1.address,
@@ -135,7 +127,6 @@ export default {
                 digest
             })
             let salt = genSalt(this.password)
-            let kek = genKek(this.password)
             setGlabolKek(kek)
             let mnemonic = AESEncrypt(this.mnemonicWords,kek)
             await window.filecoinwalletDb.walletKey.where({khazix:'khazix'}).delete()

@@ -37,6 +37,7 @@ import kyBack from '@/components/back'
 import { mapState } from 'vuex';
 import transactionItem from './transaction-item.vue'
 import {formatNumber} from '@/utils'
+import { BigNumber } from "bignumber.js";
 export default {
     data(){
         return{
@@ -61,7 +62,8 @@ export default {
     filters:{
         formatBalance(val,decimals,n){
             let dec = val / Math.pow(10,Number(decimals))
-            let num = formatNumber(dec,n)
+            let big = new BigNumber(dec).toFixed()
+            let num = formatNumber(big,n)
             return num
         }
     },

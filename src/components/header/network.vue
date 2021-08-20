@@ -7,10 +7,10 @@
        </div>
        <div class="network-list">
            <div class="netwotk-item" v-for="(item,index) in networks" :key="index" @click="confirmNet(item)">
-               <div class="img-wrap">
-                   <!-- {{item.image}} -->
+               <div class="img-wrap" v-if="item.disabled">
                    <img class="img" :src="require(`@/assets/svg/${item.image}`)" alt="">
                </div>
+                <div class="custom-img" v-else>{{item.name.substring(0,1)}}</div>
                <div class="name">{{ item.name }}</div>
                <i class="el-icon-check check" v-if="rpc === item.rpc"></i>
             </div>
@@ -103,6 +103,27 @@ export default {
                    width: 26px;
                     height: 26px; 
                 }
+            }
+            &:nth-child(even){
+                .custom-img{
+                    background: #9261E8;
+                }
+            }
+            &:nth-child(odd){
+                .custom-img{
+                    background: #5BC1CA;
+                }
+            }
+            .custom-img{
+                width: 26px;
+                height: 26px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 18px;
+                color: #fff;
+                border-radius: 13px;
+                
             }
             .name{
                 padding-left: 10px;

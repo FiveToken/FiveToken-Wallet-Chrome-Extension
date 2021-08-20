@@ -73,12 +73,13 @@
                     </div>
                 </div>
             </div>
+            <div class="mask" v-if="mask"></div>
         </div>
     </layout>
 </template>
 <script>
-import { validatePassword,getDecodePrivateKey,getQueryString} from '@/utils'
-import { genKek } from '@/utils/key'
+import { validatePassword,getDecodePrivateKey,getQueryString } from '@/utils'
+import { genKek,AESDecrypt } from '@/utils/key'
 import ClipboardJS from 'clipboard'
 import layout from '@/components/layout'
 import kyBack from '@/components/back'
@@ -96,7 +97,9 @@ export default {
             passwordType:'password',
             passwordError:false,
             pk:'',
-            salt:null
+            salt:null,
+            nme:'',
+            mask:false
         }
     },
     components:{
@@ -128,6 +131,7 @@ export default {
         if(walletKey.length){
             let salt = walletKey[0].salt
             this.salt = salt
+            this.nme = walletKey[0].mnemonicWords
         }
         let backups = getQueryString("backups")
         this.backups = backups
@@ -151,12 +155,12 @@ export default {
                 let voild = await validatePassword(this.password,this.salt)
                 if(voild){
                     this.step = 2
+                    let kek = genKek(this.password)
                     if(this.backups === 'privateKey'){
-                        let kek = genKek(this.password)
                         let pk = getDecodePrivateKey(this.privateKey,kek,this.networkType,true)
-                        console.log(pk,'pk 11111')
                         this.pk = pk
                     }else{
+                        let mnemonic = AESDecrypt(this.nme,kek)
                         this.mnemonic = mnemonic
                     }
                 }else{
@@ -167,9 +171,13 @@ export default {
             
         },
         copyMne(){
+            this.mask = true
             let that = this
             const clipboard = new ClipboardJS('.copy-mne')
             clipboard.on('success', function(e) {
+                setTimeout(()=>{
+                    that.mask = false
+                },3000)
                 that.$message.success(that.$t('settingBackups.copySuccess'))
             })
             clipboard.on('error', function(e) {})
@@ -189,6 +197,19 @@ export default {
     height: 100%;
     background: #fff;
     box-sizing: border-box;
+    
+    .mask{
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 999;
+    }
     .backups-content{
         position: relative;
         height: 100%;

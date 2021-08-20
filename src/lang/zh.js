@@ -138,16 +138,17 @@ const zh = {
     confirmTransaction:'确认交易',
     sendAmount:'发送数额',
     networkGas:'网络费率',
-    maxGas:'预估最大手续费',
+    maxGas:'预估最大Gas费',
     totalTips:'发送数额+预估Gas费',
     total:'总额',
     gasFeeError:'低于当前BaseFee',
     gasLimitError:'低于当前Gas Limit',
     addressError:'地址格式不正确',
     insufficientBalance:'余额不足',
-    filBaseFeeTips:'网络费率用于支付网络费用，网络费率&gt;BaseFee时，消息才会被打包。nanoFIL = 10^-9 FIL',
+    filBaseFeeTips:'网络费率用于支付网络费用，网络费率>BaseFee时，消息才会被打包。nanoFIL = 10^-9 FIL',
     baseFeeTips:'Gas价格是单位Gas的支付代币数量，Gwei=10^-9。',
-    gasLimitTips:'Gas Limit是发送消息时，将会被消耗的Gas最大值。'
+    gasLimitTips:'Gas Limit是发送消息时，将会被消耗的Gas最大值。',
+    vaildNumber:'请输入有效数字'
   },
   setting:{
     name:'设置',

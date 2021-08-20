@@ -8,7 +8,7 @@
                 <img :src="logo" alt="" class="img">
             </div>
             <div class="amount">
-                {{ sendAmount }} {{formData.symbol}}
+                {{ formData.fil | formatFil}} {{formData.symbol}}
             </div>
             <div class="send-amount">{{$t('sendFil.sendAmount')}}</div>
             <div class="from-to">
@@ -97,6 +97,7 @@ import kyBack from '@/components/back'
 import kyInput from '@/components/input'
 import kyButton from '@/components/button'
 import {isFilecoinChain,formatNumber } from '@/utils'
+import { BigNumber } from "bignumber.js";
 export default {
     data(){
         return{
@@ -104,13 +105,23 @@ export default {
         }
     },
     filters:{
+        formatFil(val){
+            let big = new BigNumber(val)
+            let str = big.toFixed()
+            let num = formatNumber(str,12)
+            return num
+        },
         formatGas(val,n){
-            let num = formatNumber(val,n)
+            let big = new BigNumber(val)
+            let str = big.toFixed()
+            let num = formatNumber(str,n)
             return num
         },
         formatUSD(val,n,price_currency){
             let usd = val * price_currency
-            let num = formatNumber(usd,n)
+            let big = new BigNumber(usd)
+            let str = big.toFixed()
+            let num = formatNumber(str,n)
             return num
         },
         addressFormat(val){
@@ -123,19 +134,6 @@ export default {
     },
     computed:{
         ...mapState('app',['rpc','symbol','address','networkType','currency']),
-        sendAmount(){
-            let num = 0
-            if(this.formData.isAll){
-                if(this.formData.balance - this.allGasFee >= 0){
-                    num = this.formData.fil
-                }else{
-                    num = this.formData.balance
-                }
-            }else{
-                num = this.formData.fil
-            }
-            return num 
-        },
         allGasFee(){
             let gas = this.formData.gasFeeCap * this.formData.gasLimit / Math.pow(10,Number(9))
             return gas || 0
@@ -151,12 +149,9 @@ export default {
         },
         total(){
             let total = 0
-            if(this.formData.isAll){
-                total = Number(this.formData.fil)
-            }else{
-                total = Number(this.formData.fil) + this.allGasFee
-            }
-            let str = formatNumber(total,12)
+            total = Number(this.formData.fil) + this.allGasFee
+            let big = new BigNumber(total).toFixed()
+            let str = formatNumber(big,12)
             return str
         },
         active(){
@@ -189,19 +184,19 @@ export default {
         },
         send(){
             if(this.active){
-                if(this.formData.isAll){
-                    let val = 0
-                    if(this.formData.balance > this.allGasFee){
+                if(this.formData.balance > this.allGasFee){
+                    if(this.formData.isAll){
+                        let val = 0
                         val = this.formData.balance - this.allGasFee
                         this.$emit('formDataChange',{
                             key:'fil',
                             value:val,
                         })
-                    }else{
-                        this.$message.error(this.$t('sendFil.insufficientBalance'))
                     }
+                    this.$emit('sendFil')
+                }else{
+                    this.$message.error(this.$t('sendFil.insufficientBalance'))
                 }
-                this.$emit('sendFil')
             }
         },
         gasFeeCapChange(val){

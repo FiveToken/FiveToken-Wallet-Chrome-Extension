@@ -13,6 +13,7 @@
         <div class="amount">
           <div class="label">{{ $t("messageDetail.amount") }}:</div>
           <div class="value">
+            {{ address === detail.from ? '-': ''}}
             {{ detail.value | formatAmount(8,detail.decimals) }} {{ detail.token }}
           </div>
         </div>
@@ -23,7 +24,7 @@
             </div>
             <div class="value">
               <div class="text">
-                {{ detail.allGasFee | formatGas(8,detail.decimals) }} {{ detail.token }}
+                {{ detail.allGasFee | formatGas(8,decimals) }} {{ symbol }}
               </div>
             </div>
           </div>
@@ -58,6 +59,7 @@ import layout from "@/components/layout";
 import kyBack from "@/components/back";
 import { getQueryString,formatNumber, formatDate, isFilecoinChain } from "@/utils";
 import { mapState } from "vuex";
+import { BigNumber } from "bignumber.js";
 export default {
   data() {
     return {
@@ -67,18 +69,20 @@ export default {
   filters: {
     formatAmount(val, n,decimals) {
       let dec = val / Math.pow(10,Number(decimals))
-      let num = formatNumber(dec,n)
+      let big = new BigNumber(dec).toFixed()
+      let num = formatNumber(big,n)
       return num
     },
     formatGas(val, n,decimals) {
       console.log(decimals,'decimals 77777')
       let dec = val / Math.pow(10,Number(decimals))
-      let num = formatNumber(dec,n)
+      let big = new BigNumber(dec).toFixed()
+      let num = formatNumber(big,n)
       return num
     },
   },
   computed: {
-    ...mapState('app',['networkType','browser']),
+    ...mapState('app',['address','networkType','browser','symbol','decimals']),
     time() {
       let str = "";
       if (this.detail && this.detail.type === "pending") {

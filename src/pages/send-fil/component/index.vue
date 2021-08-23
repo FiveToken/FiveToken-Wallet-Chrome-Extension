@@ -110,6 +110,8 @@ export default {
         },
         async getTokenList(){
             let list = await window.filecoinwalletDb.tokenList.where({ rpc:this.rpc,address:this.address }).toArray () || [];
+            let chainImg = this.activenNetworks.length && this.activenNetworks[0].image
+            let customNetwork = !this.activenNetworks.length && this.activenNetworks[0].disabled
             let tokenList = [
                 {
                     rpc:this.rpc,
@@ -118,7 +120,9 @@ export default {
                     symbol:this.symbol,
                     contract:'',
                     balance:this.formData.balance,
-                    isMain:1
+                    isMain:1,
+                    image:chainImg,
+                    customNetwork
                 }
             ]
             let provider = ethers.getDefaultProvider(this.rpc);
@@ -132,7 +136,10 @@ export default {
                             {
                                 ...n,
                                 balance:num,
-                                isMain:0
+                                isMain:0,
+                                chainName:this.formData.chainName,
+                                image:'',
+                                contract:n.contract
                             }
                         )
                     })
@@ -208,11 +215,9 @@ export default {
             this.getNextNonce()
         },
         async getBaseFeeAndGas(from,to,nonce){
-            this.isFetch = true
             MyGlobalApi.setRpc(this.rpc)
             MyGlobalApi.setNetworkType(this.networkType)
             let res = await MyGlobalApi.getGasFee(from,to,nonce)
-            this.isFetch = false
             let { gasLimit, gasPremium ,gasFeeCap } = res
             this.$set(this.formData,'gasLimit',gasLimit)
             this.$set(this.formData,'gasPremium',gasPremium)

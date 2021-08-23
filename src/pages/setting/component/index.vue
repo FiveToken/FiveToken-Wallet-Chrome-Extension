@@ -157,6 +157,9 @@ export default {
                 line-height: 50px;
                 border-bottom: 1px solid #eee;
                 position: relative;
+                &:hover{
+                    background: #f5f5f5;
+                }
                 .link{
                     color: #222;
                     text-decoration: none;

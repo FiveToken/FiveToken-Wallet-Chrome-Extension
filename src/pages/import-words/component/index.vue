@@ -42,7 +42,7 @@ import layout from '@/components/layout'
 import kyButton from '@/components/button'
 import kyInput from '@/components/input'
 import kyBack from '@/components/back'
-import { mapState } from 'vuex'
+import { mapMutations, mapState } from 'vuex'
 import * as bip39 from 'bip39'
 export default {
     data(){
@@ -60,7 +60,13 @@ export default {
         }
     },
     computed: {
-        ...mapState('app',['rpc','networks','networkType','filecoinAddress0']),
+        ...mapState('app',[
+            'rpc',
+            'networks',
+            'networkType',
+            'filecoinAddress0',
+            'deriveIndex'
+        ]),
         active(){
             let values = Object.values(this.form)
             let bol = values.every(n=>{
@@ -82,6 +88,9 @@ export default {
         this.$set(this.form,'password',password)
     },
     methods:{
+        ...mapMutations('app',[
+            'SET_DERIVEINDEX'
+        ]),
         async layoutMounted(){
         },
         async importWallet(){
@@ -89,7 +98,7 @@ export default {
             let mneWords = trimStr(this.form.mnemonicWords)
             let volid = bip39.validateMnemonic(mneWords)
             if(volid){
-                let index = 1
+                let index = this.deriveIndex + 1
                 this.isFetch = true
                 this.error = false
                 let kek = genKek(this.form.password)
@@ -108,10 +117,21 @@ export default {
                     fil:0,
                     rpc:this.rpc
                 })
+                this.SET_DERIVEINDEX(index)
+                await window.filecoinwalletDb.activenNetworks.where({
+                    rpc:this.rpc
+                }).modify({
+                    deriveIndex:index
+                })
+                await window.filecoinwalletDb.networks.where({
+                    rpc:this.rpc
+                }).modify({
+                    deriveIndex:index
+                })
                 for (let n of this.networks){
                     if(n.rpc !== this.rpc){
-                        let oF1 = await getF1ByMne(mneWords,kek,n.networkType,n.filecoinAddress0,index)
-                        
+                        let _index = n.deriveIndex + 1
+                        let oF1 = await getF1ByMne(mneWords,kek,n.networkType,n.filecoinAddress0,_index)
                         await window.filecoinwalletDb.accountList.add({
                             accountName,
                             address:oF1.address,
@@ -122,6 +142,16 @@ export default {
                             digest:oF1.digest,
                             fil:0,
                             rpc:n.rpc
+                        })
+                        await window.filecoinwalletDb.activenNetworks.where({
+                            rpc:n.rpc
+                        }).modify({
+                            deriveIndex:_index
+                        })
+                        await window.filecoinwalletDb.networks.where({
+                            rpc:n.rpc
+                        }).modify({
+                            deriveIndex:_index
                         })
                     }
                 }

@@ -98,7 +98,8 @@ export default {
             'accountList',
             'symbol',
             'filecoinAddress0',
-            'decimals'
+            'decimals',
+            'deriveIndex'
         ])
     },
     filters:{
@@ -114,7 +115,8 @@ export default {
             let big = new BigNumber(dec)
             let str = big.toFixed()
             if( dec !== 0 && dec < minimumPrecision){
-                return "<" + minimumPrecision
+                let min = new BigNumber(minimumPrecision).toFixed()
+                return "<" + min
             }else{
                 let num = formatNumber(str,8)
                 return num 
@@ -138,6 +140,7 @@ export default {
             'SET_ADDRESS',
             'SET_DIGEST',
             'SET_ACCOUNTNAME',
+            'SET_DERIVEINDEX'
         ]),
         layoutMounted(){
             let accountList = this.accountList
@@ -153,42 +156,50 @@ export default {
             try{
                 this.isFetch = true
                 this.addAccountVisable = false
-                let index = this.accountList.length + 1
+                let index = this.deriveIndex + 1
                 let kek = getGlobalKek()
                 let mnemonic = AESDecrypt(this.nme)
                 let f1 = await getF1ByMne(mnemonic,kek,this.networkType,this.filecoinAddress0,index)
                 let { address,privateKey,digest } = f1
-                // MyGlobalApi.setRpc(this.rpc)
-                // MyGlobalApi.setNetworkType(this.networkType)
-                // let res = await MyGlobalApi.getBalance(address)
-                // let { balance } = res
+
+                this.SET_DERIVEINDEX(index)
+                await window.filecoinwalletDb.activenNetworks.where({
+                    rpc:this.rpc
+                }).modify({
+                    deriveIndex:index
+                })
+                await window.filecoinwalletDb.networks.where({
+                    rpc:this.rpc
+                }).modify({
+                    deriveIndex:index
+                })
                 let accountName = this.addName
                 let create_time =  parseInt(new Date().getTime() / 1000)
                 await window.filecoinwalletDb.accountList.add({
-                accountName,
-                address,
-                createType:'mnemonic',
-                privateKey,
-                create_time,
-                khazix:'khazix',
-                digest,
-                rpc:this.rpc,
-                fil:0
-            })
-            await window.filecoinwalletDb.activeAccount.where({khazix:'khazix'}).delete()
-            await window.filecoinwalletDb.activeAccount.add({
-                address,
-                accountName,
-                privateKey,
-                create_time,
-                khazix:'khazix',
-                rpc:this.rpc,
-                fil:0,
-                createType:'mnemonic',
-                digest
-            })
-            this.isFetch = false
-            window.location.href = './wallet.html'
+                    accountName,
+                    address,
+                    createType:'mnemonic',
+                    privateKey,
+                    create_time,
+                    khazix:'khazix',
+                    digest,
+                    rpc:this.rpc,
+                    fil:0
+                })
+                await window.filecoinwalletDb.activeAccount.where({khazix:'khazix'}).delete()
+                await window.filecoinwalletDb.activeAccount.add({
+                    address,
+                    accountName,
+                    privateKey,
+                    create_time,
+                    khazix:'khazix',
+                    rpc:this.rpc,
+                    fil:0,
+                    createType:'mnemonic',
+                    digest
+                })
+                this.isFetch = false
+                window.location.href = './wallet.html'
             }catch(err){
                 this.addAccountVisable = false
                 this.isFetch = false
@@ -238,7 +249,7 @@ export default {
             window.location.href = './wallet.html'
         },
         createWallet(){
-            this.addName = `Account` + (this.accountList.length + 1)
+            this.addName = `Account` + (this.deriveIndex + 1)
             this.addAccountVisable = true
         },
         importWallet(){

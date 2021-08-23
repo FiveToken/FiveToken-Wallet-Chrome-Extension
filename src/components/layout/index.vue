@@ -29,6 +29,9 @@ export default {
             let networkType =  activenNetworks[0].networkType
             let filecoinAddress0 = activenNetworks[0].filecoinAddress0
             let decimals = activenNetworks[0].decimals
+            let image = activenNetworks[0].image
+            let disabled = activenNetworks[0].disabled
+            let deriveIndex = activenNetworks[0].deriveIndex
             this.SET_RPC(rpc)
             this.SET_RPCNAME(rpcName)
             let networks = await window.filecoinwalletDb.networks.where({ khazix:'khazix'}).sortBy('create_time');;
@@ -41,6 +44,9 @@ export default {
             this.SET_NETWORKTYPE(networkType)
             this.SET_FILECOINADDRESS0(filecoinAddress0)
             this.SET_DECIMALS(decimals)
+            this.SET_OWENCHAIN(disabled)
+            this.SET_RPCIMAGE(image)
+            this.SET_DERIVEINDEX(deriveIndex)
         }
         if(activeAccount.length ){
             let address = activeAccount[0].address
@@ -74,7 +80,10 @@ export default {
             'SET_FILECOINADDRESS0',
             'SET_LANGUAGE',
             'SET_CURRENCY',
-            'SET_DECIMALS'
+            'SET_DECIMALS',
+            'SET_OWENCHAIN',
+            'SET_RPCIMAGE',
+            'SET_DERIVEINDEX'
         ]),
     }
 }

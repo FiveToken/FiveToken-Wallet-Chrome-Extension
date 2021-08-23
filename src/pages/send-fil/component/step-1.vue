@@ -8,8 +8,18 @@
             <div class="input-item">
                 <div class="label">{{$t('sendFil.token')}}</div>
                 <div class="value" @click="tokenVisible = true">
-                    <div class="logo">
-                        <img class="img" :src="logo" alt="">
+                    <div class="main-logo" v-if="formData.isMain">
+                        <div class="logo" v-if="activenNetworks.length">
+                            <div class="img-wrap" v-if="owenChain">
+                                <img class="img" :src="require(`@/assets/svg/${chainImg}`)"/>
+                            </div>
+                            <div class="custom-img" v-else>{{chainName.substring(0,1)}}</div>
+                        </div>
+                    </div>
+                    <div class="token-logo" v-else>
+                        <div class="logo">
+                            <kyCanvas :contract="formData.contract" />
+                        </div>
                     </div>
                     <div class="token">{{formData.symbol}}</div>
                     <div class="name">{{formData.chainName}}</div>
@@ -85,6 +95,7 @@ import kyInput from '@/components/input'
 import kyButton from '@/components/button'
 import kyAddress from './address.vue'
 import kyToken from './token.vue'
+import kyCanvas from "@/components/canvas";
 import { isValidAddress,formatNumber } from '@/utils'
 import { mapState } from 'vuex'
 import { BigNumber } from "bignumber.js";
@@ -105,10 +116,37 @@ export default {
         formData:Object
     },
     computed:{
-        ...mapState('app',['rpc','symbol','networkType','decimals']),
+        ...mapState('app',[
+            'rpc',
+            'symbol',
+            'networkType',
+            'decimals',
+            'activenNetworks'
+        ]),
         active(){
             return this.formData.to !== '' && this.formData.fil !== ''
         },
+        owenChain(){
+            let volid = false
+            if(this.activenNetworks.length){
+                 volid = this.activenNetworks[0].disabled
+            }
+            return volid
+        },
+        chainImg(){
+            let src = ''
+            if(this.activenNetworks.length){
+                 src = this.activenNetworks[0].image
+            }
+            return src
+        },
+        chainName(){
+            let name = ''
+            if(this.activenNetworks.length){
+                 name = this.activenNetworks[0].name
+            }
+            return name
+        }
     },
     filters:{
         formatBalance(val,n){
@@ -124,7 +162,8 @@ export default {
         kyInput,
         kyButton,
         kyAddress,
-        kyToken
+        kyToken,
+        kyCanvas
     },
     methods:{
         sendBack(){
@@ -206,12 +245,12 @@ export default {
                     position: relative;
                     cursor: pointer;
                     .logo{
-                        width:18px;
-                        height: 18px;
-                        margin-right: 10px;
+                        width:30px;
+                        height: 30px;
+                        margin-right: 15px;
                         .img{
-                            width:18px;
-                            height: 18px;  
+                            width:30px;
+                            height: 30px;  
                         }
                     }
                     .token{

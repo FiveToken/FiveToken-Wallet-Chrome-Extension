@@ -7,23 +7,23 @@
         <div class="tips">{{$t('settingNetworks.addTips')}}</div>
         <div class="input-item">
             <div class="label">{{$t('settingNetworks.networkName')}}</div>
-            <kyInput :value="form.name" @changeInput="changeForm(arguments,'name')"/>
+            <kyInput :value="form.name" :disabled="form.disabled" @changeInput="changeForm(arguments,'name')"/>
         </div>
         <div class="input-item">
             <div class="label">{{$t('settingNetworks.rpc')}}</div>
-            <kyInput :value="form.rpc" @changeInput="changeForm(arguments,'rpc')"/>
+            <kyInput :value="form.rpc" :disabled="form.disabled" @changeInput="changeForm(arguments,'rpc')"/>
         </div>
         <div class="input-item">
             <div class="label">{{$t('settingNetworks.chainID')}}</div>
-            <kyInput :value="form.chainID" @changeInput="changeForm(arguments,'chainID')"/>
+            <kyInput :value="form.chainID" :disabled="form.disabled" @changeInput="changeForm(arguments,'chainID')"/>
         </div>
         <div class="input-item">
             <div class="label">{{$t('settingNetworks.symbol')}}</div>
-            <kyInput :value="form.symbol" @changeInput="changeForm(arguments,'symbol')"/>
+            <kyInput :value="form.symbol" :disabled="form.disabled" @changeInput="changeForm(arguments,'symbol')"/>
         </div>
         <div class="input-item">
             <div class="label">{{$t('settingNetworks.browser')}}</div>
-            <kyInput :value="form.browser" @changeInput="changeForm(arguments,'browser')"/>
+            <kyInput :value="form.browser" :disabled="form.disabled" @changeInput="changeForm(arguments,'browser')"/>
         </div>
         <div class="btn-wrap">
             <kyButton @btnClick="back">{{$t('settingNetworks.cancel')}}</kyButton>
@@ -42,6 +42,7 @@ import kyInput from '@/components/input'
 import kyButton from '@/components/button'
 import { MyGlobalApi } from '@/utils/api'
 import { getF1ByMne,getGlobalKek } from '@/utils'
+import { AESDecrypt } from '@/utils/key'
 import { mapState } from 'vuex'
 export default {
     data(){
@@ -87,7 +88,9 @@ export default {
     watch:{
         detail:{
             handler(newval,old){
-                this.form = Object.assign({}, this.form, { ...newval })
+                if(newval){
+                    this.form = Object.assign({}, this.form, { ...newval })
+                }
                 console.log(newval,this,'newval')
             },
             immediate:true
@@ -121,6 +124,8 @@ export default {
                 let create_time =  parseInt(new Date().getTime() / 1000)
                 let filRec = await MyGlobalApi.getFIleCoinChainHead(this.form.rpc)
                 let ethRec = await MyGlobalApi.getBlockNumber(this.form.rpc)
+                // this.SET_DERIVEINDEX(index) deriveIndex
+                let index = this.detail.deriveIndex || 0
                 if(filRec && filRec.networkType === 'filecoin'){
                     let { networkType,filecoinAddress0 } = filRec
                     await window.filecoinwalletDb.networks.put({
@@ -135,6 +140,7 @@ export default {
                         filecoinAddress0,
                         decimals:18,
                         image:'na.svg',
+                        deriveIndex:index,
                         khazix:'khazix'
                     })
                     await this.addUser(networkType,filecoinAddress0,create_time)
@@ -150,8 +156,9 @@ export default {
                         create_time,
                         networkType,
                         filecoinAddress0,
-                        decimals:9,
+                        decimals:18,
                         image:'na.svg',
+                        deriveIndex:index,
                         khazix:'khazix'
                     })
                     await this.addUser(networkType,filecoinAddress0,create_time)
@@ -165,26 +172,26 @@ export default {
             }
         },
         async addUser(networkType,filecoinAddress0,create_time){
-                let rpcAccount = await window.filecoinwalletDb.accountList.where({rpc:this.form.rpc}).toArray() || []
-                let accountName = `Account` + (rpcAccount.length + 1)
-                let f1 = await getF1ByMne(this.mnemonicWords,this.kek,networkType,filecoinAddress0,rpcAccount.length + 1)
-                let { address,privateKey,digest } = f1
-                let res = await MyGlobalApi.getBalance(address)
-                let { balance,nonce } = res
-                await window.filecoinwalletDb.accountList.add({
-                    address,
-                    accountName,
-                    createType:'mnemonic',
-                    privateKey,
-                    fil:balance,
-                    create_time,
-                    khazix:'khazix',
-                    digest,
-                    rpc:this.form.rpc
-                })
+            let rpcAccount = await window.filecoinwalletDb.accountList.where({rpc:this.form.rpc}).toArray() || []
+            let index = this.detail.deriveIndex || 0
+            let accountName = `Account` + (index + 1)
+            let f1 = await getF1ByMne(this.mnemonicWords,this.kek,networkType,filecoinAddress0,index)
+            let { address,privateKey,digest } = f1
+            let res = await MyGlobalApi.getBalance(address)
+            let { balance,nonce } = res
+            await window.filecoinwalletDb.accountList.add({
+                address,
+                accountName,
+                createType:'mnemonic',
+                privateKey,
+                fil:balance,
+                create_time,
+                khazix:'khazix',
+                digest,
+                rpc:this.form.rpc
+            })
         },
         changeForm(args,key){
-            console.log(args,key,'args,key')
             if(args){
                 this.$set(this.form,key,args[0])
             }

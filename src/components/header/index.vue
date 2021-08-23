@@ -24,11 +24,9 @@
             :visible.sync="networkVisible"
             width="100%"
             :show-close="false"
-            :modal-append-to-body="false"
-            :close-on-click-modal="false"
             class="network-dialog"
         >
-            <kyNetwork v-if="networkVisible" @confirmNet="networksChange" @closeNet="closeNet"/>
+            <kyNetwork @confirmNet="networksChange" @closeNet="closeNet"/>
         </el-dialog>
     </div>
 </template>
@@ -76,12 +74,13 @@ export default {
             'SET_BROWSER',
             'SET_NETWORKTYPE',
             'SET_FILECOINADDRESS0',
-            'SET_DECIMALS'
+            'SET_DECIMALS',
+            'SET_OWENCHAIN',
+            'SET_RPCIMAGE'
         ]),
         networksChange(obj){
             window.filecoinwalletDb.activenNetworks.where({ khazix:'khazix'}).delete()
-            let {name,rpc,chainID,symbol,browser,ids,networkType,filecoinAddress0,decimals,image } = obj
-            console.log(networkType,'networkType 1234')
+            let {name,rpc,chainID,symbol,browser,ids,networkType,filecoinAddress0,decimals,image,disabled } = obj
             window.filecoinwalletDb.activenNetworks.add({
                 name,
                 rpc,
@@ -93,7 +92,8 @@ export default {
                 filecoinAddress0,
                 decimals,
                 image,
-                khazix:'khazix'
+                khazix:'khazix',
+                disabled
             }).then(async (res)=>{
                 let accountList = await window.filecoinwalletDb.accountList.where({ rpc:rpc }).toArray ()|| [];
                 this.networkVisible = false
@@ -105,16 +105,15 @@ export default {
                 this.SET_IDS(ids)
                 this.SET_NETWORKTYPE(networkType)
                 this.SET_FILECOINADDRESS0(filecoinAddress0)
-                this.SET_ACTIVENETWORKS({
-                    ...obj
-                })
+                this.SET_ACTIVENETWORKS([obj])
                 this.SET_DECIMALS(decimals)
-                
+                this.SET_OWENCHAIN(disabled)
+                this.SET_RPCIMAGE(image)
+                this.$emit('networkChange')
                 if(accountList.length){
                     let first = accountList[0]
                     console.log(first,'first')
                     await this.changeAccount(first)
-                    this.$emit('networkChange')
                 }else{
                     window.location.href = './welcome.html'
                 }
@@ -142,7 +141,6 @@ export default {
                 createType,
                 digest
             })
-            // window.location.href = './wallet.html'
         },
         toWallet(){
             window.location.href = './wallet.html'

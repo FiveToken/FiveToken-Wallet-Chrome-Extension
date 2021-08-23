@@ -191,7 +191,7 @@ const en = {
   },
   settingAbout:{
     about:'关于',
-    filVersion:'Filecoin Wallet 版本',
+    filVersion:'FiveToken 版本',
     version:'1.0.0',
     tips:'Filecoin Wallet在新加坡设计和实现',
     links:'链接',
@@ -215,7 +215,7 @@ const en = {
   },
   settingAddress:{
     name:'名称',
-    filAddress:'Filecoin Wallet 地址',
+    filAddress:'FiveToken 地址',
     ethereumAddress:'以太坊 Ethereum 公开地址',
     addressError:'地址格式错误',
     edit:'编辑',

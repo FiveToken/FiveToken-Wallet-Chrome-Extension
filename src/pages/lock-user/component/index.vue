@@ -14,6 +14,7 @@
           @changeInput="passwordChange"
           @changeEye="changeEye"
           :suffix="suffix"
+          @keyup.enter.native="unlocking"
         > </kyInput>
       </div>
       <div class="btn-wrap">

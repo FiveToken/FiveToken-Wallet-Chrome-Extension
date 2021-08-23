@@ -41,7 +41,7 @@
 <script>
 import { mapState } from 'vuex'
 import transactionItem from './transaction-item.vue'
-import { formatNumber,formatDate } from '@/utils'
+import { formatNumber,formatDate,minimumPrecision } from '@/utils'
 import { BigNumber } from "bignumber.js";
 export default {
     data(){
@@ -74,7 +74,13 @@ export default {
             let dec = val / Math.pow(10,Number(decimals))
             let big = new BigNumber(dec).toFixed()
             let num = formatNumber(big,n)
-            return num
+            if( dec !== 0 && dec < minimumPrecision){
+                let min = new BigNumber(minimumPrecision).toFixed()
+                return "<" + min
+            }else{
+                let num = formatNumber(str,n)
+                return num 
+            }
         },
         formatStatusName(type,that){
             let name = ''

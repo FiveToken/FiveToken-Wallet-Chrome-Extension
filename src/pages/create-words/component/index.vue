@@ -24,6 +24,7 @@
             <div class="loading" v-if="isFetch">
                 <img :src="loading" alt="" class="img">
             </div>
+            <div class="mask" v-if="mask"></div>
         </div>
     </layout>
 </template>
@@ -33,13 +34,14 @@ import ClipboardJS from 'clipboard'
 import layout from '@/components/layout'
 import kyButton from '@/components/button'
 import kyBack from '@/components/back'
-import { mapState } from 'vuex'
+import { mapMutations, mapState } from 'vuex'
 import { MyGlobalApi } from '@/utils/api'
 import { getQueryString,getF1ByMne,setGlabolKek } from '@/utils'
 import { genSalt,genKek,AESEncrypt } from '@/utils/key'
 export default {
     data(){
         return{
+            mask:false,
             active:true,
             loading:require('@/assets/image/loading.png'),
             isFetch:false,
@@ -56,7 +58,13 @@ export default {
         kyButton
     },
     computed:{
-        ...mapState('app',['rpc','networks','networkType','filecoinAddress0'])
+        ...mapState('app',[
+            'rpc',
+            'networks',
+            'networkType',
+            'filecoinAddress0',
+            'deriveIndex'
+        ])
     },
     async mounted(){
         let mnemonicWords = getQueryString('mnemonicWords')
@@ -69,6 +77,9 @@ export default {
         this.password = password
     },
     methods:{
+        ...mapMutations('app',[
+            'SET_DERIVEINDEX'
+        ]),
         getQuery(name) { 
             var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i"); 
             var r = window.location.search.substr(1).match(reg);
@@ -80,7 +91,7 @@ export default {
             return context == null || context == "" || context == "undefined" ? "" : context; 
         },
         async skip(){
-            let index = 1
+            let index = this.deriveIndex + 1
             this.isFetch = true
             let kek = genKek(this.password)
             let f1 = await getF1ByMne(this.mnemonicWords,kek,this.networkType,this.filecoinAddress0,index)
@@ -98,9 +109,21 @@ export default {
                 rpc:this.rpc,
                 fil:0
             })
+            this.SET_DERIVEINDEX(index)
+            await window.filecoinwalletDb.activenNetworks.where({
+                rpc:this.rpc
+            }).modify({
+                deriveIndex:index
+            })
+            await window.filecoinwalletDb.networks.where({
+                rpc:this.rpc
+            }).modify({
+                deriveIndex:index
+            })
             for (let n of this.networks) {
                 if(n.rpc !== this.rpc){
-                    let oF1 = await getF1ByMne(this.mnemonicWords,kek,n.networkType,n.filecoinAddress0,index)
+                    let _index = n.deriveIndex + 1
+                    let oF1 = await getF1ByMne(this.mnemonicWords,kek,n.networkType,n.filecoinAddress0,_index)
                     await window.filecoinwalletDb.accountList.add({
                         accountName,
                         address:oF1.address,
@@ -111,6 +134,16 @@ export default {
                         digest:oF1.digest,
                         fil:0,
                         rpc:n.rpc
+                    })
+                    await window.filecoinwalletDb.activenNetworks.where({
+                        rpc:n.rpc
+                    }).modify({
+                        deriveIndex:_index
+                    })
+                    await window.filecoinwalletDb.networks.where({
+                        rpc:n.rpc
+                    }).modify({
+                        deriveIndex:_index
                     })
                 }
             }
@@ -143,12 +176,17 @@ export default {
             window.location.href = './create-wallet.html?backPage=wallet'
         },
         copyWords(){
+            this.mask = true
             let that = this
             const clipboard = new ClipboardJS('.copy-words')
             clipboard.on('success', function(e) {
                 that.$message({
                     message: that.$t('creatWords.copySuccess'),
-                    type: 'success'
+                    type: 'success',
+                    duration:1500,
+                    onClose:()=>{
+                        that.mask = false
+                    }
                 });
             })
             clipboard.on('error', function(e) {})
@@ -170,6 +208,15 @@ export default {
     box-sizing: border-box;
     padding: 15px 20px;
     position: relative;
+    .mask{
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.6);
+        z-index: 999;
+    }
     .loading{
         position: absolute;
         top: 0;

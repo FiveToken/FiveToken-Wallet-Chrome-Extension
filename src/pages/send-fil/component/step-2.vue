@@ -4,9 +4,23 @@
             <kyBack :name="$t('sendFil.confirmTransaction')" @pageBack="back" />
          </div>
          <div class="send-info">
-            <div class="logo">
+            <!-- <div class="logo">
                 <img :src="logo" alt="" class="img">
+            </div> -->
+            <div class="main-logo" v-if="formData.isMain">
+                <div class="logo" v-if="activenNetworks.length">
+                    <div class="img-wrap" v-if="owenChain">
+                        <img class="img" :src="require(`@/assets/svg/${chainImg}`)"/>
+                    </div>
+                    <div class="custom-img" v-else>{{chainName.substring(0,1)}}</div>
+                </div>
             </div>
+            <div class="token-logo" v-else>
+                <div class="logo">
+                    <kyCanvas :contract="formData.contract" />
+                </div>
+            </div>
+            
             <div class="amount">
                 {{ formData.fil | formatFil}} {{formData.symbol}}
             </div>
@@ -98,6 +112,7 @@ import kyInput from '@/components/input'
 import kyButton from '@/components/button'
 import {isFilecoinChain,formatNumber } from '@/utils'
 import { BigNumber } from "bignumber.js";
+import kyCanvas from "@/components/canvas";
 export default {
     data(){
         return{
@@ -133,7 +148,14 @@ export default {
         },
     },
     computed:{
-        ...mapState('app',['rpc','symbol','address','networkType','currency']),
+        ...mapState('app',[
+            'rpc',
+            'symbol',
+            'address',
+            'networkType',
+            'currency',
+            'activenNetworks'
+        ]),
         allGasFee(){
             let gas = this.formData.gasFeeCap * this.formData.gasLimit / Math.pow(10,Number(9))
             return gas || 0
@@ -164,7 +186,28 @@ export default {
             }else{
                 str = this.$t('sendFil.baseFeeTips')
             }
-            return str
+            return str + this.symbol
+        },
+        owenChain(){
+            let volid = false
+            if(this.activenNetworks.length){
+                 volid = this.activenNetworks[0].disabled
+            }
+            return volid
+        },
+        chainImg(){
+            let src = ''
+            if(this.activenNetworks.length){
+                 src = this.activenNetworks[0].image
+            }
+            return src
+        },
+        chainName(){
+            let name = ''
+            if(this.activenNetworks.length){
+                 name = this.activenNetworks[0].name
+            }
+            return name
         }
     },
     props:{
@@ -176,7 +219,8 @@ export default {
     components:{
         kyBack,
         kyInput,
-        kyButton
+        kyButton,
+        kyCanvas
     },
     methods:{
         back(){
@@ -226,14 +270,12 @@ export default {
     .send-info{
         padding: 30px 15px;
         .logo{
-            width: 32px;
-            height: 32px;
-            border-radius: 16px;
-            background: #5BC1CA;
+            width: 30px;
+            height: 30px;
             margin: 0 auto 20px;
             .img{
-                width: 32px;
-                height: 32px;
+                width: 30px;
+                height: 30px;
             }
         }
         .amount{

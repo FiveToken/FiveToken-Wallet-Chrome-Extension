@@ -6,6 +6,7 @@
                 <kyTop
                     v-if="rpc"
                     :balance="balance"
+                    :mask.sync="mask"
                     :editNameVisable.sync="editNameVisable"
                     :deleteUserVisible.sync="deleteUserVisible"
                     :receiveVisible.sync="receiveVisible"
@@ -76,6 +77,10 @@
                     @closeToken="tokenVisible = false"
                 />
             </el-dialog>
+            <div class="loading" v-if="isLoading">
+                <img :src="loading" alt="" class="img">
+            </div>
+            <div class="mask" v-if="mask"></div>
         </div>
     </layout>
 </template>
@@ -95,6 +100,9 @@ import { formatDate } from '@/utils'
 export default {
     data(){
         return{
+            mask:false,
+            loading:require('@/assets/image/loading.png'),
+            isLoading:false,
             addressName:'',
             editNameVisable:false,
             deleteUserVisible:false,
@@ -108,7 +116,7 @@ export default {
             tokenDecimals:0,
             tokenList:[],
             tokenBalance:0,
-            tokenIsMain:0
+            tokenIsMain:0,
         }
     },
     computed:{
@@ -141,10 +149,12 @@ export default {
             'SET_ACCOUNTNAME'
         ]),
         async layoutMounted(){
+            this.isLoading = true
             this.addressName = this.accountName
-            this.getPrice()
-            this.getBalanceNonce()
+            await this.getPrice()
+            await this.getBalanceNonce()
             this.getQRCode()
+            this.isLoading = false
         },
         confirmEdit(){
             let address = this.address
@@ -210,6 +220,7 @@ export default {
             window.location.href = './send-fil.html'
         },
         async getBalanceNonce(){
+            console.log('getBalanceNonce')
             let address = this.address
             let rpc = this.rpc
             MyGlobalApi.setRpc(rpc)
@@ -232,7 +243,7 @@ export default {
             }).modify({
                 fil:balance,
             }).then(res=>{
-                // console.log(balance,'balance update2')
+                console.log(balance,'balance update2')
             })
         },
         openReceive(){
@@ -278,6 +289,38 @@ export default {
     margin: 0 auto;
     background: #fff;
     box-sizing: border-box;
+    .mask{
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.6);
+        z-index: 999;
+    }
+    .loading{
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 999;
+        .img{
+            animation:turnX 3s linear infinite;
+        }
+        @keyframes turnX{
+            0%{
+                transform:rotateZ(0deg);
+            }
+            100%{
+                transform:rotateZ(360deg);
+            }
+        }
+    }
     /deep/.el-dialog{
         margin: 0 auto;
         border-radius: 10px;

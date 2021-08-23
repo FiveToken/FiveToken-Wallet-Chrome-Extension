@@ -33,6 +33,7 @@ export default {
             this.pageType = 'detail'
         },
         addNetwork(){
+            this.detail = null
             this.pageType = 'detail'
         }
     }

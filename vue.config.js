@@ -26,8 +26,8 @@ const chromeName = [
   'account',
   'message-detail',
   'add-token',
-  'get-web3',
-  'update-web3'
+  // 'get-web3',
+  // 'update-web3'
 ];
 
 chromeName.forEach(name => {
@@ -103,7 +103,7 @@ module.exports = {
   //         }
   //     }
   //   })
-  //},
+  // },
   configureWebpack: {
     plugins: [
       CopyWebpackPlugin(plugins),

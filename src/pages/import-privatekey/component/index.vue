@@ -44,7 +44,7 @@ import kyInput from '@/components/input'
 import kyButton from '@/components/button'
 import kyBack from '@/components/back'
 import kyNetwork from './select-network.vue'
-import { mapState } from 'vuex'
+import { mapMutations, mapState } from 'vuex'
 export default {
     data(){
         return{
@@ -61,7 +61,15 @@ export default {
         }
     },
     computed: {
-        ...mapState('app',['rpc','networks','accountList','activeAccount','networkType','filecoinAddress0']),
+        ...mapState('app',[
+            'rpc',
+            'networks',
+            'accountList',
+            'activeAccount',
+            'networkType',
+            'filecoinAddress0',
+            'deriveIndex'
+        ]),
         active(){
             return this.net !== '' 
         },
@@ -88,6 +96,20 @@ export default {
         this.kek = kek
     },
     methods:{
+        ...mapMutations('app',[
+            'SET_RPC',
+            'SET_RPCNAME',
+            'SET_BROWSER',
+            'SET_ACCOUNTLIST',
+            'SET_SYMBOL',
+            'SET_IDS',
+            'SET_NETWORKTYPE',
+            'SET_FILECOINADDRESS0',
+            'SET_DECIMALS',
+            'SET_OWENCHAIN',
+            'SET_RPCIMAGE',
+            'SET_DERIVEINDEX'
+        ]),
         async layoutMounted(){
             this.net = this.rpc
             this.customNetworkType = this.networkType
@@ -119,12 +141,8 @@ export default {
                         return n.address === address
                     })
                     if(!isExist){
-                        let accountName = `Account` + (this.accountList.length + 1)
+                        let accountName = `Account` + (this.deriveIndex + 1)
                         let create_time =  parseInt(new Date().getTime() / 1000)
-                        // MyGlobalApi.setRpc(this.rpc)
-                        // MyGlobalApi.setNetworkType(this.customNetworkType)
-                        // let res = await MyGlobalApi.getBalance(address)
-                        // let { balance,nonce } = res
                         await window.filecoinwalletDb.accountList.add({
                             accountName,
                             address,
@@ -152,7 +170,7 @@ export default {
                         let obj = this.networks.find(n=>{
                             return n.rpc === this.net
                         })
-                        let {name, rpc,chainID,symbol,browser,networkType,filecoinAddress0,ids,decimals,image} = obj
+                        let {name, rpc,chainID,symbol,browser,networkType,filecoinAddress0,ids,decimals,image,disabled,deriveIndex} = obj
                         await window.filecoinwalletDb.activenNetworks.add({
                             name,
                             rpc,
@@ -164,7 +182,23 @@ export default {
                             ids,
                             decimals,
                             image,
+                            disabled,
+                            deriveIndex,
                             khazix:'khazix'
+                        }).then(async ()=>{
+                            let accountList = await window.filecoinwalletDb.accountList.where({ rpc:rpc }).toArray ()|| [];
+                            this.SET_RPC(rpc)
+                            this.SET_RPCNAME(name)
+                            this.SET_BROWSER(browser)
+                            this.SET_ACCOUNTLIST(accountList)
+                            this.SET_SYMBOL(symbol)
+                            this.SET_IDS(ids)
+                            this.SET_NETWORKTYPE(networkType)
+                            this.SET_FILECOINADDRESS0(filecoinAddress0)
+                            this.SET_DECIMALS(decimals)
+                            this.SET_OWENCHAIN(disabled)
+                            this.SET_RPCIMAGE(image)
+                            this.SET_DERIVEINDEX(deriveIndex)
                         })
                         this.isFetch = false
                         window.location.href = './wallet.html'

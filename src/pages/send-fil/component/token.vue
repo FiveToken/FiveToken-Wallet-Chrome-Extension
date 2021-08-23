@@ -17,7 +17,13 @@
         <div class="search-list token-list" v-if="search">
             <div class="token-item" v-for="(item,index) in searchList" :key="index" @click="selectToken(item)">
                 <div class="logo">
-                    <img :src="img" alt="" class="img" />
+                    <div class="is-main" v-if="item.isMain === 1">
+                        <div class="custom-img" v-if="item.customNetwork">{{item.chainName.substring(0,1)}}</div>
+                        <div class="img-wrap" v-else>
+                            <img class="img" :src="require(`@/assets/svg/${item.image}`)" alt="">
+                        </div>
+                    </div>
+                    <kyCanvas v-else  :contract="item.contract"/>
                 </div>
                 <div class="info">
                     <div class="b-s">
@@ -31,7 +37,13 @@
         <div class="token-list" v-else>
             <div class="token-item" v-for="(item,index) in tokenList" :key="index" @click="selectToken(item)">
                 <div class="logo">
-                    <img :src="img" alt="" class="img" />
+                    <div class="is-main" v-if="item.isMain === 1">
+                        <div class="custom-img" v-if="item.customNetwork">{{item.chainName.substring(0,1)}}</div>
+                        <div class="img-wrap" v-else>
+                            <img class="img" :src="require(`@/assets/svg/${item.image}`)" alt="">
+                        </div>
+                    </div>
+                    <kyCanvas v-else  :contract="item.contract"/>
                 </div>
                 <div class="info">
                     <div class="b-s">
@@ -50,6 +62,7 @@
 import kyBack from '@/components/back'
 import kyInput from '@/components/input'
 import { mapState } from 'vuex'
+import kyCanvas from "@/components/canvas";
 export default {
     data(){
         return{
@@ -66,7 +79,8 @@ export default {
     },
     components:{
         kyBack,
-        kyInput
+        kyInput,
+        kyCanvas
     },
     mounted(){},
     methods:{
@@ -144,13 +158,36 @@ export default {
             padding: 10px 0;
             cursor: pointer;
             .logo{
-                width: 26px;
-                height: 26px;
-                background: #5CC1CB;
-                border-radius: 13px;
-                .img{
-                    width: 26px;
-                    height: 26px;
+                width: 30px;
+                height: 30px;
+                border-radius: 15px;
+                .img-wrap{
+                    width: 30px;
+                    height: 30px;
+                    .img{
+                        width: 30px;
+                        height: 30px; 
+                    }
+                }
+                &:nth-child(even){
+                    .custom-img{
+                        background: #9261E8;
+                    }
+                }
+                &:nth-child(odd){
+                    .custom-img{
+                        background: #5BC1CA;
+                    }
+                }
+                .custom-img{
+                    width: 30px;
+                    height: 30px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 18px;
+                    color: #fff;
+                    border-radius: 15px;
                 }
             }
             .info{

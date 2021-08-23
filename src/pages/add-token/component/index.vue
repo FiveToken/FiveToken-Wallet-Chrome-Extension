@@ -68,7 +68,7 @@ import { mapState } from 'vuex';
 export default {
   data() {
     return {
-      contract: "",
+      contract: "0xdd42bcecbe746e8f9415138ef01a4d16d1553df8",
       loading: require("@/assets/image/loading.png"),
       isFetch: false,
       provider:null,
@@ -77,14 +77,15 @@ export default {
       symbol:'',
       name:'',
       tokenList:[],
-      isExists:false
+      isExists:false,
+      logoArr:[]
     };
   },
   computed:{
       ...mapState('app',['rpc','address']),
       active(){
           let v = false
-          v = this.contract !== '' && this.contractEffective
+          v = this.contract !== '' && this.contractEffective && !this.isExists
           return v
       }
   },
@@ -178,6 +179,9 @@ export default {
     .info {
       border: 1px solid #e6f0f0;
       border-radius: 5px;
+      .logo{
+        margin: 20px auto;
+      }
       .info-item {
         display: flex;
         justify-content: space-between;

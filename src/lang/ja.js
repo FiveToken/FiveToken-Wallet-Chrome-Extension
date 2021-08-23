@@ -241,7 +241,7 @@ const ja = {
   },
   settingAddress:{
     name:'名称',
-    filAddress:'Filecoin Wallet アドレス',
+    filAddress:'FiveToken アドレス',
     ethereumAddress:'イーサリアム　Ethereum 公開アドレス',
     addressError:'アドレスフォーマットは間違っています',
     edit:'編集',

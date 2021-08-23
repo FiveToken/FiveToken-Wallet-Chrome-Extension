@@ -13,8 +13,11 @@
             <div class="list-property-wrap" v-if="type === '1'">
                 <div class="list-property">
                     <div class="list-item" @click="skipToToken(symbol,decimals,balance,1)">
-                        <div class="logo">
-                            <img class="img" :src="filLogo" />
+                        <div class="logo" v-if="activenNetworks.length">
+                            <div class="img-wrap" v-if="owenChain">
+                                <img class="img" :src="require(`@/assets/svg/${chainImg}`)"/>
+                            </div>
+                            <div class="custom-img" v-else>{{chainName.substring(0,1)}}</div>
                         </div>
                         <div class="fil-amount">{{balance|formatBalance(8,decimals)}} {{symbol}}</div>
                         <div class="amount">
@@ -31,7 +34,7 @@
                         @click="skipToToken(item.symbol,item.decimals,item.balance,0)"
                     >
                         <div class="logo">
-                            <img class="img" :src="filLogo" />
+                            <kyCanvas :contract="item.contract" />
                         </div>
                         <div class="fil-amount">{{item.balance|formatBalance(8,item.decimals)}} {{item.symbol}}</div>
                         <div class="amount">
@@ -58,6 +61,7 @@
                 </div>
             </div>
         </div>
+
     </div>
 </template>
 
@@ -69,12 +73,12 @@ import ABI from '@/utils/abi'
 import { ethers } from 'ethers'
 import { MyGlobalApi } from '@/utils/api'
 import { BigNumber } from "bignumber.js";
+
+import kyCanvas from "@/components/canvas";
 export default {
     data(){
         return{
-            filLogo:require('@/assets/image/fil-w.png'),
             type:'1',
-            listFetch:false,
             activityList:[],
             tokenList:[]
         }
@@ -97,7 +101,8 @@ export default {
                 let big = new BigNumber(dec)
                 let str = big.toFixed()
                 if( dec !== 0 && dec < minimumPrecision){
-                    return "<" + minimumPrecision
+                    let min = new BigNumber(minimumPrecision).toFixed()
+                    return "<" + min
                 }else{
                     let num = formatNumber(str,n)
                     return num 
@@ -131,18 +136,42 @@ export default {
             'symbol',
             'networkType',
             'decimals',
-            'currency'
+            'currency',
+            'activenNetworks'
         ]),
+        owenChain(){
+            let volid = false
+            if(this.activenNetworks.length){
+                 volid = this.activenNetworks[0].disabled
+            }
+            return volid
+        },
+        chainImg(){
+            let src = ''
+            if(this.activenNetworks.length){
+                 src = this.activenNetworks[0].image
+            }
+            return src
+        },
+        chainName(){
+            let name = ''
+            if(this.activenNetworks.length){
+                 name = this.activenNetworks[0].name
+            }
+            return name
+        }
     },
     components:{
-        transactionItem
+        transactionItem,
+        kyCanvas
     },
     watch:{
         // monitoring RPC changes 
-        rpc(val){
+        async rpc(val){
             if(val){
-                this.getTokenList()
-                this.getActivityList()
+                await this.getTokenList()
+                await this.updateActivityList()
+                await this.getActivityList()
             }
         }
     },
@@ -168,7 +197,7 @@ export default {
             })
             myMesList.forEach(async (n)=>{
                 // Get status
-                if(n.type !== 'pending'){
+                if(n.type === 'pending'){
                     let itemRes = await this.getDetail(n.signed_cid,n)
                     console.log(itemRes,'itemRes 33333')
                     if(itemRes){
@@ -193,9 +222,9 @@ export default {
             let myMesList = mesList.filter(n=>{
                 return n.from === this.address || n.to === this.address
             })
-            console.log(myMesList,'myMesList 888')
             this.activityList = myMesList
         },
+        // get token list
         async getTokenList(){
             let list = await window.filecoinwalletDb.tokenList.where({ 
                 rpc:this.rpc,
@@ -206,9 +235,9 @@ export default {
             list.forEach(async (n)=>{
                 try{
                     let contract = new ethers.Contract(n.contract, ABI, provider);
+                    // get balance by address
                     contract.balanceOf(this.address).then(res=>{
                         let balance = res.toString()
-                        console.log(balance,'balance token')
                         let num = Number(balance) / Number(n.decimals)
                         tokenList.push(
                             {
@@ -218,12 +247,13 @@ export default {
                         )
                     })
                 }catch(err){
-
+                    console.log(err,'contract.balanceOf error')
                 }
             })
             this.tokenList = tokenList
             return tokenList
         },
+        // get detail by hash
         async getDetail(signed_cid,itemObj){
             MyGlobalApi.setRpc(this.rpc)
             MyGlobalApi.setNetworkType(this.networkType)
@@ -374,10 +404,24 @@ export default {
                         width: 30px;
                         height: 30px;
                         border-radius: 15px;
-                        background: #5CC1CB;
-                        .img{
+                        .img-wrap{
                             width: 30px;
                             height: 30px;
+                            .img{
+                                width: 30px;
+                                height: 30px; 
+                            }
+                        }
+                        .custom-img{
+                            background: #5CC1CB;
+                            width: 30px;
+                            height: 30px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            font-size: 18px;
+                            color: #fff;
+                            border-radius: 15px;
                         }
                     }
                     .amount{

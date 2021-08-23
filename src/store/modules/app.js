@@ -18,7 +18,10 @@ const state = {
   currency:'',
   language:'',
   currencyConversion:0,
-  decimals:0
+  decimals:0,
+  owenChain:true,
+  rpcImage:'',
+  deriveIndex:0
 }
 
 const getters = {
@@ -26,6 +29,15 @@ const getters = {
 }
 
 const mutations = {
+  SET_DERIVEINDEX(state,data){
+    state.deriveIndex = data
+  },
+  SET_RPCIMAGE(state,data){
+    state.rpcImage = data
+  },
+  SET_OWENCHAIN(state,data){
+    state.owenChain = data
+  },
   SET_DECIMALS(state,data){
     state.decimals = data
   },

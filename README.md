@@ -108,11 +108,13 @@ DAppLink.request({
 
 ### DAppLink.onMessage(tag,callback)
 tag
-filecoinWalletAddress:Listen to the result of connection address and return to the connection address
-scriptUpdateWeb3Storage:Listen to the result of data storage and return to CID
-scriptWeb3Storage:Listen to the result of accessing address information and return to the storage information of the address
+
+|  filecoinWalletAddress   | scriptUpdateWeb3Storage  | scriptWeb3Storage |
+|  ----  | ----  | ----  | 
+| Listen to the result of connection address and return to the connection address  | Listen to the result of data storage and return to CID | Listen to the result of accessing address information and return to the storage information of the address |
 
 data
+
 Return data
 
 Example:

@@ -175,10 +175,15 @@ export default {
             let that = this
             const clipboard = new ClipboardJS('.copy-mne')
             clipboard.on('success', function(e) {
-                setTimeout(()=>{
-                    that.mask = false
-                },3000)
-                that.$message.success(that.$t('settingBackups.copySuccess'))
+                
+                that.$message({
+                    type:'success',
+                    message:that.$t('settingBackups.copySuccess'),
+                    duration:1500,
+                    onClose:()=>{
+                        that.mask = false
+                    }
+                })
             })
             clipboard.on('error', function(e) {})
         },

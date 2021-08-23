@@ -78,15 +78,18 @@ export default {
             diff:false,
             form:{
                 accountName:'',
-                password:'Aa123456',
-                confirmPassword:'Aa123456'
+                password:'',
+                confirmPassword:''
             },
             placeholder:'',
             createType:''
         }
     },
     computed: {
-        ...mapState("app",['rpc']),
+        ...mapState("app",[
+            'rpc',
+            'deriveIndex'
+        ]),
         disabled(){
             let values = Object.values(this.form)
             let bol = values.every(n=>{
@@ -103,13 +106,12 @@ export default {
     },
     mounted(){
         let createType = getQueryString('createType')
-        console.log(createType,'createType 666666')
         this.createType = createType
     },
     methods:{
         async layoutMounted(){
             let accountList = await window.filecoinwalletDb.accountList.where({ rpc:this.rpc }).toArray () || [];
-            let len = accountList.length + 1
+            let len = this.deriveIndex + 1
             this.$set(this.form,'accountName','Account' + len)
         },
         nameChange(val){

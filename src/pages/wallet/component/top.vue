@@ -66,6 +66,7 @@ export default {
     },
     props:{
         balance:Number,
+        mask:Boolean
     },
     filters:{
         addressFormat(val){
@@ -204,9 +205,17 @@ export default {
         },
         copyAddress1(){
             let that = this
+            this.$emit('update:mask',true)
             const clipboard = new ClipboardJS('.copy-address-box1')
             clipboard.on('success', function(e) {
-                that.$message.success(that.$t('wallet.copySuccess'))
+                that.$message({
+                    type:'success',
+                    message:that.$t('wallet.copySuccess'),
+                    duration:1500,
+                    onClose:()=>{
+                        that.$emit('update:mask',false)
+                    }
+                })
             })
             clipboard.on('error', function(e) {})
         },

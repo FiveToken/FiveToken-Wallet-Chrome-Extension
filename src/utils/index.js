@@ -24,9 +24,9 @@ export function formatNumber(str,n){
   if(index > -1){
       let arr = str.split(".")
       let num = arr[0] + "." + arr[1].substring(0,n)
-      return Number(num)
+      return num
   }else{
-      return Number(str)
+      return str
   }
 }
 
@@ -252,10 +252,10 @@ export function isDecimal(str) {
   return r.test(str)
 }
 
-export function getGasLimit(actor_exist,gas_used){
-  let gas = (Number(gas_used))*1.25
-  let gas_limit = actor_exist ? Math.floor(gas) : 2200000;
-  return gas_limit
+export function getGasLimit(actor_exist,gas_limit){
+  // let res = (Number(gas_used))*1.25
+  let res = actor_exist ? gas_limit : 2200000;
+  return res
 }
 // this.gasFeeCap(res.base_fee,base_fee_ratio,nano_ratio,gas_premium,gasLimit)
 export function getGasFeeCap(base_fee,base_fee_ratio,gas_premium,gasLimit,networkType){
@@ -278,4 +278,69 @@ export function getGasFeeCap(base_fee,base_fee_ratio,gas_premium,gasLimit,networ
 export function getGasPremium(){
   let gas_premium = Math.pow(10, 6)
   return gas_premium
+}
+
+
+export function addDb(key,data){
+  return new Promise((resolve, reject)=>{
+    try{
+      window.filecoinwalletDb[key].add({
+          ...data
+      }).then(res=>{
+        resolve()
+      }).catch(err=>{
+        reject()
+      })
+    }catch(error){
+      reject()
+    }
+  })
+}
+
+export function getDb(key,data){
+  return new Promise((resolve, reject)=>{
+    try{
+      window.filecoinwalletDb[key].add({
+          ...data
+      }).then(res=>{
+        resolve()
+      }).catch(err=>{
+        reject()
+      })
+    }catch(error){
+      reject()
+    }
+  })
+}
+
+export function deleteDb(key,data){
+  return new Promise((resolve, reject)=>{
+    try{
+      window.filecoinwalletDb[key].add({
+          ...data
+      }).then(res=>{
+        resolve()
+      }).catch(err=>{
+        reject()
+      })
+    }catch(error){
+      reject()
+    }
+  })
+}
+
+export function modifyDb(key,data){
+  return new Promise((resolve, reject)=>{
+    try{
+      window.filecoinwalletDb[key].add({
+          ...data
+      }).then(res=>{
+        resolve()
+      }).catch(err=>{
+        reject()
+      })
+    }catch(error){
+      reject()
+    }
+  })
 }

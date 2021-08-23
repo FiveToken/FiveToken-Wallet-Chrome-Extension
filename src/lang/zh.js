@@ -145,8 +145,8 @@ const zh = {
     gasLimitError:'低于当前Gas Limit',
     addressError:'地址格式不正确',
     insufficientBalance:'余额不足',
-    filBaseFeeTips:'网络费率用于支付网络费用，网络费率>BaseFee时，消息才会被打包。nanoFIL = 10^-9 FIL',
-    baseFeeTips:'Gas价格是单位Gas的支付代币数量，Gwei=10^-9。',
+    filBaseFeeTips:'网络费率用于支付网络费用，网络费率>BaseFee时，消息才会被打包。nanoFIL = 10^-9',
+    baseFeeTips:'Gas价格是单位Gas的支付代币数量，Gwei=10^-9',
     gasLimitTips:'Gas Limit是发送消息时，将会被消耗的Gas最大值。',
     vaildNumber:'请输入有效数字'
   },
@@ -211,7 +211,7 @@ const zh = {
   },
   settingAddress:{
     addressBook:'地址簿',
-    name:'便签名',
+    name:'标签名',
     address:'地址',
     addressError:'地址格式错误',
     edit:'编辑',

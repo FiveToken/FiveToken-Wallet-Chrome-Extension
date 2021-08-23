@@ -294,10 +294,10 @@ class GlobalApi{
                     let gasLimit_proxy = 0
                     let gasPremium_proxy = 0
                     let gasFeeCap_proxy = 0
-                    let { base_fee,gas_limit,gas_premium } = proxyRes
+                    let { base_fee,gas_limit,gas_premium,actor_exist } = proxyRes
                     if(proxyRes.base_fee){
                         gasPremium_proxy = Number(gas_premium)
-                        gasLimit_proxy = Number(gas_limit)
+                        gasLimit_proxy = getGasLimit(actor_exist,Number(gas_limit))
                         gasFeeCap_proxy = getGasFeeCap(base_fee,3,gasPremium_proxy,gasLimit_proxy,this.networkType)/Math.pow(10,9)
                     }
                     return {

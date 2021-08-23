@@ -29,6 +29,8 @@
             </div>
         </div>
         <div class="detail-content"  v-if="pageType === 'detail'">
+            <div class="notes">{{$t('settingAddress.name')}}</div>
+            <div class="notes-value">{{detail.accountName}}</div>
             <div class="yt">{{$t('settingAddress.address')}}</div>
             <div class="v-c copy-box" @click="copyAddress" :data-clipboard-text="detail.address">
                 <div class="value">{{detail.address | addressFormat}}</div>
@@ -36,8 +38,6 @@
                     <i class="el-icon-document-copy"></i>
                 </div>
             </div>
-            <div class="notes">{{$t('settingAddress.name')}}</div>
-            <div class="notes-value">{{detail.accountName}}</div>
             <div class="position">
                 <div class="edit-btn">
                     <kyButton :type="'primary'" :active="true" @btnClick="editAddress">
@@ -67,6 +67,7 @@
             
         </div>
     </div>
+    <div class="mask" v-if="mask"></div>
 </div>
 </template>
 
@@ -80,6 +81,7 @@ import kyInput from '@/components/input'
 export default {
     data(){
         return{
+            mask:false,
             add:{
                 accountName:'',
                 address:''
@@ -229,10 +231,18 @@ export default {
             this.$emit("update:pageType",'edit')
         },
         copyAddress(){
+            this.mask = true
             let that = this
             const clipboard = new ClipboardJS('.copy-box')
             clipboard.on('success', function(e) {
-                that.$message.success(that.$t('settingAddress.copySuccess'))
+                that.$message({
+                    type:'success',
+                    message:that.$t('settingAddress.copySuccess'),
+                    duration:1500,
+                    onClose:()=>{
+                        that.mask = false
+                    }
+                })
             })
             clipboard.on('error', function(e) {})
         },
@@ -259,8 +269,19 @@ export default {
 
 <style  lang="less" scoped>
 .address-form{
+    width: 100%;
     height: 100%;
-
+    background: #fff;
+    position: relative;
+    .mask{
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.6);
+        z-index: 999;
+    }
     .back-wrap{
         padding:  15px 20px;
         border-bottom: 1px solid #F6F7FF;
@@ -292,7 +313,7 @@ export default {
         }
         .yt{
             font-size: 14px;
-            color: #999;
+            color: #101010;
             margin-bottom: 20px;
         }
         .v-c{
@@ -303,11 +324,12 @@ export default {
             text-align: left;
             .copy{
                 padding-left: 10px;
+                cursor: pointer;
             }
         }
         .notes{
             font-size: 14px;
-            color: #999;
+            color: #101010;
             margin-bottom: 20px;
         }
         .notes-value{

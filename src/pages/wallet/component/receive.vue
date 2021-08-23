@@ -54,10 +54,14 @@ export default {
             let that = this
             const clipboard = new ClipboardJS('.copy-address-box2')
             clipboard.on('success', function(e) {
-                that.$message.success(that.$t('wallet.copySuccess'))
-                setTimeout(()=>{
-                    that.mask = false
-                },3000)
+                that.$message({
+                    type:'success',
+                    message:that.$t('wallet.copySuccess'),
+                    duration:1500,
+                    onClose:()=>{
+                        that.mask = false
+                    }
+                })
             })
             clipboard.on('error', function(e) {})
         },

@@ -34,7 +34,7 @@
 <script>
 import layout from '@/components/layout'
 import kyButton from '@/components/button'
-import { mapState } from 'vuex'
+import { mapMutations, mapState } from 'vuex'
 import kyBack from '@/components/back'
 import { MyGlobalApi } from '@/utils/api'
 import { getQueryString,getF1ByMne,setGlabolKek } from '@/utils'
@@ -54,7 +54,13 @@ export default {
         }
     },
     computed:{
-        ...mapState('app',['rpc','networks','networkType','filecoinAddress0']),
+        ...mapState('app',[
+            'rpc',
+            'networks',
+            'networkType',
+            'filecoinAddress0',
+            'deriveIndex'
+        ]),
         active(){
             return this.selected.length === 12 ? true : false
         }
@@ -73,6 +79,9 @@ export default {
         this.mnemonicWords = this.shuffle(mnemonicWords)
     },
     methods:{
+        ...mapMutations('app',[
+            'SET_DERIVEINDEX'
+        ]),
         getQuery(name) { 
             var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i"); 
             var r = window.location.search.substr(1).match(reg);
@@ -112,7 +121,7 @@ export default {
             let mneArr = mne.split(' ')
             let bol = this.arrayEquals(this.selected,mneArr)
             if(bol){
-                let index = 1
+                let index = this.deriveIndex + 1
                 this.isFetch = true
                 this.error = false
                 let kek = genKek(this.password)
@@ -120,7 +129,17 @@ export default {
                 let { address,privateKey,digest } = f1
                 let accountName = this.accountName
                 let create_time =  parseInt(new Date().getTime() / 1000)
-
+                this.SET_DERIVEINDEX(index)
+                await window.filecoinwalletDb.activenNetworks.where({
+                    rpc:this.rpc
+                }).modify({
+                    deriveIndex:index
+                })
+                await window.filecoinwalletDb.networks.where({
+                    rpc:this.rpc
+                }).modify({
+                    deriveIndex:index
+                })
                 await window.filecoinwalletDb.accountList.add({
                     address,
                     accountName,
@@ -134,7 +153,8 @@ export default {
                 })
                 for (let n of this.networks){
                     if(n.rpc !== this.rpc){
-                        let oF1 = await getF1ByMne(mne,kek,n.networkType,n.filecoinAddress0,index)
+                        let _index = n.deriveIndex
+                        let oF1 = await getF1ByMne(mne,kek,n.networkType,n.filecoinAddress0,_index)
                         await window.filecoinwalletDb.accountList.add({
                             accountName,
                             address:oF1.address,
@@ -145,6 +165,16 @@ export default {
                             digest:oF1.digest,
                             fil:0,
                             rpc:n.rpc
+                        })
+                        await window.filecoinwalletDb.activenNetworks.where({
+                            rpc:n.rpc
+                        }).modify({
+                            deriveIndex:_index
+                        })
+                        await window.filecoinwalletDb.networks.where({
+                            rpc:n.rpc
+                        }).modify({
+                            deriveIndex:_index
                         })
                     }
                 }

@@ -123,7 +123,6 @@ export default {
                 font-size: 18px;
                 color: #fff;
                 border-radius: 13px;
-                
             }
             .name{
                 padding-left: 10px;

@@ -34,7 +34,7 @@ export default {
             let deriveIndex = activenNetworks[0].deriveIndex
             this.SET_RPC(rpc)
             this.SET_RPCNAME(rpcName)
-            let networks = await window.filecoinwalletDb.networks.where({ khazix:'khazix'}).sortBy('create_time');;
+            let networks = await window.filecoinwalletDb.networks.where({ khazix:'khazix'}).toArray()|| [];
             this.SET_NETWORKS(networks)
             let accountList = await window.filecoinwalletDb.accountList.where({ rpc:rpc }).toArray ()|| [];
             this.SET_ACCOUNTLIST(accountList)

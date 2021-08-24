@@ -63,18 +63,8 @@ export default {
     },
     props:{
         detail:Object,
-        pageType:String
-    },
-    watch:{
-        detail:{
-            handler(val){
-                if(val){
-                    this.$set(this.form,'disabled',val.disabled)
-                }
-            },
-            deep:true,
-            immediate:true
-        }
+        pageType:String,
+        deletaRpc:String
     },
     computed:{
         ...mapState('app',[
@@ -90,9 +80,11 @@ export default {
             handler(newval,old){
                 if(newval){
                     this.form = Object.assign({}, this.form, { ...newval })
+                    this.$set(this.form,'disabled',newval.disabled)
                 }
                 console.log(newval,this,'newval')
             },
+            deep:true,
             immediate:true
         }
     },
@@ -114,9 +106,18 @@ export default {
     methods:{
         back(){
             this.$emit("update:pageType",'list')
-            // window.location.href = './setting.html'
         },
         async save(){
+            if(!this.detail){
+               let networks = await window.filecoinwalletDb.networks.where({ khazix:'khazix'}).toArray();
+                let isExist = networks.find(n=>{
+                    return n.rpc === this.form.rpc
+                })
+                if(isExist){
+                    this.$message.error(this.$t('settingNetworks.isExistError'))
+                    return
+                }
+            }
             if(this.active){
                 this.isFetch = true
                 MyGlobalApi.setRpc(this.form.rpc)
@@ -124,11 +125,20 @@ export default {
                 let create_time =  parseInt(new Date().getTime() / 1000)
                 let filRec = await MyGlobalApi.getFIleCoinChainHead(this.form.rpc)
                 let ethRec = await MyGlobalApi.getBlockNumber(this.form.rpc)
-                // this.SET_DERIVEINDEX(index) deriveIndex
-                let index = this.detail.deriveIndex || 0
                 if(filRec && filRec.networkType === 'filecoin'){
                     let { networkType,filecoinAddress0 } = filRec
-                    await window.filecoinwalletDb.networks.put({
+                    let _index = 1
+                    if(this.detail){
+                        _index = this.detail.deriveIndex
+                        await window.filecoinwalletDb.networks.where({
+                            rpc:this.deletaRpc
+                        }).delete()
+                        
+                    }else{
+                        await this.addUser(networkType,filecoinAddress0,create_time)
+                        _index = 1
+                    }
+                    await window.filecoinwalletDb.networks.add({
                         name:this.form.name,
                         rpc:this.form.rpc,
                         chainID:this.form.chainID,
@@ -139,14 +149,24 @@ export default {
                         networkType,
                         filecoinAddress0,
                         decimals:18,
-                        image:'na.svg',
-                        deriveIndex:index,
+                        image:'',
+                        deriveIndex:_index,
                         khazix:'khazix'
                     })
-                    await this.addUser(networkType,filecoinAddress0,create_time)
                 }else if(ethRec && ethRec.networkType === 'ethereum'){
                     let { networkType,filecoinAddress0 } = ethRec
-                    await window.filecoinwalletDb.networks.put({
+                    let _index = 1
+                    if(this.detail){
+                        _index = this.detail.deriveIndex
+                        await window.filecoinwalletDb.networks.where({
+                            rpc:this.deletaRpc
+                        }).delete()
+                        
+                    }else{
+                        await this.addUser(networkType,filecoinAddress0,create_time)
+                        _index = 1
+                    }
+                    await window.filecoinwalletDb.networks.add({
                         name:this.form.name,
                         rpc:this.form.rpc,
                         chainID:this.form.chainID,
@@ -157,11 +177,10 @@ export default {
                         networkType,
                         filecoinAddress0,
                         decimals:18,
-                        image:'na.svg',
-                        deriveIndex:index,
+                        image:'',
+                        deriveIndex:_index,
                         khazix:'khazix'
                     })
-                    await this.addUser(networkType,filecoinAddress0,create_time)
                 }else{
                     this.isFetch = false
                     this.$message.error(this.$t('settingNetworks.addError'))
@@ -173,9 +192,8 @@ export default {
         },
         async addUser(networkType,filecoinAddress0,create_time){
             let rpcAccount = await window.filecoinwalletDb.accountList.where({rpc:this.form.rpc}).toArray() || []
-            let index = this.detail.deriveIndex || 0
-            let accountName = `Account` + (index + 1)
-            let f1 = await getF1ByMne(this.mnemonicWords,this.kek,networkType,filecoinAddress0,index)
+            let accountName = `Account` + 1
+            let f1 = await getF1ByMne(this.mnemonicWords,this.kek,networkType,filecoinAddress0,0)
             let { address,privateKey,digest } = f1
             let res = await MyGlobalApi.getBalance(address)
             let { balance,nonce } = res
@@ -249,7 +267,7 @@ export default {
             .label{
                 margin-bottom: 6px;
                 font-size: 14px;
-                color: #999;
+                color: #131313;
             }
             .error{
                 padding-top: 5px;

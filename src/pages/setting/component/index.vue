@@ -40,7 +40,6 @@
             :visible.sync="currencyVisible"
             width="300px"
             :show-close="false"
-            :close-on-click-modal="false"
             :top="'38vh'"
         >
             <kyCurrency v-if="currencyVisible" @confirm="currencyChange" @close="currencyClose"/>
@@ -49,7 +48,6 @@
             :visible.sync="languageVisible"
             width="300px"
             :show-close="false"
-            :close-on-click-modal="false"
             :top="'30vh'"
         >
             <kyLanguage v-if="languageVisible" @confirm="languageChange" @close="languageClose"/>

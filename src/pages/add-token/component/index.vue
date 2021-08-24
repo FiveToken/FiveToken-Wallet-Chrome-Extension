@@ -68,7 +68,7 @@ import { mapState } from 'vuex';
 export default {
   data() {
     return {
-      contract: "0xdd42bcecbe746e8f9415138ef01a4d16d1553df8",
+      contract: "",
       loading: require("@/assets/image/loading.png"),
       isFetch: false,
       provider:null,

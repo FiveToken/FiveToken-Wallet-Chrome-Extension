@@ -296,7 +296,7 @@ export default {
         .label{
             margin-bottom: 10px;
             font-size: 14px;
-            color: #999;
+            color: #101010;
         }
         .error{
             padding-top: 5px;
@@ -342,7 +342,7 @@ export default {
             .label{
                 margin-bottom: 10px;
                 font-size: 14px;
-                color: #999;
+                color: #101010;
             }
         }
         .edit-btn{

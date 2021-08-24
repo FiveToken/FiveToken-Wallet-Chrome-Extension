@@ -106,7 +106,6 @@ export function getDecodePrivateKey(encodePrivateKey,kek,networkType,hex) {
   if(isFilecoinChain(networkType)){
     let pk = privateKeyDecode(encodePrivateKey,kek)
     let privateKey1 = strToHexCharCode(pk)
-    console.log(privateKey1,'privateKey 123456')
     if(hex){
       let privateKey = strToHexCharCode(pk)
       return privateKey
@@ -204,7 +203,6 @@ export function parseE(str) {
 
 
 export function isValidAddress(v,networkType){
-  console.log(v,networkType,'v,networkType')
   if(!isFilecoinChain(networkType)){
     let bol = false
     let start = v.startsWith('0x')

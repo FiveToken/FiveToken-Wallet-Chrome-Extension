@@ -78,7 +78,7 @@ export default {
                 let min = new BigNumber(minimumPrecision).toFixed()
                 return "<" + min
             }else{
-                let num = formatNumber(str,n)
+                let num = formatNumber(big,n)
                 return num 
             }
         },

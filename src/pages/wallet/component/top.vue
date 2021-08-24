@@ -211,7 +211,7 @@ export default {
                 that.$message({
                     type:'success',
                     message:that.$t('wallet.copySuccess'),
-                    duration:1500,
+                    duration:1000,
                     onClose:()=>{
                         that.$emit('update:mask',false)
                     }

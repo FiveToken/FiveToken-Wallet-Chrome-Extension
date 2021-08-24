@@ -1,8 +1,18 @@
 <template>
     <layout>
         <div class="setting-networks">
-            <networksList @networksItemClick="networksItemClick" @addNetwork="addNetwork" v-if="pageType === 'list'"/>
-            <networksFrom :detail="detail" :pageType.sync="pageType" v-if="pageType === 'detail'"/>
+            <networksList
+                :networks="networks"
+                @networksItemClick="networksItemClick" 
+                @addNetwork="addNetwork" 
+                v-if="pageType === 'list'"
+            />
+            <networksFrom
+                :deletaRpc="deletaRpc"
+                :detail="detail" 
+                :pageType.sync="pageType" 
+                v-if="pageType === 'detail'"
+            />
         </div>
     </layout>
 </template>
@@ -15,7 +25,9 @@ export default {
     data(){
         return{
            pageType:'list',
-           detail:null
+           detail:null,
+           deletaRpc:'',
+           networks:[]
         }
     },
     components:{
@@ -23,16 +35,19 @@ export default {
        networksFrom,
        layout
     },
-    mounted(){
-       
+    async mounted(){
+        let networks = await window.filecoinwalletDb.networks.where({ khazix:'khazix'}).sortBy('create_time');
+        this.networks = networks
     },
     methods:{
         networksItemClick(obj){
             console.log(obj,'oobbjj')
             this.detail = obj
+            this.deletaRpc = obj.rpc
             this.pageType = 'detail'
         },
         addNetwork(){
+            this.deletaRpc = ''
             this.detail = null
             this.pageType = 'detail'
         }

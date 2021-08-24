@@ -26,13 +26,14 @@ request.interceptors.response.use(
   response => {
     const res = response.data
     if (response.status && response.status !== 200) {
-      return Promise.reject(res || 'error')
+      console.log('network error' + JSON.stringify(res)) // for debug
+      return Promise.reject(response || 'error')
     } else {
       return Promise.resolve(res)
     }
   },
   error => {
-    console.error('network error' + error) // for debug
+    console.log('network error' + JSON.stringify(error)) // for debug
     return Promise.reject(error)
   }
 )

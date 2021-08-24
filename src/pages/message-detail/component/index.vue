@@ -213,7 +213,7 @@ export default {
       justify-content: space-between;
       align-items: center;
       background: #f5f5f5;
-      padding: 20px 10px;
+      padding: 15px 10px;
       border-radius: 5px;
       .label {
         font-size: 14px;

@@ -111,7 +111,7 @@ export default {
         async getTokenList(){
             let list = await window.filecoinwalletDb.tokenList.where({ rpc:this.rpc,address:this.address }).toArray () || [];
             let chainImg = this.activenNetworks.length && this.activenNetworks[0].image
-            let customNetwork = !this.activenNetworks.length && this.activenNetworks[0].disabled
+            let customNetwork = this.activenNetworks.length && !this.activenNetworks[0].disabled
             let tokenList = [
                 {
                     rpc:this.rpc,
@@ -131,7 +131,7 @@ export default {
                     let contract = new ethers.Contract(n.contract, ABI, provider);
                     contract.balanceOf(this.address).then(res=>{
                         let balance = res.toString()
-                        let num = Number(balance) / Number(n.decimals)
+                        let num = Number(balance) / Math.pow(10,Number(n.decimals))
                         tokenList.push(
                             {
                                 ...n,
@@ -147,6 +147,7 @@ export default {
                     console.log(err,'getTokenList err')
                 }
             })
+                    console.log(tokenList,'tokenList 88888')
             this.SET_TOKENLIST(tokenList)
         },
         formDataChange(obj){
@@ -245,12 +246,14 @@ export default {
             let fil = Number(this.formData.fil)
             let reg = /^((0)?|[1-9]*) + (.)? + [1-9]*$/
             let isNumber =  new BigNumber(fil).isPositive()
-            console.log(isNumber,'isNumber 123')
             if(isNumber){
                 if( fil > balance){
                     this.$message.error(this.$t('sendFil.insufficientBalance'))
                 }else{
+                    this.step = 2
+                    this.isFetch = true
                     await this.getBaseFeeAndGas(this.address,this.formData.to,this.maxNonce)
+                    this.isFetch = false
                     let gas = (this.formData.gasFeeCap * this.formData.gasLimit) / Math.pow(10, 9)
                     // all banance > gas 
                     if(this.formData.isAll === 1){
@@ -262,10 +265,9 @@ export default {
                         }
                     }
                     if(this.formData.isMain !== 1){
-                        let double = this.formData.gasLimit * 2.3
+                        let double = this.formData.gasLimit * 2.5
                         this.$set(this.formData,'gasLimit',double)
                     }
-                    this.step = 2
                 }
             }else{
                 this.$message.error(this.$t('sendFil.vaildNumber'))
@@ -274,12 +276,14 @@ export default {
         },
         async sendToken(){
             try{
-                this.isFetch = true
                 let provider = ethers.getDefaultProvider(this.rpc);
+                console.log(provider,'provider')
                 let wallet = new ethers.Wallet(this.pkk, provider);
+                console.log(wallet,'wallet')
                 let contractSigner = new ethers.Contract(this.formData.contract, ABI, wallet);
-
+                console.log(contractSigner,'contractSigner')
                 let numberOfTokens = ethers.utils.parseUnits(this.formData.fil, this.formData.decimals);
+                console.log(numberOfTokens,'numberOfTokens')
                 let allGasFee = this.formData.gasFeeCap * this.formData.gasLimit * Math.pow(10, 9)
                 let res = await contractSigner.transfer(this.formData.to,numberOfTokens,{
                     gasPrice: this.formData.gasFeeCap * Math.pow(10, 9),
@@ -311,10 +315,9 @@ export default {
                         })
                         window.location.href = './wallet.html?fromPage=sendFil'
                 }
-                this.isFetch = false
             }catch(error){
-                console.log(error,'sendtoken error')
                 this.isFetch = false
+                console.log(error,'sendtoken error')
                 if(error.error && error.error.message){
                     this.$message({
                         type:'error',
@@ -324,10 +327,10 @@ export default {
             }
         },
         async sendFil(){
+            this.isFetch = true
             let balance = Number(this.formData.balance)
             let gas = (this.formData.gasFeeCap * this.formData.gasLimit) / Math.pow(10, 9)
             let fil = Number(this.formData.fil)
-            console.log(fil , gas, balance,'fil + gas > balance')
             if( fil + gas > balance) {
                 this.$message.error(this.$t('sendFil.insufficientBalance'))
                 return
@@ -335,7 +338,6 @@ export default {
 
             if(this.formData.isMain === 1){
                 try{
-                    this.isFetch = true
                     let address = this.address
                     let tx = {
                         from:address,
@@ -378,14 +380,14 @@ export default {
                         })
                        window.location.href = './wallet.html?fromPage=sendFil'
                     }
-                    this.isFetch = false
                 }catch(err){
-                    console.log(err,'senFIl err')
                     this.isFetch = false
+                    console.log(err,'senFIl err')
                 }
             }else{
                 this.sendToken()
             }
+            this.isFetch = false
         },
     }
 }

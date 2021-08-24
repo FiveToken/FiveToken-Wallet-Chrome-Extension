@@ -1,17 +1,40 @@
 import request from '@/utils/request'
-// https://api.coingecko.com/api/v3/simple/price?ids=binancecoin&vs_currencies=usd,cny
 
 const api = {
-    BaseFeeAndGas:'/v1/filscan/BaseFeeAndGas',
-    BalanceNonceByAddress:'/v1/filscan/BalanceNonceByAddress',
-    MessageDetails:'/v1/filscan/MessageDetails',
-    FilPricePoints:'/v1/filscan/FilPricePoints',
-    MessagePush:'/v1/chainmessage/MessagePush',
-    MessageByAddressDirection:'/v1/filscan/MessageByAddressDirection',
-    pricePoints:'http://8.209.219.115:8090/third/priceByType',
-    searchHandler:'https://bscscan.com/searchHandler'
+    // BaseFeeAndGas:'/v1/filscan/BaseFeeAndGas',
+    // BalanceNonceByAddress:'/v1/filscan/BalanceNonceByAddress',
+    // MessageDetails:'/v1/filscan/MessageDetails',
+    // MessagePush:'/v1/chainmessage/MessagePush',
+    // pricePoints:'http://8.209.219.115:8090/third/priceByType'
+
+    BalanceNonceByAddress:'/api/actor/balance',
+    MessageDetails:'/api/message',
+    MessagePush:'/api/message',
+    Message:'/api/actor/messages',
+    MessageBuild:'/api/message/build',
+    BaseFeeAndGas:'/api/recommend/fee',
+    pricePoints:'http://8.209.219.115:8090/third/priceByType'
 }
 
+export function BaseFeeAndGas(data,rpc){
+    return request({
+        url: rpc + api.BaseFeeAndGas,
+        method: 'get',
+        params:{
+            method:'Send',
+            actor:data
+        }
+    })
+}
+export function BalanceNonceByAddress(data,rpc){
+    return request({
+        url: rpc + api.BalanceNonceByAddress,
+        method: 'get',
+        params:{
+            actor:data
+        }
+    })
+}
 
 export function getPricePoints(ids){
     return request({
@@ -23,54 +46,18 @@ export function getPricePoints(ids){
     })
 }
 
-export function getTokenImg(term){
+
+
+export function MessageDetails(data,rpc){
     return request({
-        url: api.searchHandler,
+        url: rpc + api.MessageDetails,
         method: 'get',
         params:{
-            term,
-            filterby:'0'
+            cid:data
         }
     })
 }
 
-export function BaseFeeAndGas(data,rpc){
-    return request({
-        url: rpc + api.BaseFeeAndGas,
-        method: 'post',
-        data
-    })
-}
-export function BalanceNonceByAddress(data,rpc){
-    return request({
-        url: rpc + api.BalanceNonceByAddress,
-        method: 'post',
-        data
-    })
-}
-
-export function MessageByAddressDirection(data,rpc){
-    return request({
-        url: rpc + api.MessageByAddressDirection,
-        method: 'post',
-        data
-    })
-}
-export function MessageDetails(data,rpc){
-    return request({
-        url: rpc + api.MessageDetails,
-        method: 'post',
-        data
-    })
-}
-
-export function FilPricePoints(data,rpc){
-    return request({
-        url:  rpc + api.FilPricePoints,
-        method: 'post',
-        data
-    })
-}
 export function MessagePush(data,rpc){
     return request({
         url:  rpc + api.MessagePush,

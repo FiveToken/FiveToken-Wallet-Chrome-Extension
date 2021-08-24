@@ -16,14 +16,13 @@ filecoinwalletDb.version(2).stores({
 });
 window.filecoinwalletDb = filecoinwalletDb
 window.localStorage.setItem('filecoinWalletVersion','1.0.0')
-
 window.filecoinwalletDb.networks.where({ khazix:'khazix'}).toArray().then(res=>{
     if(!res.length){
         let create_time =  parseInt(new Date().getTime() / 1000)
         let defaultNetworks = [
             {
                 name:'Filcoin Mainnet',
-                rpc:'https://api.filscan.io:8083',
+                rpc:'http://192.168.1.161:8081',
                 chainID:'',
                 symbol:'FIL',
                 ids:'filecoin',
@@ -38,23 +37,6 @@ window.filecoinwalletDb.networks.where({ khazix:'khazix'}).toArray().then(res=>{
                 deriveIndex:0
             },
             {
-                name:'Calibration Testnet',
-                rpc:'https://calibration.node.glif.io',
-                chainID:'',
-                symbol:'FIL',
-                ids:'filecoin',
-                browser:'https://calibration.filscan.io',
-                khazix:'khazix',
-                networkType:'filecoin',
-                filecoinAddress0:'t',
-                create_time:create_time+1,
-                decimals:18,
-                image:'fil.svg',
-                disabled:true,
-                deriveIndex:0
-            },
-
-            {
                 name:'Ethereum Mainnet',
                 rpc:'https://mainnet.infura.io/v3/96837d28a772466ca6ed88eddb221e09',
                 chainID:'1',
@@ -64,7 +46,7 @@ window.filecoinwalletDb.networks.where({ khazix:'khazix'}).toArray().then(res=>{
                 khazix:'khazix',
                 networkType:'ethereum',
                 filecoinAddress0:'',
-                create_time:create_time+2,
+                create_time:create_time+1,
                 decimals:18,
                 image:'eth.svg',
                 disabled:true,
@@ -80,29 +62,93 @@ window.filecoinwalletDb.networks.where({ khazix:'khazix'}).toArray().then(res=>{
                 khazix:'khazix',
                 networkType:'ethereum',
                 filecoinAddress0:'',
-                create_time:create_time+3,
+                create_time:create_time+2,
                 decimals:18,
                 image:'bnb.svg',
                 disabled:true,
                 deriveIndex:0
             },
-
             {
-                name:'Filcoin TEST',
-                rpc:'https://1w1cJziPEPGNpMlwFjxyj8f7dhd:87323bed6d5a3aa3eb3cbd7ee1d28407@filecoin.infura.io',
+                name:'Filecoin Calibration Testnet',
+                rpc:'https://calibration.node.glif.io',
                 chainID:'',
-                symbol:'FIL TEST',
+                symbol:'FIL',
                 ids:'filecoin',
-                browser:'https://filscan.io',
+                browser:'https://calibration.filscan.io',
                 khazix:'khazix',
-                create_time:create_time+4,
                 networkType:'filecoin',
-                filecoinAddress0:'f',
+                filecoinAddress0:'t',
+                create_time:create_time+3,
                 decimals:18,
                 image:'fil.svg',
                 disabled:true,
                 deriveIndex:0
             },
+            {
+                name:'Ropsten Test Network',
+                rpc: 'https://ropsten.infura.io/v3/96837d28a772466ca6ed88eddb221e09',
+                chainID: '3',
+                symbol:'ETH',
+                ids:'ethereum',
+                browser: 'https://ropsten.etherscan.io',
+                khazix:'khazix',
+                networkType:'ethereum',
+                filecoinAddress0:'',
+                create_time:create_time+4,
+                decimals:18,
+                image:'eth.svg',
+                disabled:true,
+                deriveIndex:0
+            },
+            {
+                name:'Kovan Test Network',
+                rpc: 'https://kovan.infura.io/v3/96837d28a772466ca6ed88eddb221e09',
+                chainID: '42',
+                symbol:'ETH',
+                ids:'ethereum',
+                browser: 'https://kovan.etherscan.io',
+                khazix:'khazix',
+                networkType:'ethereum',
+                filecoinAddress0:'',
+                create_time:create_time+5,
+                decimals:18,
+                image:'eth.svg',
+                disabled:true,
+                deriveIndex:0
+            },
+            {
+                name:'Rinkeby Test Network',
+                rpc: 'https://rinkeby.infura.io/v3/96837d28a772466ca6ed88eddb221e09',
+                chainID: '4',
+                symbol:'ETH',
+                ids:'ethereum',
+                browser: 'https://rinkeby.etherscan.io',
+                khazix:'khazix',
+                networkType:'ethereum',
+                filecoinAddress0:'',
+                create_time:create_time+6,
+                decimals:18,
+                image:'eth.svg',
+                disabled:true,
+                deriveIndex:0
+            },
+            // {
+            //     name:'Goerli Test Network',
+            //     rpc: 'https://goerli.infura.io/v3/96837d28a772466ca6ed88eddb221e09',
+            //     chainID: '5',
+            //     symbol:'ETH',
+            //     ids:'ethereum',
+            //     browser: 'https://goerli.etherscan.io',
+            //     khazix:'khazix',
+            //     networkType:'ethereum',
+            //     filecoinAddress0:'',
+            //     create_time:create_time+7,
+            //     decimals:18,
+            //     image:'eth.svg',
+            //     disabled:true,
+            //     deriveIndex:0
+            // },
+            
             {
                 name:'Binance TEST',
                 rpc:'https://data-seed-prebsc-1-s1.binance.org:8545',
@@ -113,28 +159,28 @@ window.filecoinwalletDb.networks.where({ khazix:'khazix'}).toArray().then(res=>{
                 khazix:'khazix',
                 networkType:'ethereum',
                 filecoinAddress0:'',
-                create_time:create_time+5,
+                create_time:create_time+8,
                 decimals:18,
                 image:'bnb.svg',
                 disabled:true,
                 deriveIndex:0
             },
             {
-                name:'Ethereum TEST',
-                rpc:'https://ropsten.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161',
-                chainID:'3',
-                symbol:'ETH',
-                ids:'binancecoin',
-                browser:'https://ropsten.etherscan.io',
+                name:'Filcoin TEST',
+                rpc:'https://1w1cJziPEPGNpMlwFjxyj8f7dhd:87323bed6d5a3aa3eb3cbd7ee1d28407@filecoin.infura.io',
+                chainID:'',
+                symbol:'FIL TEST',
+                ids:'filecoin',
+                browser:'https://filscan.io',
                 khazix:'khazix',
-                networkType:'ethereum',
-                filecoinAddress0:'',
-                create_time:create_time+6,
+                create_time:create_time+9,
+                networkType:'filecoin',
+                filecoinAddress0:'f',
                 decimals:18,
-                image:'eth.svg',
+                image:'fil.svg',
                 disabled:true,
                 deriveIndex:0
-            }
+            },
         ]
         window.filecoinwalletDb.networks.bulkPut(defaultNetworks)
     }
@@ -143,7 +189,7 @@ window.filecoinwalletDb.activenNetworks.where({ khazix:'khazix'}).toArray().then
     if(!res.length){
         window.filecoinwalletDb.activenNetworks.add({
             name:'Filcoin Mainnet',
-            rpc:'https://api.filscan.io:8083',
+            rpc:'http://192.168.1.161:8081',
             chainID:'',
             symbol:'FIL',
             ids:'filecoin',

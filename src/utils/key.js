@@ -20,7 +20,6 @@ export function privateKeyEncode(sk,kek){
 export function privateKeyDecode(encodePrivateKey, kek){
   // let salt = genSalt(password)
   // let kek = genKek(password)
-  console.log(encodePrivateKey,kek,'12345678')
   let pk = AESDecrypt(encodePrivateKey,kek)
   return pk
 

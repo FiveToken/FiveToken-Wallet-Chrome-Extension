@@ -184,7 +184,8 @@ const zh = {
     browser:'区块浏览器URL(选填)',
     cancel:'取消',
     save:'保存',
-    addError:'不支持的网络'
+    addError:'不支持的网络',
+    isExistError:'RPC 已存在'
   },
   settingAbout:{
     about:'关于',

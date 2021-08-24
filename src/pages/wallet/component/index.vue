@@ -1,7 +1,9 @@
 <template>
     <layout @layoutMounted="layoutMounted">
         <div class="wallet-page" >
-            <bHeader @networkChange="layoutMounted"/>
+            <bHeader 
+                @openNetwork="openNetwork" 
+            />
             <div class="content">
                 <kyTop
                     v-if="rpc"
@@ -18,6 +20,22 @@
                     @tokenShow="tokenShow"
                 />
             </div>
+
+
+            <el-dialog
+                :visible.sync="networkVisible"
+                width="100%"
+                :show-close="false"
+                class="network-dialog"
+                :modal="false"
+                :top="'0'"
+            >
+                <kyNetwork 
+                    @closeNetwork="closeNetwork"
+                    @networkChange="networkChange"
+                />
+            </el-dialog>
+
             <el-dialog
                 :visible.sync="editNameVisable"
                 width="300px"
@@ -80,7 +98,7 @@
             <div class="loading" v-if="isLoading">
                 <img :src="loading" alt="" class="img">
             </div>
-            <div class="mask" v-if="mask"></div>
+            <div class="mask" v-if="mask" @click="maskClick"></div>
         </div>
     </layout>
 </template>
@@ -93,6 +111,7 @@ import receive from './receive.vue'
 import kyTop from './top.vue'
 import kyList from './transaction-list.vue'
 import kyToken from './token.vue'
+import kyNetwork from '@/components/header/network.vue'
 import { MyGlobalApi } from '@/utils/api'
 import QRCode from 'qrcode'
 import { mapGetters, mapMutations, mapState } from 'vuex'
@@ -117,6 +136,7 @@ export default {
             tokenList:[],
             tokenBalance:0,
             tokenIsMain:0,
+            networkVisible:false,
         }
     },
     computed:{
@@ -139,7 +159,8 @@ export default {
         receive,
         kyTop,
         kyList,
-        kyToken
+        kyToken,
+        kyNetwork
     },
     methods:{
         ...mapMutations('app',[
@@ -155,6 +176,23 @@ export default {
             await this.getBalanceNonce()
             this.getQRCode()
             this.isLoading = false
+        },
+        networkChange(){
+            this.closeNetwork()
+            this.layoutMounted()
+        },
+        openNetwork(){
+            console.log('openNetwork')
+            this.mask = true
+            this.networkVisible = true
+        },
+        closeNetwork(){
+            this.mask = false
+            this.networkVisible = false
+        },
+        maskClick(){
+             this.mask = false
+            this.networkVisible = false
         },
         confirmEdit(){
             let address = this.address
@@ -220,7 +258,6 @@ export default {
             window.location.href = './send-fil.html'
         },
         async getBalanceNonce(){
-            console.log('getBalanceNonce')
             let address = this.address
             let rpc = this.rpc
             MyGlobalApi.setRpc(rpc)
@@ -341,6 +378,14 @@ export default {
     /deep/.el-dialog__footer{
         padding: 30px;
         border-top:1px solid #eee;
+    }
+
+    /deep/.network-dialog{
+        bottom: 0;
+        top: auto;
+        .el-dialog{
+            border-radius: 10px 10px 0 0;
+        }
     }
 }
 </style>

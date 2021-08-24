@@ -37,12 +37,12 @@
                             <kyCanvas :contract="item.contract" />
                         </div>
                         <div class="fil-amount">{{item.balance|formatBalance(8,item.decimals)}} {{item.symbol}}</div>
-                        <div class="amount">
+                        <!-- <div class="amount">
                             <div class="usd">
                                 {{ currency === 'cny' ? "¥" : "$"}} 
                                 {{(item.balance)|formatUsd(2,item.decimals,price_currency)}}
                             </div>
-                        </div>
+                        </div> -->
                     </div>
                 </div>
 
@@ -238,7 +238,7 @@ export default {
                     // get balance by address
                     contract.balanceOf(this.address).then(res=>{
                         let balance = res.toString()
-                        let num = Number(balance) / Number(n.decimals)
+                        let num = Number(balance)
                         tokenList.push(
                             {
                                 ...n,
@@ -422,6 +422,7 @@ export default {
                             font-size: 18px;
                             color: #fff;
                             border-radius: 15px;
+                            line-height: 30px;
                         }
                     }
                     .amount{
@@ -438,7 +439,7 @@ export default {
                     }
                     .fil-amount{
                         flex-grow: 1;
-                        padding-left: 5px;
+                        padding-left: 10px;
                         font-size: 12px;
                         color: #131313;
                         font-weight: bolder;

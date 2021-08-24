@@ -9,7 +9,6 @@ import {
     MessagePush,
     MessageDetails,
     BaseFeeAndGas,
-    FilPricePoints,
     getPricePoints
 } from '@/utils/fil-api'
 import request from '@/utils/request'
@@ -38,13 +37,20 @@ class GlobalApi{
         try{
             switch (this.networkType){
                 case 'proxy':
-                    let result = await BalanceNonceByAddress([{address}],this.rpc)
-                    let proxyRes = result && result.data
-                    let balance = Number(proxyRes.balance || 0)
-                    let nonce = proxyRes.nonce
-                    return {
-                        balance,
-                        nonce
+                    let result = await BalanceNonceByAddress(address,this.rpc)
+                    if(result && result.code === 200){
+                        let proxyRes = result && result.data
+                        let balance = Number(proxyRes.balance || 0)
+                        let nonce = proxyRes.nonce
+                        return {
+                            balance,
+                            nonce
+                        }
+                    }else{
+                        return {
+                            balance:0,
+                            nonce:0
+                        }
                     }
                     break;
                 case 'ethereum':
@@ -66,9 +72,15 @@ class GlobalApi{
                         nonce:filNonce
                     }
                     break;
+                default:
+                    return {
+                        balance:0,
+                        nonce:0
+                    }
+                    break;
             }
         }catch(err){
-            console.log(err,'GlobalApi.getBalance')
+            console.log(err,'GlobalApi.getBalance error')
             return {
                 balance:0,
                 nonce:0
@@ -103,18 +115,24 @@ class GlobalApi{
                         Params: ''
                     };
                     let signedMsg = await getT1SignedMsg(msg, privateKey)
-                    let objparams = [{
-                        ...signedMsg
-                    }]
+                    let objparams = {
+                        raw:JSON.stringify(signedMsg)
+                    }
                     let proxyRes = await MessagePush(objparams,this.rpc)
                     console.log(proxyRes,'proxyRes   12312')
-                    if(proxyRes && proxyRes.data){
-                        let signed_cid = proxyRes.data['/']
+                    if(proxyRes && proxyRes.code === 200){
+                        let signed_cid = proxyRes.data
                         return {
                             signed_cid,
                             nonce:nonce+1
                         }
                     }else{
+                        if(proxyRes.detail){
+                            Message({
+                                type:'error',
+                                message:proxyRes.detail
+                            })
+                        }
                         return {
                             signed_cid:'',
                             nonce:nonce+1
@@ -166,20 +184,22 @@ class GlobalApi{
                     this.setFilecoinAPI()
                     this.FilecoinAPI.setRpc(this.rpc)
                     let filRes = await this.FilecoinAPI.MpoolPush(params)
-                    console.log(filRes,'MpoolPush')
-                    return {
-                        signed_cid:filRes,
-                        nonce:nonce+1
+                    if(filRes){
+                        console.log(filRes,'MpoolPush')
+                        return {
+                            signed_cid:filRes,
+                            nonce:nonce+1
+                        }
+                    }else{
+
                     }
+                    
+                    break;
+                default:
+                    return null
                     break;
             }
-            
-            
         }catch(err){
-            Message({
-                type:'error',
-                message:err
-            })
             console.log(err,'GlobalApi.sendTransaction.err')
             return null
         }
@@ -188,19 +208,19 @@ class GlobalApi{
         try{
             switch (this.networkType){
                 case 'proxy':
-                    let result = await MessageDetails([signed_cid],this.rpc)
-                    let proxyRes = result.data
-                    if(proxyRes){
+                    let result = await MessageDetails(signed_cid,this.rpc)
+                    if(result && result.code === 200){
+                        let proxyRes = result.data
                         let value = Number(proxyRes.value)
-                        let all_gas_fee = Number(proxyRes.all_gas_fee)
+                        let all_gas_fee = Number(proxyRes.gas_fee)
                         let total_amount = Number(value) + Number(all_gas_fee)
                         let block_time = proxyRes.block_time ? formatDate(proxyRes.block_time,true):""
                         
                         let type = 'pending'
-                        if(proxyRes.height  && proxyRes.exit_code === 0){
+                        if(proxyRes.block_epoch  && proxyRes.exit_code === 0){
                             type = 'success'
                         }
-                        if(proxyRes.height && proxyRes.exit_code !== 0){
+                        if(proxyRes.block_epoch && proxyRes.exit_code !== 0){
                             type = 'error'
                         }
                         let detail = {
@@ -212,7 +232,8 @@ class GlobalApi{
                             total_amount,
                             type,
                             signed_cid,
-                            block_time
+                            block_time,
+                            height:proxyRes.block_epoch
                         }
                         return detail
                     }else{
@@ -287,23 +308,30 @@ class GlobalApi{
         try{
             switch (this.networkType){
                 case 'proxy':
-                    let params = [to, 0]
-                    let result = await BaseFeeAndGas(params,this.rpc)
-                    let proxyRes = result.data
-                    console.log(proxyRes,'resss BaseFeeAndGas')
-                    let gasLimit_proxy = 0
-                    let gasPremium_proxy = 0
-                    let gasFeeCap_proxy = 0
-                    let { base_fee,gas_limit,gas_premium,actor_exist } = proxyRes
-                    if(proxyRes.base_fee){
-                        gasPremium_proxy = Number(gas_premium)
-                        gasLimit_proxy = getGasLimit(actor_exist,Number(gas_limit))
-                        gasFeeCap_proxy = getGasFeeCap(base_fee,3,gasPremium_proxy,gasLimit_proxy,this.networkType)/Math.pow(10,9)
-                    }
-                    return {
-                        gasLimit:gasLimit_proxy,
-                        gasPremium:gasPremium_proxy,
-                        gasFeeCap:gasFeeCap_proxy
+                    let result = await BaseFeeAndGas(to,this.rpc)
+                    console.log(result,'result 123456')
+                    if(result && result.code === 200){
+                        let proxyRes = result.data
+                        let gasLimit_proxy = 0
+                        let gasPremium_proxy = 0
+                        let gasFeeCap_proxy = 0
+                        let { base_fee,gas_limit,gas_premium,actor_exist } = proxyRes
+                        if(proxyRes.base_fee){
+                            gasPremium_proxy = Number(gas_premium)
+                            gasLimit_proxy = getGasLimit(actor_exist,Number(gas_limit))
+                            gasFeeCap_proxy = getGasFeeCap(base_fee,3,gasPremium_proxy,gasLimit_proxy,this.networkType)/Math.pow(10,9)
+                        }
+                        return {
+                            gasLimit:gasLimit_proxy,
+                            gasPremium:gasPremium_proxy,
+                            gasFeeCap:gasFeeCap_proxy
+                        }
+                    }else{
+                        return {
+                            gasLimit:0,
+                            gasPremium:0,
+                            gasFeeCap:0
+                        }
                     }
                     break;
                 case 'ethereum':
@@ -326,11 +354,17 @@ class GlobalApi{
                     this.FilecoinAPI.setRpc(this.rpc)
                     let filRes = await this.FilecoinAPI.getBaseFeeAndGas(from,to,nonce)
                     let { gasLimit,gasPremium,gasFeeCap } = filRes
-                    console.log(filRes,'filRes 1234')
                     return {
                         gasLimit,
                         gasPremium,
                         gasFeeCap:Number(gasFeeCap)/Math.pow(10,9)
+                    }
+                    break;
+                default:
+                    return {
+                        gasLimit:0,
+                        gasPremium:0,
+                        gasFeeCap:0
                     }
                     break;
             }
@@ -404,7 +438,6 @@ class GlobalApi{
             this.setBSCChainAPI()
             this.BSCChainAPI.setProvider(rpc)
             let res = await this.BSCChainAPI.getBlockNumber()
-            console.log(res,'rreeess  1234')
             if(res){
                 return{
                     networkType:'ethereum',
@@ -453,6 +486,12 @@ class BSCChainAPI{
             return res
         }catch(err){
             console.log(err,'BSCChainAPI.sendTransaction')
+            if(err.error && err.error.message){
+                Message({
+                    type:'error',
+                    message:err.error && err.error.message
+                })
+            }
             return null
         }
         
@@ -659,9 +698,16 @@ class FilecoinAPI{
             if(res && res.result){
                 return res.result['/']
             }else{
+                if(res && res.error && res.error.message){
+                    Message({
+                        type:'error',
+                        message:res.error.message
+                    })
+                }
                 return ''
             }
         }catch(error){
+            console.log(error,'error2')
             return ''
         }
     }

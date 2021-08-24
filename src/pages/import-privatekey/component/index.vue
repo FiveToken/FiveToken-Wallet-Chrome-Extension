@@ -141,7 +141,12 @@ export default {
                         return n.address === address
                     })
                     if(!isExist){
-                        let accountName = `Account` + (this.deriveIndex + 1)
+                        let obj = this.networks.find(n=>{
+                            return n.rpc === this.net
+                        })
+                        let {name, rpc,chainID,symbol,browser,networkType,filecoinAddress0,ids,decimals,image,disabled,deriveIndex} = obj
+                        let index = deriveIndex + 1
+                        let accountName = `Account` + index
                         let create_time =  parseInt(new Date().getTime() / 1000)
                         await window.filecoinwalletDb.accountList.add({
                             accountName,
@@ -166,11 +171,12 @@ export default {
                             digest,
                             rpc:this.net
                         })
-                        await window.filecoinwalletDb.activenNetworks.where({ khazix:'khazix'}).delete()
-                        let obj = this.networks.find(n=>{
-                            return n.rpc === this.net
+                        await window.filecoinwalletDb.networks.where({
+                            rpc:rpc
+                        }).modify({
+                            deriveIndex:index
                         })
-                        let {name, rpc,chainID,symbol,browser,networkType,filecoinAddress0,ids,decimals,image,disabled,deriveIndex} = obj
+                        await window.filecoinwalletDb.activenNetworks.where({ khazix:'khazix'}).delete()
                         await window.filecoinwalletDb.activenNetworks.add({
                             name,
                             rpc,
@@ -183,7 +189,7 @@ export default {
                             decimals,
                             image,
                             disabled,
-                            deriveIndex,
+                            deriveIndex:index,
                             khazix:'khazix'
                         }).then(async ()=>{
                             let accountList = await window.filecoinwalletDb.accountList.where({ rpc:rpc }).toArray ()|| [];
@@ -198,7 +204,7 @@ export default {
                             this.SET_DECIMALS(decimals)
                             this.SET_OWENCHAIN(disabled)
                             this.SET_RPCIMAGE(image)
-                            this.SET_DERIVEINDEX(deriveIndex)
+                            this.SET_DERIVEINDEX(index)
                         })
                         this.isFetch = false
                         window.location.href = './wallet.html'

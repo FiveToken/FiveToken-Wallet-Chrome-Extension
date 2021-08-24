@@ -56,8 +56,6 @@
                 :visible.sync="addAccountVisable"
                 width="300px"
                 :show-close="false"
-                :modal-append-to-body="false"
-                :close-on-click-modal="false"
                 class="network-dialog"
                 :top="'34vh'"
             >
@@ -333,6 +331,7 @@ export default {
     .content-account{
         max-height: 390px;
         overflow-y: auto;
+        box-shadow: 0px 0px 4px 0px rgb(0 0 0 / 40%)
         .mne-account,.pk-account{
             .mne-tit{
                     height: 40px;

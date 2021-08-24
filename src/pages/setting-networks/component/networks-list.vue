@@ -27,7 +27,7 @@ import { mapState } from 'vuex'
 export default {
     data(){
         return{
-            networks:[]
+            
         }
     },
     computed:{
@@ -37,9 +37,8 @@ export default {
         kyBack,
         kyButton
     },
-    async mounted(){
-        let networks = await window.filecoinwalletDb.networks.where({ khazix:'khazix'}).sortBy('create_time');
-        this.networks = networks
+    props:{
+        networks:Array
     },
     methods:{
         back(){
@@ -135,7 +134,7 @@ export default {
                 font-size: 18px;
                 color: #fff;
                 border-radius: 13px;
-                
+                line-height: 26px;
             }
             .name{
                 flex-grow: 1;

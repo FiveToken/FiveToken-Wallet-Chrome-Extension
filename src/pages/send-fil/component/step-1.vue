@@ -252,6 +252,18 @@ export default {
                             width:30px;
                             height: 30px;  
                         }
+                        .custom-img{
+                            background: #5CC1CB;
+                            width: 30px;
+                            height: 30px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            font-size: 18px;
+                            color: #fff;
+                            border-radius: 15px;
+                            line-height: 30px;
+                        }
                     }
                     .token{
                         font-size: 14px;

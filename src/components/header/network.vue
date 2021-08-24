@@ -2,11 +2,11 @@
 <template>
     <div class="select-network-component">
        <div class="title-network">{{ $t('importPrivatkey.titleNetwork') }}</div>
-       <div class="close" @click="closeNet">
+       <div class="close" @click="closeNetwork">
            <i class="el-icon-close"></i>
        </div>
        <div class="network-list">
-           <div class="netwotk-item" v-for="(item,index) in networks" :key="index" @click="confirmNet(item)">
+           <div class="netwotk-item" v-for="(item,index) in networks" :key="index" @click="confirmNetwork(item)">
                <div class="img-wrap" v-if="item.disabled">
                    <img class="img" :src="require(`@/assets/svg/${item.image}`)" alt="">
                </div>
@@ -19,15 +19,24 @@
 </template>
 
 <script>
-import { mapState } from 'vuex'
+import { MyGlobalApi } from '@/utils/api'
+import { mapState ,mapMutations, mapGetters} from 'vuex'
 export default {
     data(){
         return{ }
     },
     computed:{
         ...mapState('app',[
+            'networks',
+            'activenNetworks',
             'rpc',
-            'networks'
+            'rpcName',
+            'accountList',
+            'activeAccount',
+            'address',
+            'privateKey',
+            'digest',
+            'networkType'
         ]),
     },
     filter:{
@@ -37,11 +46,92 @@ export default {
         }
     },
     methods:{
-        confirmNet(val){
-            this.$emit('confirmNet',val)
+        ...mapMutations('app',[
+            'SET_ACTIVENETWORKS',
+            'SET_RPC',
+            'SET_RPCNAME',
+            'SET_ACCOUNTLIST',
+            'SET_SYMBOL',
+            'SET_PRIVATEKEY',
+            'SET_ADDRESS',
+            'SET_DIGEST',
+            'SET_ACCOUNTNAME',
+            'SET_IDS',
+            'SET_BROWSER',
+            'SET_NETWORKTYPE',
+            'SET_FILECOINADDRESS0',
+            'SET_DECIMALS',
+            'SET_OWENCHAIN',
+            'SET_RPCIMAGE',
+            'SET_DERIVEINDEX'
+        ]),
+        confirmNetwork(obj){
+            window.filecoinwalletDb.activenNetworks.where({ khazix:'khazix'}).delete()
+            let {name,rpc,chainID,symbol,browser,ids,networkType,filecoinAddress0,decimals,image,disabled,deriveIndex } = obj
+            window.filecoinwalletDb.activenNetworks.add({
+                name,
+                rpc,
+                chainID,
+                ids,
+                symbol,
+                browser,
+                networkType,
+                filecoinAddress0,
+                decimals,
+                image,
+                deriveIndex,
+                khazix:'khazix',
+                disabled
+            }).then(async (res)=>{
+                this.$emit('networkChange',obj)
+                let accountList = await window.filecoinwalletDb.accountList.where({ rpc:rpc }).toArray ()|| [];
+                this.SET_RPC(rpc)
+                this.SET_RPCNAME(name)
+                this.SET_BROWSER(browser)
+                this.SET_ACCOUNTLIST(accountList)
+                this.SET_SYMBOL(symbol)
+                this.SET_IDS(ids)
+                this.SET_NETWORKTYPE(networkType)
+                this.SET_FILECOINADDRESS0(filecoinAddress0)
+                this.SET_ACTIVENETWORKS([obj])
+                this.SET_DECIMALS(decimals)
+                this.SET_OWENCHAIN(disabled)
+                this.SET_RPCIMAGE(image)
+                this.SET_DERIVEINDEX(deriveIndex)
+                if(accountList.length){
+                    let first = accountList[0]
+                    console.log(first,'first')
+                    await this.changeAccount(first)
+                }else{
+                    window.location.href = './welcome.html'
+                }
+            })
         },
-        closeNet(){
-            this.$emit('closeNet')
+        async changeAccount(item){
+            let {address,accountName,privateKey,create_time,digest,createType} = item
+            this.settingVisible = false
+            this.SET_PRIVATEKEY(privateKey)
+            this.SET_ADDRESS(address)
+            this.SET_DIGEST(digest)
+            this.SET_ACCOUNTNAME(accountName)
+            MyGlobalApi.setRpc(this.rpc)
+            MyGlobalApi.setNetworkType(this.networkType)
+            let res = await MyGlobalApi.getBalance(address)
+            let { balance } = res
+            await window.filecoinwalletDb.activeAccount.where({khazix:'khazix'}).delete()
+            await window.filecoinwalletDb.activeAccount.add({
+                address,
+                accountName,
+                privateKey,
+                create_time,
+                khazix:'khazix',
+                fil:balance,
+                createType,
+                digest
+            })
+        },
+        closeNetwork(){
+            this.$emit('closeNetwork')
         }
     }
 }
@@ -50,6 +140,7 @@ export default {
 <style  lang="less" scoped>
 .select-network-component{
     position: relative;
+    z-index: 100;
     .title-network{
         height: 43px;
         line-height: 43px;

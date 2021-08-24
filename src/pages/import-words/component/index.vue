@@ -95,94 +95,101 @@ export default {
         },
         async importWallet(){
             if(!this.active) return
-            let mneWords = trimStr(this.form.mnemonicWords)
-            let volid = bip39.validateMnemonic(mneWords)
-            if(volid){
-                let index = this.deriveIndex + 1
-                this.isFetch = true
-                this.error = false
-                let kek = genKek(this.form.password)
-                let f1 = await getF1ByMne(mneWords,kek,this.networkType,this.filecoinAddress0,index)
-                let { address,privateKey,digest } = f1
-                let create_time =  parseInt(new Date().getTime() / 1000)
-                let accountName = this.form.accountName
-                await window.filecoinwalletDb.accountList.add({
-                    accountName,
-                    address,
-                    createType:'mnemonic',
-                    privateKey,
-                    create_time,
-                    khazix:'khazix',
-                    digest,
-                    fil:0,
-                    rpc:this.rpc
-                })
-                this.SET_DERIVEINDEX(index)
-                await window.filecoinwalletDb.activenNetworks.where({
-                    rpc:this.rpc
-                }).modify({
-                    deriveIndex:index
-                })
-                await window.filecoinwalletDb.networks.where({
-                    rpc:this.rpc
-                }).modify({
-                    deriveIndex:index
-                })
-                for (let n of this.networks){
-                    if(n.rpc !== this.rpc){
-                        let _index = n.deriveIndex + 1
-                        let oF1 = await getF1ByMne(mneWords,kek,n.networkType,n.filecoinAddress0,_index)
-                        await window.filecoinwalletDb.accountList.add({
+            try{
+                let mneWords = trimStr(this.form.mnemonicWords)
+                let volid = bip39.validateMnemonic(mneWords)
+                if(volid){
+                    this.isFetch = true
+                    this.error = false
+                    setTimeout(async ()=>{
+                        let kek = genKek(this.form.password)
+                        // let f1 = await getF1ByMne(mneWords,kek,this.networkType,this.filecoinAddress0,index)
+                        let ethereumF1 = await getF1ByMne(mneWords,kek,'ethereum','',0)
+                        let filecoinF1 = await getF1ByMne(mneWords,kek,'proxy','f',0)
+                        let calibrationF1 = await getF1ByMne(mneWords,kek,'proxy','t',0)
+                        let { address,privateKey,digest } = filecoinF1
+                        let create_time =  parseInt(new Date().getTime() / 1000)
+                        let accountName = this.form.accountName
+                        this.SET_DERIVEINDEX(1)
+                        await window.filecoinwalletDb.activenNetworks.where({
+                            rpc:this.rpc
+                        }).modify({
+                            deriveIndex:1
+                        })
+                        for (let n of this.networks) {
+                            let _index = n.deriveIndex + 1
+                            if(n.filecoinAddress0 === 'f'){
+                                await window.filecoinwalletDb.accountList.add({
+                                    accountName,
+                                    address:filecoinF1.address,
+                                    createType:'mnemonic',
+                                    privateKey:filecoinF1.privateKey,
+                                    create_time,
+                                    khazix:'khazix',
+                                    digest:filecoinF1.digest,
+                                    fil:0,
+                                    rpc:n.rpc
+                                })
+                            }else if(n.filecoinAddress0 === 't'){
+                                await window.filecoinwalletDb.accountList.add({
+                                    accountName,
+                                    address:calibrationF1.address,
+                                    createType:'mnemonic',
+                                    privateKey:calibrationF1.privateKey,
+                                    create_time,
+                                    khazix:'khazix',
+                                    digest:calibrationF1.digest,
+                                    fil:0,
+                                    rpc:n.rpc
+                                })
+                            }else{
+                                await window.filecoinwalletDb.accountList.add({
+                                    accountName,
+                                    address:ethereumF1.address,
+                                    createType:'mnemonic',
+                                    privateKey:ethereumF1.privateKey,
+                                    create_time,
+                                    khazix:'khazix',
+                                    digest:ethereumF1.digest,
+                                    fil:0,
+                                    rpc:n.rpc
+                                })
+                            }
+                            await window.filecoinwalletDb.networks.where({
+                                rpc:n.rpc
+                            }).modify({
+                                deriveIndex:1
+                            })
+                        }
+                        await window.filecoinwalletDb.activeAccount.add({
+                            address,
                             accountName,
-                            address:oF1.address,
-                            createType:'mnemonic',
-                            privateKey:oF1.privateKey,
+                            privateKey,
                             create_time,
                             khazix:'khazix',
-                            digest:oF1.digest,
+                            createType:'mnemonic',
                             fil:0,
-                            rpc:n.rpc
+                            digest,
+                            rpc:this.rpc
                         })
-                        await window.filecoinwalletDb.activenNetworks.where({
-                            rpc:n.rpc
-                        }).modify({
-                            deriveIndex:_index
+                        let salt = genSalt(this.form.password)
+                        setGlabolKek(kek)
+                        let mnemonic = AESEncrypt(mneWords,kek)
+                        await window.filecoinwalletDb.walletKey.add({
+                            mnemonicWords:mnemonic,
+                            salt,
+                            rpc:this.rpc,
+                            khazix:'khazix'
                         })
-                        await window.filecoinwalletDb.networks.where({
-                            rpc:n.rpc
-                        }).modify({
-                            deriveIndex:_index
-                        })
-                    }
+                        this.isFetch = false
+                        window.location.href = './wallet.html'
+                    },0)
+                }else{
+                    this.error = true
                 }
-                await window.filecoinwalletDb.activeAccount.where({khazix:'khazix'}).delete()
-                await window.filecoinwalletDb.activeAccount.add({
-                    address,
-                    accountName,
-                    privateKey,
-                    create_time,
-                    khazix:'khazix',
-                    createType:'mnemonic',
-                    fil:0,
-                    digest,
-                    rpc:this.rpc
-                })
-                let salt = genSalt(this.form.password)
-                setGlabolKek(kek)
-                let mnemonic = AESEncrypt(mneWords,kek)
-                await window.filecoinwalletDb.walletKey.where({khazix:'khazix'}).delete()
-                await window.filecoinwalletDb.walletKey.add({
-                    mnemonicWords:mnemonic,
-                    salt,
-                    rpc:this.rpc,
-                    khazix:'khazix'
-                })
-                this.isFetch = false
-                window.location.href = './wallet.html'
-            }else{
-                this.error = true
+            }catch(error){
+                console.log(error,'error')
             }
-            
         },
         focus(){
             this.error = false

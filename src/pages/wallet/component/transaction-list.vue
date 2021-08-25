@@ -183,7 +183,7 @@ export default {
         // get assets list
         this.getTokenList()
         // update activity list
-        this.updateActivityList()
+        await this.updateActivityList()
         // get activity list
         this.getActivityList()
     },

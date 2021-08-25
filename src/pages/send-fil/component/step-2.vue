@@ -63,8 +63,14 @@
                                 </div>
                                 
                             </div>
-                            <kyInput :value="formData.gasFeeCap" @changeInput='gasFeeCapChange'></kyInput>
-                            <div class="tips" v-if="formData.gasFeeCap < baseFeeCap">{{$t('sendFil.gasFeeError')}}</div>
+                            <kyInput 
+                                :value="formData.gasFeeCap" 
+                                @changeInput='gasFeeCapChange'
+                                type="number"
+                            ></kyInput>
+                            <div class="tips" v-if="formData.gasFeeCap < baseFeeCap">
+                                {{$t('sendFil.gasFeeError')}}
+                            </div>
                         </div>
                         <div class="gaslimit">
                             <div class="label">
@@ -80,8 +86,14 @@
                                     </el-popover>
                                 </div>
                             </div>
-                            <kyInput :value="formData.gasLimit" @changeInput='gasLimitChange'></kyInput>
-                            <div class="tips" v-if="formData.gasLimit < baseLimit">{{$t('sendFil.gasLimitError')}}</div>
+                            <kyInput 
+                                :value="formData.gasLimit" 
+                                @changeInput='gasLimitChange'
+                                type="number"
+                            ></kyInput>
+                            <div class="tips" v-if="formData.gasLimit < baseLimit">
+                                {{$t('sendFil.gasLimitError')}}
+                            </div>
                         </div>
                     </div>
                 </el-collapse-item>

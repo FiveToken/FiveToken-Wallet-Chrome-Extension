@@ -1,7 +1,7 @@
 <template>
 <div class="networks-form">
     <div class="back">
-        <kyBack @pageBack="back" :name="$t('settingNetworks.addNetwork')"/>
+        <kyBack @pageBack="back" :name="pageName"/>
     </div>
     <div class="add-networks">
         <div class="tips">{{$t('settingNetworks.addTips')}}</div>
@@ -25,14 +25,25 @@
             <div class="label">{{$t('settingNetworks.browser')}}</div>
             <kyInput :value="form.browser" :disabled="form.disabled" @changeInput="changeForm(arguments,'browser')"/>
         </div>
-        <div class="btn-wrap">
-            <kyButton @btnClick="back">{{$t('settingNetworks.cancel')}}</kyButton>
-            <kyButton type="primary" :active="active" @btnClick="save">{{$t('settingNetworks.save')}}</kyButton>
+        <div class="btn-wrap" :class="{two:!form.disabled && detail}">
+            <kyButton @btnClick="deleteNetwork" v-if="!form.disabled && detail">{{$t('settingNetworks.delete')}}</kyButton>
+            <kyButton type="primary" v-if="!form.disabled" :active="active" @btnClick="save">{{$t('settingNetworks.save')}}</kyButton>
         </div>
     </div>
     <div class="loading" v-if="isFetch">
         <img :src="loading" alt="" class="img">
     </div>
+    <el-dialog
+        :visible.sync="deleteNetworkVisible"
+        width="300px"
+        :show-close="false"
+        :top="'50vh'"
+    >
+        <deleteNetwork
+            @confirmDelete="confirmDelete"
+            @closeDelete="closeDelete"
+        />
+    </el-dialog>
 </div>
 </template>
 
@@ -40,13 +51,15 @@
 import kyBack from '@/components/back'
 import kyInput from '@/components/input'
 import kyButton from '@/components/button'
+import deleteNetwork from './delete-network.vue'
 import { MyGlobalApi } from '@/utils/api'
 import { getF1ByMne,getGlobalKek } from '@/utils'
 import { AESDecrypt } from '@/utils/key'
-import { mapState } from 'vuex'
+import { mapState ,mapMutations} from 'vuex'
 export default {
     data(){
         return{
+            deleteNetworkVisible:false,
             form:{
                 name:'',
                 rpc:'',
@@ -68,9 +81,23 @@ export default {
     },
     computed:{
         ...mapState('app',[
+            'rpc',
             'networkType',
             'filecoinAddress0'
         ]),
+        pageName(){
+            let str = ''
+            if(this.form.disabled){
+                str = this.$t('settingNetworks.viewNetwork')
+            }else{
+                if(this.detail){
+                    str = this.$t('settingNetworks.editNewwork')
+                }else{
+                    str = this.$t('settingNetworks.addNetwork')
+                }
+            }
+            return str
+        },
         active(){
             return this.form.name !== '' && this.form.rpc !== '' && this.form.chainID !== '' && this.form.symbol !== '' && !this.form.disabled
         }
@@ -91,7 +118,8 @@ export default {
     components:{
         kyBack,
         kyInput,
-        kyButton
+        kyButton,
+        deleteNetwork
     },
     async mounted(){
         let kek = getGlobalKek()
@@ -104,6 +132,92 @@ export default {
         }
     },
     methods:{
+        ...mapMutations('app',[
+            'SET_ACTIVENETWORKS',
+            'SET_RPC',
+            'SET_RPCNAME',
+            'SET_ACCOUNTLIST',
+            'SET_SYMBOL',
+            'SET_PRIVATEKEY',
+            'SET_ADDRESS',
+            'SET_DIGEST',
+            'SET_ACCOUNTNAME',
+            'SET_IDS',
+            'SET_BROWSER',
+            'SET_NETWORKTYPE',
+            'SET_FILECOINADDRESS0',
+            'SET_DECIMALS',
+            'SET_OWENCHAIN',
+            'SET_RPCIMAGE',
+            'SET_DERIVEINDEX'
+        ]),
+        async confirmDelete(){
+            let that = this
+            await window.filecoinwalletDb.networks.where({
+                rpc:this.deletaRpc
+            }).delete().then(res=>{
+                window.filecoinwalletDb.accountList.where({ rpc:this.deletaRpc}).delete()
+                that.deleteNetworkVisible = false
+                that.$emit("deleteNetworkCb")
+                that.$message({
+                    type:'success',
+                    message:that.$t('settingNetworks.deleteSuccess'),
+                    duration:1000,
+                    onClose:()=>{
+                       
+                    }
+                })
+            })
+            if(this.rpc === this.deletaRpc){
+                await window.filecoinwalletDb.activenNetworks.where({ khazix:'khazix'}).delete()
+                let networks = await window.filecoinwalletDb.networks.where({ rpc:rpc }).toArray ()|| [];
+                let obj = networks.length && networks[0]
+                let {name,rpc,chainID,symbol,browser,ids,networkType,filecoinAddress0,decimals,image,disabled,deriveIndex } = obj
+                window.filecoinwalletDb.activenNetworks.add({
+                    name,
+                    rpc,
+                    chainID,
+                    ids,
+                    symbol,
+                    browser,
+                    networkType,
+                    filecoinAddress0,
+                    decimals,
+                    image,
+                    deriveIndex,
+                    khazix:'khazix',
+                    disabled
+                }).then(async (res)=>{
+                    this.$emit('networkChange',obj)
+                    let accountList = await window.filecoinwalletDb.accountList.where({ rpc:rpc }).toArray ()|| [];
+                    this.SET_RPC(rpc)
+                    this.SET_RPCNAME(name)
+                    this.SET_BROWSER(browser)
+                    this.SET_ACCOUNTLIST(accountList)
+                    this.SET_SYMBOL(symbol)
+                    this.SET_IDS(ids)
+                    this.SET_NETWORKTYPE(networkType)
+                    this.SET_FILECOINADDRESS0(filecoinAddress0)
+                    this.SET_ACTIVENETWORKS([obj])
+                    this.SET_DECIMALS(decimals)
+                    this.SET_OWENCHAIN(disabled)
+                    this.SET_RPCIMAGE(image)
+                    this.SET_DERIVEINDEX(deriveIndex)
+                    if(accountList.length){
+                        let first = accountList[0]
+                        await this.changeAccount(first)
+                    }else{
+                        window.location.href = './welcome.html'
+                    }
+                })
+            }
+        },
+        closeDelete(){
+            this.deleteNetworkVisible = false
+        },
+        deleteNetwork(){
+            this.deleteNetworkVisible = true
+        },
         back(){
             this.$emit("update:pageType",'list')
         },
@@ -126,34 +240,45 @@ export default {
                 let filRec = await MyGlobalApi.getFIleCoinChainHead(this.form.rpc)
                 let ethRec = await MyGlobalApi.getBlockNumber(this.form.rpc)
                 if(filRec && filRec.networkType === 'filecoin'){
-                    let { networkType,filecoinAddress0 } = filRec
-                    let _index = 1
-                    if(this.detail){
-                        _index = this.detail.deriveIndex
-                        await window.filecoinwalletDb.networks.where({
-                            rpc:this.deletaRpc
-                        }).delete()
+                    this.isFetch = false
+                    this.$message.error(this.$t('settingNetworks.addError'))
+                    return
+                    // let { networkType,filecoinAddress0 } = filRec
+                    // let _index = 1
+                    // if(this.detail){
+                    //     _index = this.detail.deriveIndex
+                    //     await window.filecoinwalletDb.networks.where({
+                    //         rpc:this.deletaRpc
+                    //     }).delete()
                         
-                    }else{
-                        await this.addUser(networkType,filecoinAddress0,create_time)
-                        _index = 1
-                    }
-                    await window.filecoinwalletDb.networks.add({
-                        name:this.form.name,
-                        rpc:this.form.rpc,
-                        chainID:this.form.chainID,
-                        symbol:this.form.symbol,
-                        browser:this.form.browser,
-                        disabled:false,
-                        create_time,
-                        networkType,
-                        filecoinAddress0,
-                        decimals:18,
-                        image:'',
-                        deriveIndex:_index,
-                        khazix:'khazix'
-                    })
+                    // }else{
+                    //     await this.addUser(networkType,filecoinAddress0,create_time,0)
+                    //     _index = 1
+                    // }
+                    // await window.filecoinwalletDb.networks.add({
+                    //     name:this.form.name,
+                    //     rpc:this.form.rpc,
+                    //     chainID:this.form.chainID,
+                    //     symbol:this.form.symbol,
+                    //     browser:this.form.browser,
+                    //     disabled:false,
+                    //     create_time,
+                    //     ids:'filecoin',
+                    //     networkType,
+                    //     filecoinAddress0,
+                    //     decimals:18,
+                    //     image:'',
+                    //     deriveIndex:_index,
+                    //     khazix:'khazix'
+                    // })
                 }else if(ethRec && ethRec.networkType === 'ethereum'){
+                    let ids = '' 
+                    if(this.form.symbol.toUpperCase() === 'ETH'){
+                        ids = 'ethereum'
+                    }
+                    if(this.form.symbol.toUpperCase() === 'BNB'){
+                        ids = 'binancecoin'
+                    }
                     let { networkType,filecoinAddress0 } = ethRec
                     let _index = 1
                     if(this.detail){
@@ -161,10 +286,36 @@ export default {
                         await window.filecoinwalletDb.networks.where({
                             rpc:this.deletaRpc
                         }).delete()
-                        
                     }else{
-                        await this.addUser(networkType,filecoinAddress0,create_time)
+                        await this.addUser(networkType,filecoinAddress0,create_time,0)
                         _index = 1
+                    }
+                    if(this.rpc === this.deletaRpc){
+                        console.log(this.rpc === this.deletaRpc,'this.rpc === this.deletaRpc')
+                        let dIndex =  0
+                        if(this.form.rpc === this.deletaRpc){
+                            dIndex = this.detail.deriveIndex
+                        }else{
+                            await this.addUser(networkType,filecoinAddress0,create_time,0)
+                            dIndex = 1
+                        }
+                        await window.filecoinwalletDb.activenNetworks.where({ 
+                            rpc: this.deletaRpc
+                        }).modify({
+                            name:this.form.name,
+                            rpc:this.form.rpc,
+                            chainID:this.form.chainID,
+                            symbol:this.form.symbol,
+                            browser:this.form.browser,
+                            image:'',
+                            ids:ids,
+                            decimals:18,
+                            networkType:networkType,
+                            filecoinAddress0,
+                            deriveIndex:dIndex,
+                            disabled:false,
+                            khazix:'khazix'
+                        })
                     }
                     await window.filecoinwalletDb.networks.add({
                         name:this.form.name,
@@ -178,6 +329,7 @@ export default {
                         filecoinAddress0,
                         decimals:18,
                         image:'',
+                        ids,
                         deriveIndex:_index,
                         khazix:'khazix'
                     })
@@ -187,13 +339,13 @@ export default {
                     return
                 }
                 this.isFetch = false
-                window.location.href = './setting-networks.html'
+                this.$emit('addNetworkCb')
             }
         },
-        async addUser(networkType,filecoinAddress0,create_time){
+        async addUser(networkType,filecoinAddress0,create_time,index){
             let rpcAccount = await window.filecoinwalletDb.accountList.where({rpc:this.form.rpc}).toArray() || []
             let accountName = `Account` + 1
-            let f1 = await getF1ByMne(this.mnemonicWords,this.kek,networkType,filecoinAddress0,0)
+            let f1 = await getF1ByMne(this.mnemonicWords,this.kek,networkType,filecoinAddress0,index)
             let { address,privateKey,digest } = f1
             let res = await MyGlobalApi.getBalance(address)
             let { balance,nonce } = res
@@ -219,6 +371,22 @@ export default {
 </script>
 
 <style  lang="less" scoped>
+/deep/.el-dialog{
+    margin: 0 auto;
+    border-radius: 10px;
+    margin-top: 50vh;
+    transform: translateY(-50%);
+}
+/deep/.el-dialog__header{
+    padding:0;
+}
+/deep/.el-dialog__body{
+    padding: 0;
+}
+/deep/.el-dialog__footer{
+    padding: 30px;
+    border-top:1px solid #eee;
+}
 .networks-form{
     height: 100%;
     position: relative;
@@ -277,11 +445,17 @@ export default {
         }
         .btn-wrap{
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
             padding-top: 15px;
+            &.two{
+                justify-content: space-between;
+                /deep/.button-wrap{
+                    width: 155px;
+                }
+            }
             /deep/.button-wrap{
-                width: 155px;
+                width: 100%;
             }
         }
     }

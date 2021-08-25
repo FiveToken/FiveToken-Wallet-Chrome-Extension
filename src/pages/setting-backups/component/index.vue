@@ -66,6 +66,8 @@
                         </kyButton>
                         <kyButton 
                             v-if="step === 2"
+                            :type="'primary'"
+                            :active="active"
                             @btnClick="pageClose"
                         >
                             {{$t('settingBackups.close')}}
@@ -99,7 +101,8 @@ export default {
             pk:'',
             salt:null,
             nme:'',
-            mask:false
+            mask:false,
+            active:true
         }
     },
     components:{

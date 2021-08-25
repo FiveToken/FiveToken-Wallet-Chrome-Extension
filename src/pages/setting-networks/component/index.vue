@@ -11,6 +11,8 @@
                 :deletaRpc="deletaRpc"
                 :detail="detail" 
                 :pageType.sync="pageType" 
+                @deleteNetworkCb="deleteNetworkCb"
+                @addNetworkCb="addNetworkCb"
                 v-if="pageType === 'detail'"
             />
         </div>
@@ -50,7 +52,17 @@ export default {
             this.deletaRpc = ''
             this.detail = null
             this.pageType = 'detail'
-        }
+        },
+        async deleteNetworkCb(){
+            let networks = await window.filecoinwalletDb.networks.where({ khazix:'khazix'}).sortBy('create_time');
+            this.networks = networks
+            this.pageType = 'list'
+        },
+        async addNetworkCb(){
+            let networks = await window.filecoinwalletDb.networks.where({ khazix:'khazix'}).sortBy('create_time');
+            this.networks = networks
+            this.pageType = 'list'
+        },
     }
 }
 </script>

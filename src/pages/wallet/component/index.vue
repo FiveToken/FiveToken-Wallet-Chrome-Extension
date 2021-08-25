@@ -182,7 +182,6 @@ export default {
             this.layoutMounted()
         },
         openNetwork(){
-            console.log('openNetwork')
             this.mask = true
             this.networkVisible = true
         },
@@ -243,16 +242,17 @@ export default {
             this.deleteUserVisible = false
         },
         async getPrice(){
-            MyGlobalApi.setRpc(this.rpc)
-            MyGlobalApi.setNetworkType(this.networkType)
-            let res = await MyGlobalApi.getPrice(this.ids)
-            let { usd,cny } = res
-            if(this.currency === 'cny'){
-                this.price_currency = cny
-            }else{
-                this.price_currency = usd
-            }
-            
+            if(this.ids){
+                MyGlobalApi.setRpc(this.rpc)
+                MyGlobalApi.setNetworkType(this.networkType)
+                let res = await MyGlobalApi.getPrice(this.ids)
+                let { usd,cny } = res
+                if(this.currency === 'cny'){
+                    this.price_currency = cny
+                }else{
+                    this.price_currency = usd
+                }
+            }  
         },
         sendFil(){
             window.location.href = './send-fil.html'

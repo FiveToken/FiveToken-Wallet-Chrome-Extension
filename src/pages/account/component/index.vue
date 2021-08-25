@@ -69,7 +69,7 @@
 </template>
 <script>
 import layout from '@/components/layout'
-import { getQueryString,formatNumber,getF1ByMne,getGlobalKek,minimumPrecision } from '@/utils'
+import { getQueryString,formatNumber,getF1ByMne,getGlobalKek,minimumPrecision,isFilecoinChain } from '@/utils'
 import { AESDecrypt } from '@/utils/key'
 import { mapMutations, mapState } from 'vuex'
 import kyBack from '@/components/back'
@@ -85,7 +85,11 @@ export default {
             mneAccount:[],
             pkAccount:[],
             addName:'',
-            nme:''
+            nme:'',
+            activeF1:null,
+            ethereumF1:null,
+            filecoinF1:null,
+            calibrationF1:null,
         }
     },
     computed:{
@@ -97,7 +101,8 @@ export default {
             'symbol',
             'filecoinAddress0',
             'decimals',
-            'deriveIndex'
+            'deriveIndex',
+            'networks'
         ])
     },
     filters:{
@@ -140,6 +145,26 @@ export default {
             'SET_ACCOUNTNAME',
             'SET_DERIVEINDEX'
         ]),
+        async initAdd(){
+            let index = this.deriveIndex + 1
+            let kek = getGlobalKek()
+            let mnemonic = AESDecrypt(this.nme)
+            let ethereumF1 = await getF1ByMne(mnemonic,kek,'ethereum','',index)
+            let filecoinF1 = await getF1ByMne(mnemonic,kek,'filecoin','f',index)
+            let calibrationF1 = await getF1ByMne(mnemonic,kek,'filecoin','t',index)
+            let activeF1 = null
+            if(this.filecoinAddress0 === 't'){
+                activeF1 = calibrationF1
+            }else if(this.filecoinAddress0 === 'f'){
+                activeF1 = filecoinF1
+            }else{
+                activeF1 = ethereumF1
+            }
+            this.activeF1 = activeF1
+            this.ethereumF1 = ethereumF1
+            this.filecoinF1 = filecoinF1
+            this.calibrationF1 = calibrationF1
+        },
         layoutMounted(){
             let accountList = this.accountList
             this.mneAccount = accountList.filter(n=>{
@@ -148,53 +173,81 @@ export default {
             this.pkAccount = accountList.filter(n=>{
                 return n.createType === 'privateKey'
             })
-            console.log(this.accountList,'accountList vvv')
         },
         async confirmAdd(){
             try{
                 this.isFetch = true
                 this.addAccountVisable = false
-                let index = this.deriveIndex + 1
-                let kek = getGlobalKek()
-                let mnemonic = AESDecrypt(this.nme)
-                let f1 = await getF1ByMne(mnemonic,kek,this.networkType,this.filecoinAddress0,index)
-                let { address,privateKey,digest } = f1
-
-                this.SET_DERIVEINDEX(index)
-                await window.filecoinwalletDb.activenNetworks.where({
-                    rpc:this.rpc
-                }).modify({
-                    deriveIndex:index
-                })
-                await window.filecoinwalletDb.networks.where({
-                    rpc:this.rpc
-                }).modify({
-                    deriveIndex:index
-                })
                 let accountName = this.addName
                 let create_time =  parseInt(new Date().getTime() / 1000)
-                await window.filecoinwalletDb.accountList.add({
-                    accountName,
-                    address,
-                    createType:'mnemonic',
-                    privateKey,
-                    create_time,
-                    khazix:'khazix',
-                    digest,
-                    rpc:this.rpc,
-                    fil:0
-                })
                 await window.filecoinwalletDb.activeAccount.where({khazix:'khazix'}).delete()
                 await window.filecoinwalletDb.activeAccount.add({
-                    address,
+                    address:this.activeF1.address,
                     accountName,
-                    privateKey,
+                    privateKey:this.activeF1.privateKey,
                     create_time,
                     khazix:'khazix',
                     rpc:this.rpc,
                     fil:0,
                     createType:'mnemonic',
-                    digest
+                    digest:this.activeF1.digest
+                })
+                let _accountList = []
+                for (let n of this.networks){
+                    if(n.filecoinAddress0 === 't'){
+                        _accountList.push({
+                            accountName,
+                            address:this.calibrationF1.address,
+                            createType:'mnemonic',
+                            privateKey:this.calibrationF1.privateKey,
+                            create_time,
+                            khazix:'khazix',
+                            digest:this.calibrationF1.digest,
+                            rpc:n.rpc,
+                            fil:0
+                        })
+                    }else if(n.filecoinAddress0 === 'f'){
+                        _accountList.push({
+                            accountName,
+                            address:this.filecoinF1.address,
+                            createType:'mnemonic',
+                            privateKey:this.filecoinF1.privateKey,
+                            create_time,
+                            khazix:'khazix',
+                            digest:this.filecoinF1.digest,
+                            rpc:n.rpc,
+                            fil:0
+                        })
+                    }else{
+                        _accountList.push({
+                            accountName,
+                            address:this.ethereumF1.address,
+                            createType:'mnemonic',
+                            privateKey:this.ethereumF1.privateKey,
+                            create_time,
+                            khazix:'khazix',
+                            digest:this.ethereumF1.digest,
+                            rpc:n.rpc,
+                            fil:0
+                        })
+                    }
+                }
+                console.log(_accountList,'_accountList')
+                let _index = this.deriveIndex + 1
+                await window.filecoinwalletDb.accountList.bulkAdd(_accountList)
+                let _networks = this.networks.map(n=>{
+                    return {
+                        ...n,
+                        deriveIndex:_index
+                    }
+                })
+                await window.filecoinwalletDb.networks.bulkPut(_networks)
+
+                this.SET_DERIVEINDEX(_index)
+                await window.filecoinwalletDb.activenNetworks.where({
+                    rpc:this.rpc
+                }).modify({
+                    deriveIndex:_index
                 })
                 this.isFetch = false
                 window.location.href = './wallet.html'
@@ -249,6 +302,9 @@ export default {
         createWallet(){
             this.addName = `Account` + (this.deriveIndex + 1)
             this.addAccountVisable = true
+            setTimeout(()=>{
+                this.initAdd()
+            },0)
         },
         importWallet(){
             window.location.href = './import-privatekey.html'
@@ -331,7 +387,7 @@ export default {
     .content-account{
         max-height: 390px;
         overflow-y: auto;
-        box-shadow: 0px 0px 4px 0px rgb(0 0 0 / 40%)
+        box-shadow: 0 2px 2px 0 rgb(0 0 0 / 20%);
         .mne-account,.pk-account{
             .mne-tit{
                     height: 40px;

@@ -14,6 +14,12 @@
                <div class="name">{{ item.name }}</div>
                <i class="el-icon-check check" v-if="rpc === item.rpc"></i>
             </div>
+            <div class="custom-item netwotk-item" @click="skipToNetwork">
+                <div class="img-wrap">
+                    <i class="el-icon-s-operation"></i>
+                </div>
+                <div class="name">{{ $t('header.customRpc') }}</div>
+            </div>
        </div>
     </div>
 </template>
@@ -83,7 +89,6 @@ export default {
                 khazix:'khazix',
                 disabled
             }).then(async (res)=>{
-                this.$emit('networkChange',obj)
                 let accountList = await window.filecoinwalletDb.accountList.where({ rpc:rpc }).toArray ()|| [];
                 this.SET_RPC(rpc)
                 this.SET_RPCNAME(name)
@@ -99,9 +104,17 @@ export default {
                 this.SET_RPCIMAGE(image)
                 this.SET_DERIVEINDEX(deriveIndex)
                 if(accountList.length){
-                    let first = accountList[0]
-                    console.log(first,'first')
-                    await this.changeAccount(first)
+                    // createType mnemonic
+                    if(this.activeAccount && this.activeAccount.length && this.activeAccount[0].createType === 'mnemonic'){
+                        let _c = accountList[deriveIndex - 1]
+                        await this.changeAccount(_c)
+                    }else{
+                        let first = accountList[0]
+                        console.log(first,'first')
+                        await this.changeAccount(first)
+                    }
+                    console.log(this.activeAccount,'activeAccount 0000')
+                    
                 }else{
                     window.location.href = './welcome.html'
                 }
@@ -114,10 +127,7 @@ export default {
             this.SET_ADDRESS(address)
             this.SET_DIGEST(digest)
             this.SET_ACCOUNTNAME(accountName)
-            MyGlobalApi.setRpc(this.rpc)
-            MyGlobalApi.setNetworkType(this.networkType)
-            let res = await MyGlobalApi.getBalance(address)
-            let { balance } = res
+            this.$emit('networkChange')
             await window.filecoinwalletDb.activeAccount.where({khazix:'khazix'}).delete()
             await window.filecoinwalletDb.activeAccount.add({
                 address,
@@ -125,13 +135,16 @@ export default {
                 privateKey,
                 create_time,
                 khazix:'khazix',
-                fil:balance,
+                fil:0,
                 createType,
                 digest
             })
         },
         closeNetwork(){
             this.$emit('closeNetwork')
+        },
+        skipToNetwork(){
+            window.location.href = './setting-networks.html'
         }
     }
 }
@@ -190,6 +203,9 @@ export default {
             .img-wrap{
                 width: 26px;
                 height: 26px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
                 .img{
                    width: 26px;
                     height: 26px; 

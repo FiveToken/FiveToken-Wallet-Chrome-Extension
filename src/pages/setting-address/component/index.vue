@@ -4,17 +4,19 @@
             <addressList 
                 v-if="pageType === 'list'" 
                 :pageType.sync='pageType' 
-                @addressDetail="addressDetail" 
+                @addressDetail="addressDetail"
+                @addAddress="addAddress"
                 :addressRecordLast="addressRecordLast"
                 :addressBook="addressBook"
             />
             <addressFrom 
                 v-else
+                :editAddress="editAddress"
                 :addressBook="addressBook"
-                @addAddressCb="addAddressCb"
-                @editAddressCb="editAddressCb"
+                @addEditAddressCb="addEditAddressCb"
+                @deleteAddressCb="deleteAddressCb"
                 :pageType.sync="pageType" 
-                :detailObj="detailObj" 
+                :detail="detail" 
                 :to="to"
             />
         </div>
@@ -31,8 +33,9 @@ export default {
     data(){
         return{
             pageType:'list',
-            detailObj:null,
+            detail:null,
             to:'',
+            editAddress:'',
             addressRecordLast:[],
             addressBook:[]
         }
@@ -64,20 +67,25 @@ export default {
             this.addressBook = addressBook
         },
         addressDetail(detailObj){
-            this.pageType = 'detail'
-            this.detailObj = detailObj
+            this.pageType = 'edit'
+            this.detail = detailObj
+            this.editAddress = detailObj.address
         },
-        async addAddressCb(){
+        addAddress(){
+            this.pageType = 'edit'
+            this.detail = null
+        },
+        async addEditAddressCb(){
             let rpc = this.rpc
             let addressBook = await window.filecoinwalletDb.addressBook.where({ rpc:rpc}).toArray () || [];
             this.addressBook = addressBook
             this.pageType = 'list'
         },
-        async editAddressCb(){
+        async deleteAddressCb(){
             let rpc = this.rpc
             let addressBook = await window.filecoinwalletDb.addressBook.where({ rpc:rpc}).toArray () || [];
             this.addressBook = addressBook
-            this.pageType = 'detail'
+            this.pageType = 'list'
         }
     }
 }

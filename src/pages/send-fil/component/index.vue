@@ -73,6 +73,7 @@ export default {
             'accountList',
             'activenNetworks',
             'decimals',
+            'ids',
             'symbol',
             'currency'
         ])
@@ -147,7 +148,6 @@ export default {
                     console.log(err,'getTokenList err')
                 }
             })
-                    console.log(tokenList,'tokenList 88888')
             this.SET_TOKENLIST(tokenList)
         },
         formDataChange(obj){
@@ -231,15 +231,18 @@ export default {
             }
         },
         async getFilPricePoints(){
-            MyGlobalApi.setRpc(this.rpc)
-            MyGlobalApi.setNetworkType(this.networkType)
-            let res = await MyGlobalApi.getPrice()
-            let { usd,cny } = res
-            if(this.currency === 'cny'){
-                this.price_currency = cny
-            }else{
-                this.price_currency = usd
+            if(this.ids){
+                MyGlobalApi.setRpc(this.rpc)
+                MyGlobalApi.setNetworkType(this.networkType)
+                let res = await MyGlobalApi.getPrice(this.ids)
+                let { usd,cny } = res
+                if(this.currency === 'cny'){
+                    this.price_currency = cny
+                }else{
+                    this.price_currency = usd
+                }
             }
+            
         },
         async next(){
             let balance = this.formData.balance
@@ -352,7 +355,6 @@ export default {
                     MyGlobalApi.setRpc(this.rpc)
                     MyGlobalApi.setNetworkType(this.networkType)
                     let result = await MyGlobalApi.sendTransaction(tx)
-                    
                     let allGasFee = this.formData.gasFeeCap * this.formData.gasLimit * Math.pow(10, 9)
                     if(result && result.signed_cid){
                         let create_time =  parseInt(new Date().getTime() / 1000)

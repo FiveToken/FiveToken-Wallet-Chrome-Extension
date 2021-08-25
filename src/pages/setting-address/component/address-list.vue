@@ -82,7 +82,7 @@ export default {
             this.$emit('addressDetail',detail)
         },
         addAddress(){
-            this.$emit('update:pageType','add')
+            this.$emit('addAddress')
         }
     }
 }

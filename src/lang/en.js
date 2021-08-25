@@ -1,6 +1,9 @@
 const en = {
+  header:{
+    customRpc:'Custom RPC'
+  },
   welcome: {
-    title:'欢迎使用FiveToken',
+    title:'欢迎使用 FiveToken',
     subTitle1:'Filecoin生态领域的连接器，多链融合，未来存储世界的入口。',
     subTitle2:'我们很高兴见到您。',
     btn1:'创建新钱包',
@@ -11,12 +14,12 @@ const en = {
     importWords:'导入助记词',
     back:'返回',
     accountName:'请输入账户名',
-    nameTips:'小于15个字符',
+    nameTips:'不超过15个字符',
     nameError:'无效的账户名',
     password:'请输入账户密码',
     passwordTips:'8位及以上字符',
     passwordError:'无效的密码',
-    diffError:'密码不一样',
+    diffError:'密码不匹配',
     correctPassword:'请输入正确的密码',
     confirmPassword:'确认密码',
     btn:'下一步'
@@ -41,17 +44,19 @@ const en = {
   importWords:{
     title:'导入助记词',
     subTitle:'请输入您的助记词，以恢复您的钱包',
-    tips:'单词使用空格分割',
+    tips:'单词使用空格分隔',
     btn:'导入',
-    error:'助记词错误'
+    error:'助记词错误',
+    exist:'账户已存在'
   },
   importPrivatkey:{
-    title:'导入钱包',
+    title:'导入私钥',
     label1:'请选择支持的网络',
     label2:'请输入您的私钥，以恢复您的钱包',
     btn:'导入',
     titleNetwork:'选择网络',
     importError:'类型不支持',
+    exist:'账户已存在'
   },
   account:{
     title:'账户',
@@ -68,8 +73,6 @@ const en = {
     cancel:'取消'
   },
   wallet:{
-    receive:'receive',
-    send:'send',
     tab:[
       {name:'资产',type:'1'},
       {name:'活动',type:'2'}
@@ -80,9 +83,16 @@ const en = {
       {name:'备份私钥',action:'backupPrivateKey'},
       {name:'删除钱包',action:'deleteWallet'}
     ],
+    statusSuccess:'完成',
+    statusError:'失败',
+    statusPending:'确认中',
+    send:'发送',
+    received:'接收',
+    labelSend:'发送地址',
+    labelReceived:'收款地址',
     titleEdit:'修改账户名',
     editLabel:'账户名称',
-    editTips:'小于15个字符',
+    editTips:'不超过15个字符',
     cancel:'取消',
     confirm:'确认',
     deleteTitle:'删除确认',
@@ -90,10 +100,6 @@ const en = {
     copyAddress:'复制地址',
     copySuccess:'复制成功',
     tranRecord:'交易记录',
-    receivedSuccess:'接收成功',
-    receivedError:'接收失败',
-    sendSuccess:'发送成功',
-    sendError:'发送失败',
     noTransactionRecord:'没有交易',
     waiting:'等待',
     noBrowser:'当前网络未添加区块链浏览器地址'
@@ -101,7 +107,8 @@ const en = {
   messageDetail:{
     title:'消息详情',
     amount:'数量',
-    gasFee:'预估最大手续费',
+    willgasFee:"预估最大手续费",
+    gasFee:'手续费',
     from:'发送者',
     to:'接收者',
     messageId:'消息ID',
@@ -119,39 +126,32 @@ const en = {
     error:'代币已添加'
   },
   sendFil:{
-    waiting:'等待',
-    sendFil:'发送FIL',
-    fast:'快速',
-    normal:"普通",
-    custom:'自定义',
-    reset:'重置',
-    edit:'编辑',
-    password:'密码验证',
-    sendFil:'发送FIL',
-    cancel:'取消',
-    confirm:'确认',
-    next:'下一步',
-    error:'密码不正确',
-    cost:'交易费',
-    amount:'数额',
-    balance:'余额',
-    addReveice:'添加接收方',
-    invalidReceiverAddress:'接收方地址无效',
-    property:'资产',
-    addToaddress:'监测到新地址!点击添加至地址簿。',
-    customFuel:'自定义燃料',
-    senior:'高级',
-    minerFees:'矿工费用',
-    sendAmount:'发送数额',
-    transFees:'交易费',
-    newTotal:'新总额',
-    save:'保存',
-    inMyAccount:'在我的账户之间转账',
-    lastRecord:'最近记录',
-    addressBook:'地址簿',
-    backAll:'返回全部',
+    send:'发送',
+    token:'代币',
+    toAddress:'接收地址',
+    number:'数量',
+    all:'全部',
+    available:'可用',
+    selectToken:'选择代币',
+    selectAddress:'选择地址',
+    recordLast:'最近使用',
     myAccount:'我的账户',
-    insufficientBalance:'余额不足'
+    addressBook:'地址簿',
+    gasLimit:'Gas Limit',
+    confirmTransaction:'确认交易',
+    sendAmount:'发送数额',
+    networkGas:'网络费率',
+    maxGas:'预估最大Gas费',
+    totalTips:'发送数额+预估Gas费',
+    total:'总额',
+    gasFeeError:'低于当前BaseFee',
+    gasLimitError:'低于当前Gas Limit',
+    addressError:'地址格式不正确',
+    insufficientBalance:'余额不足',
+    filBaseFeeTips:'网络费率用于支付网络费用，网络费率>BaseFee时，消息才会被打包。nanoFIL = 10^-9',
+    baseFeeTips:'Gas价格是单位Gas的支付代币数量，Gwei=10^-9',
+    gasLimitTips:'Gas Limit是发送消息时，将会被消耗的Gas最大值。',
+    vaildNumber:'请输入有效数字'
   },
   setting:{
     name:'设置',
@@ -180,23 +180,30 @@ const en = {
     title:'网络',
     addNetwork:'添加网络',
     networkName:'网络名称',
+    deleteTitle:'删除网络',
+    editNewwork:'编辑网络',
+    viewNetwork:'网络信息',
     addTips:' 恶意网络可谎报区块状态，请添加您信任的网络。',
     chainID:'链ID',
-    symbol:'符号(选填)',
+    symbol:'符号',
     rpc:"RPC URL",
     browser:'区块浏览器URL(选填)',
     cancel:'取消',
+    confirm:'确认',
     save:'保存',
-    addError:'不支持的网络'
+    addError:'不支持的网络',
+    isExistError:'RPC 已存在',
+    delete:'删除',
+    deleteTips:'您确定要删除该网络吗？',
+    deleteSuccess:'删除成功'
   },
   settingAbout:{
     about:'关于',
-    filVersion:'FiveToken 版本',
-    version:'1.0.0',
-    tips:'Filecoin Wallet在新加坡设计和实现',
-    links:'链接',
+    filVersion:'FiveToken',
+    Version:'Version',
+    tips:'Filecoin生态领域的连接器，多链融合，未来存储世界的入口。',
     privacy:'隐私政策',
-    useRule:'使用条款'
+    useRule:'用户使用协议'
   },
   settingBackups:{
     backupsCheck:'备份验证',
@@ -214,46 +221,35 @@ const en = {
     yourPk:'您的私钥'
   },
   settingAddress:{
-    name:'名称',
-    filAddress:'FiveToken 地址',
-    ethereumAddress:'以太坊 Ethereum 公开地址',
+    addressBook:'地址簿',
+    name:'标签名',
+    address:'地址',
     addressError:'地址格式错误',
     edit:'编辑',
-    address:'地址',
     cancel:'取消',
     confirm:'确认',
-    placeholder:"查找Filecoin Wallet 地址，f0/f1/f2/f3",
     addAddress:'添加地址',
     addressDetail:'地址详情',
     editAddress:'编辑地址',
     copySuccess:'复制成功',
     editSuccess:'编辑成功',
-    addressBook:'地址簿',
-    myWallet:'我的账户钱包',
-    autoAdd:'所有创建的Filecoin Wallet账户将自动添加到此部分',
-    lastRecord:'最近记录',
-    add:'添加'
+    addressIsExist:'地址已存在',
+    add:'添加',
+    delete:'删除',
+    deleteTitle:'删除地址',
+    deleteTips:'您确定要删除该地址吗？',
+    deleteSuccess:'删除成功'
   },
   lock:{
-    welcomeBack:'欢迎回来！',
-    enterNetwork:'即将进入去中心化网络',
+    title:'欢迎使用 FiveToken',
+    subTitle:'Filecoin生态领域的连接器，多链融合，未来存储世界的入口。',
     unlocking:'解锁',
-    passwordError:'密码不正确',
-    selectAccount:'请选择解锁账号',
-    inputPassword:'请输入您的帐户密码'
+    label:'密码'
   },
   connect:{
-    title:'使用 fivetoken 连接',
+    title:'使用 FiveToken 连接',
     cancel:'取消',
     connect:'连接'
-  },
-  firstWallet:{
-    question:'第一次使用Filecoin Wallet?',
-    arr:[
-      {icon:'el-icon-download',title:'不，我已有一个账户助记词了。',subTitle:'使用12个单词的账户助记词导入您现有的钱包账户。',btn:'导入钱包',url:'./import-wallet.html?createType=words'},
-      {icon:'el-icon-download',title:'不，我已有一个私钥了。',subTitle:'使用私钥导入您现有的钱包账户。',btn:'导入钱包',url:'./import-wallet.html?createType=key'},
-      {icon:'el-icon-plus',title:'第一次，立即开始设置。',subTitle:'将为你创建新的钱包账户和账户助记词',btn:'创建钱包',url:'./create-wallet.html?createType=create'},
-    ]
   },
 }
 export default en

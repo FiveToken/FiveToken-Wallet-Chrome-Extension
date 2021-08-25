@@ -7,66 +7,35 @@
         />
     </div>
     <div class="form-content">
-        <div class="add-content" v-if="pageType === 'add'">
-            <div class="input-item">
-                <div class="label">{{$t('settingAddress.name')}}</div>
-                <kyInput :value="add.accountName" @changeInput="addFormChange(arguments,'accountName')"></kyInput>
-            </div>
-            <div class="input-item">
-                <div class="label">{{$t('settingAddress.address')}}</div>
-                <kyInput :value="add.address" 
-                    @changeInput="addFormChange(arguments,'address')">
-                </kyInput>
-                <div class="error" v-if="addAddressError">{{$t('settingAddress.addressError')}}</div>
-            </div>
-            <div class="position">
-                <div class="btn-box">
-                    <kyButton @btnClick="cancelAdd">{{$t('settingAddress.cancel')}}</kyButton>
-                    <kyButton type="primary" :active="addActive" @btnClick="addConfirm">
-                        {{$t('settingAddress.confirm')}}
-                    </kyButton>
-                </div>
-            </div>
+        <div class="input-item">
+            <div class="label">{{$t('settingAddress.name')}}</div>
+            <kyInput :value="form.accountName" @changeInput="editFormChange(arguments,'accountName')"></kyInput>
         </div>
-        <div class="detail-content"  v-if="pageType === 'detail'">
-            <div class="notes">{{$t('settingAddress.name')}}</div>
-            <div class="notes-value">{{detail.accountName}}</div>
-            <div class="yt">{{$t('settingAddress.address')}}</div>
-            <div class="v-c copy-box" @click="copyAddress" :data-clipboard-text="detail.address">
-                <div class="value">{{detail.address | addressFormat}}</div>
-                <div class="copy">
-                    <i class="el-icon-document-copy"></i>
-                </div>
-            </div>
-            <div class="position">
-                <div class="edit-btn">
-                    <kyButton :type="'primary'" :active="true" @btnClick="editAddress">
-                        {{$t('settingAddress.edit')}}
-                    </kyButton>
-                </div>
-            </div>
+        <div class="input-item">
+            <div class="label">{{$t('settingAddress.address')}}</div>
+            <kyInput :value="form.address" @changeInput="editFormChange(arguments,'address')"></kyInput>
+            <div class="error" v-if="editAddressError">{{$t('settingAddress.addressError')}}</div>
         </div>
-        <div class="edit-content"  v-if="pageType === 'edit'">
-            <div class="input-item">
-                <div class="label">{{$t('settingAddress.name')}}</div>
-                <kyInput :value="edit.accountName" @changeInput="editFormChange(arguments,'accountName')"></kyInput>
+        <div class="position">
+            <div class="btn-box" :class="{two:detail}">
+                <kyButton @btnClick="deleteAddress" v-if="detail">{{$t('settingAddress.delete')}}</kyButton>
+                <kyButton :type="'primary'" :active="active" @btnClick="save">
+                    {{$t('settingAddress.confirm')}}
+                </kyButton>
             </div>
-            <div class="input-item">
-                <div class="label">{{$t('settingAddress.address')}}</div>
-                <kyInput :value="edit.address" @changeInput="editFormChange(arguments,'address')"></kyInput>
-                <div class="error" v-if="editAddressError">{{$t('settingAddress.addressError')}}</div>
-            </div>
-            <div class="position">
-                <div class="btn-box">
-                    <kyButton @btnClick="cancelEdit">{{$t('settingAddress.cancel')}}</kyButton>
-                    <kyButton :type="'primary'" :active="editActive" @btnClick="confirmEdit">
-                        {{$t('settingAddress.confirm')}}
-                    </kyButton>
-                </div>
-            </div>
-            
         </div>
     </div>
+    <el-dialog
+        :visible.sync="deleteAddressVisible"
+        width="300px"
+        :show-close="false"
+        :top="'50vh'"
+    >
+        <deleteAdress
+            @confirmDelete="confirmDelete"
+            @closeDelete="closeDelete"
+        />
+    </el-dialog>
     <div class="mask" v-if="mask"></div>
 </div>
 </template>
@@ -78,58 +47,51 @@ import { mapState } from 'vuex'
 import kyBack from '@/components/back'
 import kyButton from '@/components/button'
 import kyInput from '@/components/input'
+import deleteAdress from './delete-address.vue'
 export default {
     data(){
         return{
+            deleteAddressVisible:false,
             mask:false,
-            add:{
-                accountName:'',
-                address:''
-            },
-            detail:{
-                accountName:'',
-                address:''
-            },
-            edit:{
+            form:{
                 accountName:'',
                 address:''
             },
             editAddressError:'',
-            addAddressError:''
         }
     },
     props:{
         pageType:String,
-        detailObj:Object,
+        detail:Object,
         to:String,
-        addressBook:Array
+        addressBook:Array,
+        editAddress:String
+    },
+    watch:{
+        detail:{
+            handler(newval,old){
+                if(newval){
+                    this.form = Object.assign({}, this.form, { ...newval })
+                }
+            },
+            deep:true,
+            immediate:true
+        }
     },
     computed:{
         ...mapState('app',['rpc','networkType','accountList']),
         pageName(){
             let str = ''
-            switch (this.pageType){
-                case 'add':
-                    str = this.$t('settingAddress.addAddress')
-                    break;
-                case 'detail':
-                    str = this.$t('settingAddress.addressDetail')
-                    break;
-                case 'edit':
-                    str = this.$t('settingAddress.editAddress')
-                    break;
+            if (this.detail){
+                str = this.$t('settingAddress.editAddress')
+            }else{
+                str = this.$t('settingAddress.addAddress')
             }
             return str
         },
-        addActive(){
-            let vol = true
-            let values = Object.values(this.add)
-            vol = values.every( n=> n !=='')
-            return vol
-        },
-        editActive(){
+        active(){
             let vol = false
-            let values = Object.values(this.edit)
+            let values = Object.values(this.form)
             vol = values.every( n=> n !=='')
             return vol
         }
@@ -137,98 +99,78 @@ export default {
     components:{
         kyBack,
         kyButton,
-        kyInput
+        kyInput,
+        deleteAdress
     },
-    filters:{
-        addressFormat(val){
-            if(val.length>12){
-                return val.substr(0,6) + '...' + val.substr(val.length-6,6)
-            }else{
-                return val
-            } 
-        },
-    },
-    mounted(){
-        if(this.pageType === 'detail'){
-            let { accountName,address } = this.detailObj
-            this.detail = Object.assign({}, this.detail, { accountName, address})
-            console.log(this.detailObj,'this.detailObj')
-        }
-        console.log(this.to,'this.to')
-        if(this.pageType === 'add' && this.to){
-            this.$set(this.add,'address',this.to)
-        }
-    },
+    mounted(){ },
     methods:{
-        addFormChange(arg,key){
-            console.log(arg,key,'aarrgg 112233')
-            if(arg){
-                let value = arg[0]
-                this.$set(this.add,key,value)
-            }
-            console.log(arg,key,'312312')
+        async confirmDelete(){
+            let that = this
+            await window.filecoinwalletDb.addressBook.where({
+                address:this.editAddress
+            }).delete().then(res=>{
+                that.deleteAddressVisible = false
+                that.$emit("deleteAddressCb")
+                that.$message({
+                    type:'success',
+                    message:that.$t('settingAddress.deleteSuccess'),
+                    duration:1000,
+                    onClose:()=>{
+                       
+                    }
+                })
+            })
+        },
+        closeDelete(){
+            this.deleteAddressVisible = false
+        },
+        deleteAddress(){
+            this.deleteAddressVisible = true
         },
         editFormChange(arg,key){
             if(arg){
                 let value = arg[0]
-                this.$set(this.edit,key,value)
-            }
-            console.log(arg,key,'312312')
-        },
-        addAddressInput(){
-            let voild = isValidAddress(this.add.address,this.networkType)
-            if(!voild){
-                this.addAddressError = '1'
-            }else{
-                this.addAddressError = ''
-            }
-        },
-        editAddressInput(){
-            let voild = isValidAddress(this.edit.address,this.networkType)
-            if(!voild){
-                this.editAddressError = '1'
-            }else{
+                this.$set(this.form,key,value)
                 this.editAddressError = ''
             }
-            
-        },
-        toList(){
-            this.addressList = true
-        },
-        cancelAdd(){
-            this.$emit("update:pageType",'list')
         },
         back(){
             this.$emit("update:pageType",'list')
         },
-        async addConfirm(){
-            let voild = isValidAddress(this.add.address,this.networkType)
-            let isExist = this.addressBook.filter(n => {
-                return n.address === this.add.address
-            })
-            console.log(isExist,this.addressBook,this.add.address,'isExist 333')
+        async save(){
+            let voild = isValidAddress(this.form.address,this.networkType)
             if(voild){
-                if(isExist.length){
-                    this.$message.error(this.$t('settingAddress.addressIsExist')) 
-                }else{
-                    let create_time =  parseInt(new Date().getTime() / 1000)
-                    await window.filecoinwalletDb.addressBook.add({
-                        address:this.add.address,
-                        accountName:this.add.accountName,
-                        create_time,
-                        rpc:this.rpc,
-                        khazix:'khazix'
+                // edit address
+                if(this.detail){
+                     window.filecoinwalletDb.addressBook.where("address").equals(this.editAddress).modify({
+                        address:this.form.address,
+                        accountName:this.form.accountName
+                    }).then(res=>{
+                        this.form = Object.assign({}, this.form, { accountName:this.form.accountName, address:this.form.address})
+                        this.$message.success(this.$t('settingAddress.editSuccess'))
+                        this.$emit("addEditAddressCb")
                     })
-                    this.$emit('addAddressCb')
+                }else{
+                    let isExist = this.addressBook.filter(n => {
+                        return n.address === this.form.address
+                    })
+                    if(isExist.length){
+                        this.$message.error(this.$t('settingAddress.addressIsExist')) 
+                    }else{
+                        let create_time =  parseInt(new Date().getTime() / 1000)
+                        await window.filecoinwalletDb.addressBook.add({
+                            address:this.form.address,
+                            accountName:this.form.accountName,
+                            create_time,
+                            rpc:this.rpc,
+                            khazix:'khazix'
+                        })
+                        this.$emit('addEditAddressCb')
+                    }
                 }
             }else{
-                this.$message.error(this.$t('settingAddress.addressError')) 
+                this.editAddressError = '1'
             }
-        },
-        editAddress(){
-            let { accountName,address } = this.detailObj
-            this.edit = Object.assign({}, this.edit, { accountName, address})
-            this.$emit("update:pageType",'edit')
         },
         copyAddress(){
             this.mask = true
@@ -249,25 +191,27 @@ export default {
         close(){
             this.$emit("update:pageType",'list')
         },
-        cancelEdit(){
-            this.$emit("update:pageType",'detail')
-        },
-        confirmEdit(){
-            window.filecoinwalletDb.addressBook.where("address").equals(this.detail.address).modify({
-                    address:this.edit.address,
-                    accountName:this.edit.accountName
-                }).then(res=>{
-                console.log(this.detail,this.edit,'editeditedit')
-                this.detail = Object.assign({}, this.detail, { accountName:this.edit.accountName, address:this.edit.address})
-                this.$message.success(this.$t('settingAddress.editSuccess'))
-                this.$emit("editAddressCb")
-            })
-        }
     }
 }
 </script>
 
 <style  lang="less" scoped>
+/deep/.el-dialog{
+    margin: 0 auto;
+    border-radius: 10px;
+    margin-top: 50vh;
+    transform: translateY(-50%);
+}
+/deep/.el-dialog__header{
+    padding:0;
+}
+/deep/.el-dialog__body{
+    padding: 0;
+}
+/deep/.el-dialog__footer{
+    padding: 30px;
+    border-top:1px solid #eee;
+}
 .address-form{
     width: 100%;
     height: 100%;
@@ -290,53 +234,6 @@ export default {
         padding: 20px;
         position: relative;
         height: 500px;
-    }
-    .input-item{
-        margin-bottom: 20px;
-        .label{
-            margin-bottom: 10px;
-            font-size: 14px;
-            color: #101010;
-        }
-        .error{
-            padding-top: 5px;
-            font-size: 12px;
-            color: #FD334C;
-        }
-    }
-    .detail-content{
-        .name{
-            font-size: 18px;
-            color: #222;
-            font-weight: bold;
-            margin-bottom: 20px;
-        }
-        .yt{
-            font-size: 14px;
-            color: #101010;
-            margin-bottom: 20px;
-        }
-        .v-c{
-            font-size: 14px;
-            color: #222;
-            display: flex;
-            margin-bottom: 20px;
-            text-align: left;
-            .copy{
-                padding-left: 10px;
-                cursor: pointer;
-            }
-        }
-        .notes{
-            font-size: 14px;
-            color: #101010;
-            margin-bottom: 20px;
-        }
-        .notes-value{
-            font-size: 14px;
-            color: #222;
-            margin-bottom: 20px;
-        }
         .input-item{
             margin-bottom: 20px;
             .label{
@@ -344,18 +241,14 @@ export default {
                 font-size: 14px;
                 color: #101010;
             }
-        }
-        .edit-btn{
-            width: 100%;
-            display: flex;
-            /deep/.kyButton{
-                flex-grow: 1;
+            .error{
+                padding-top: 5px;
+                font-size: 12px;
+                color: #FD334C;
             }
         }
     }
-    .edit-content{
-        
-    }
+    
     .position{
         position: absolute;
         bottom:20px;
@@ -364,10 +257,16 @@ export default {
         .btn-box{
             width: 100%;
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
+            &.two{
+                justify-content: space-between;
+                /deep/.button-wrap{
+                    width: 155px;
+                }
+            }
             /deep/.button-wrap{
-                width: 150px;
+                width: 100%;
             }
         }
     }

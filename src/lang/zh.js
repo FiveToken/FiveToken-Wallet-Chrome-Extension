@@ -1,4 +1,7 @@
 const zh = {
+  header:{
+    customRpc:'自定义RPC'
+  },
   welcome: {
     title:'欢迎使用 FiveToken',
     subTitle1:'Filecoin生态领域的连接器，多链融合，未来存储世界的入口。',
@@ -11,7 +14,7 @@ const zh = {
     importWords:'导入助记词',
     back:'返回',
     accountName:'请输入账户名',
-    nameTips:'小于15个字符',
+    nameTips:'不超过15个字符',
     nameError:'无效的账户名',
     password:'请输入账户密码',
     passwordTips:'8位及以上字符',
@@ -89,14 +92,14 @@ const zh = {
     labelReceived:'收款地址',
     titleEdit:'修改账户名',
     editLabel:'账户名称',
-    editTips:'小于15个字符',
+    editTips:'不超过15个字符',
     cancel:'取消',
     confirm:'确认',
     deleteTitle:'删除确认',
     deleteTips:'请确保私钥已备份。删除后，若要展示该钱包，需使用私钥导入。',
     copyAddress:'复制地址',
     copySuccess:'复制成功',
-    tranRecord:'交易记录',
+    tranRecord:'活动记录',
     noTransactionRecord:'没有交易',
     waiting:'等待',
     noBrowser:'当前网络未添加区块链浏览器地址'
@@ -148,7 +151,9 @@ const zh = {
     filBaseFeeTips:'网络费率用于支付网络费用，网络费率>BaseFee时，消息才会被打包。nanoFIL = 10^-9',
     baseFeeTips:'Gas价格是单位Gas的支付代币数量，Gwei=10^-9',
     gasLimitTips:'Gas Limit是发送消息时，将会被消耗的Gas最大值。',
-    vaildNumber:'请输入有效数字'
+    vaildNumber:'请输入有效数字',
+    cancel:'取消',
+    confirm:'确认',
   },
   setting:{
     name:'设置',
@@ -177,15 +182,22 @@ const zh = {
     title:'网络',
     addNetwork:'添加网络',
     networkName:'网络名称',
+    deleteTitle:'删除网络',
+    editNewwork:'编辑网络',
+    viewNetwork:'网络信息',
     addTips:' 恶意网络可谎报区块状态，请添加您信任的网络。',
     chainID:'链ID',
     symbol:'符号',
     rpc:"RPC URL",
     browser:'区块浏览器URL(选填)',
     cancel:'取消',
+    confirm:'确认',
     save:'保存',
     addError:'不支持的网络',
-    isExistError:'RPC 已存在'
+    isExistError:'RPC 已存在',
+    delete:'删除',
+    deleteTips:'您确定要删除该网络吗？',
+    deleteSuccess:'删除成功'
   },
   settingAbout:{
     about:'关于',
@@ -224,7 +236,11 @@ const zh = {
     copySuccess:'复制成功',
     editSuccess:'编辑成功',
     addressIsExist:'地址已存在',
-    add:'添加'
+    add:'添加',
+    delete:'删除',
+    deleteTitle:'删除地址',
+    deleteTips:'您确定要删除该地址吗？',
+    deleteSuccess:'删除成功'
   },
   lock:{
     title:'欢迎使用 FiveToken',

@@ -40,7 +40,7 @@ class GlobalApi{
                     let result = await BalanceNonceByAddress(address,this.rpc)
                     if(result && result.code === 200){
                         let proxyRes = result && result.data
-                        let balance = Number(proxyRes.balance || 0)
+                        let balance = Number(proxyRes && proxyRes.balance || 0)
                         let nonce = proxyRes.nonce
                         return {
                             balance,
@@ -81,6 +81,10 @@ class GlobalApi{
             }
         }catch(err){
             console.log(err,'GlobalApi.getBalance error')
+            Message({
+                type:'error',
+                message:'Network error !!!'
+            })
             return {
                 balance:0,
                 nonce:0
@@ -245,25 +249,38 @@ class GlobalApi{
                     this.BSCChainAPI.setProvider(this.rpc)
                     let ethRes = await this.BSCChainAPI.getTransaction(signed_cid)
                     let rptRes = await this.BSCChainAPI.getTransactionReceipt(signed_cid)
-                    
                     let block = await this.BSCChainAPI.getBlock(ethRes.blockNumber)
-                    let type = rptRes.status === 1 ? 'success' : 'error'
-                    let block_time = formatDate(block.timestamp,true)
-                    let value = Number(ethRes.value.toString())
-                    let all_gas_fee = Number(ethRes.gasPrice.toString()) * Number(ethRes.gasLimit.toString())
-                    let total_amount = value + all_gas_fee
-                    let detail = {
-                        from:ethRes.from,
-                        to:ethRes.to,
-                        nonce:ethRes.nonce,
-                        value,
-                        all_gas_fee,
-                        total_amount,
-                        type,
-                        block_time,
-                        signed_cid
+                    console.log(ethRes,rptRes,block,'ethRes 22222')
+                    
+                    if(ethRes){
+                        let type = 'pending'
+                        if(rptRes && rptRes.status === 1){
+                            type = 'success'
+                        }
+                        if(rptRes && rptRes.status !== 1){
+                            type = 'error'
+                        }
+                        let block_time = formatDate(block.timestamp,true)
+                        let value = Number(ethRes.value.toString())
+                        let all_gas_fee = Number(ethRes.gasPrice.toString()) * Number(ethRes.gasLimit.toString())
+                        let total_amount = value + all_gas_fee
+                        let detail = {
+                            from:ethRes.from,
+                            to:ethRes.to,
+                            nonce:ethRes.nonce,
+                            value,
+                            all_gas_fee,
+                            total_amount,
+                            type,
+                            block_time,
+                            height:ethRes.blockNumber,
+                            signed_cid
+                        }
+                        return detail
+                    }else{
+                        return null
                     }
-                    return detail
+                    
                     break;
                 case 'filecoin':
                     this.setFilecoinAPI()
@@ -273,12 +290,12 @@ class GlobalApi{
                     console.log(filRes,stateRes,'888888222222')
                     if(filRes){
                         let all_gas_fee = Number(filRes.GasFeeCap) * Number(filRes.GasLimit)
-                        let total_amount = Number(value) + all_gas_fee
+                        let total_amount = Number(filRes.Value) + all_gas_fee
                         let mType = 'pending'
-                        if(stateRes.ExitCode === 0){
+                        if(stateRes && stateRes.ExitCode === 0){
                             mType = 'success'
                         }
-                        if( stateRes.ExitCode && stateRes.ExitCode !== 0){
+                        if( stateRes && stateRes.ExitCode && stateRes.ExitCode !== 0){
                             mType = 'error'
                         }
                         let detail = {

@@ -88,6 +88,7 @@ import kyBack from '@/components/back'
 import kyInput from '@/components/input'
 import kyButton from '@/components/button'
 import { mapState } from 'vuex'
+import { Database } from '@/utils/database.js';
 export default {
     data(){
         return{
@@ -130,7 +131,8 @@ export default {
         }
     },
     async mounted(){
-        let walletKey = await window.filecoinwalletDb.walletKey.where({khazix:'khazix'}).toArray()
+        let db = new Database()
+        let walletKey = await db.getTable('walletKey',{khazix:'khazix'})
         if(walletKey.length){
             let salt = walletKey[0].salt
             this.salt = salt

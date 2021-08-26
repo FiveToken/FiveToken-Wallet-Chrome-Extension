@@ -1,3 +1,5 @@
+const create_time =  parseInt(new Date().getTime() / 1000)
+
 const zh = {
   header:{
     customRpc:'自定义RPC'
@@ -100,7 +102,7 @@ const zh = {
     copyAddress:'复制地址',
     copySuccess:'复制成功',
     tranRecord:'活动记录',
-    noTransactionRecord:'没有交易',
+    noTransactionRecord:'没有活动记录',
     waiting:'等待',
     noBrowser:'当前网络未添加区块链浏览器地址'
   },
@@ -115,6 +117,7 @@ const zh = {
     success:'成功',
     error:'失败',
     pending:'确认中',
+    height:'高度',
     noBrowser:'当前网络未添加区块链浏览器地址'
   },
   addToken:{
@@ -252,6 +255,153 @@ const zh = {
     title:'使用 FiveToken 连接',
     cancel:'取消',
     connect:'连接'
-  },
+  },    
+  defaultNetworks:[
+    {
+        name:'Filecoin主网络',
+        rpc:'http://192.168.1.161:8081',
+        chainID:'',
+        symbol:'FIL',
+        ids:'filecoin',
+        browser:'https://filscan.io',
+        khazix:'khazix',
+        create_time:create_time,
+        networkType:'proxy',
+        filecoinAddress0:'f',
+        decimals:18,
+        disabled:true,
+        image:'fil.svg',
+        deriveIndex:0
+    },
+    {
+        name:'以太坊ETH主网络',
+        rpc:'https://mainnet.infura.io/v3/96837d28a772466ca6ed88eddb221e09',
+        chainID:'1',
+        symbol:'ETH',
+        browser:'https://etherscan.io',
+        ids:'ethereum',
+        khazix:'khazix',
+        networkType:'ethereum',
+        filecoinAddress0:'',
+        create_time:create_time+1,
+        decimals:18,
+        image:'eth.svg',
+        disabled:true,
+        deriveIndex:0
+    },
+    {
+        name:'币安智能链主网',
+        rpc:'https://bsc-dataseed.binance.org',
+        chainID:'56',
+        symbol:'BNB',
+        ids:'binancecoin',
+        browser:'https://bscscan.com',
+        khazix:'khazix',
+        networkType:'ethereum',
+        filecoinAddress0:'',
+        create_time:create_time+2,
+        decimals:18,
+        image:'bnb.svg',
+        disabled:true,
+        deriveIndex:0
+    },
+    {
+        name:'Filecoin CalIbration测试网',
+        rpc:'http://192.168.1.161:9091',
+        chainID:'',
+        symbol:'FIL',
+        ids:'filecoin',
+        browser:'https://calibration.filscan.io',
+        khazix:'khazix',
+        networkType:'proxy',
+        filecoinAddress0:'t',
+        create_time:create_time+3,
+        decimals:18,
+        image:'fil.svg',
+        disabled:true,
+        deriveIndex:0
+    },
+    {
+        name:'以太坊Ropsten测试网络',
+        rpc: 'https://ropsten.infura.io/v3/96837d28a772466ca6ed88eddb221e09',
+        chainID: '3',
+        symbol:'ETH',
+        ids:'ethereum',
+        browser: 'https://ropsten.etherscan.io',
+        khazix:'khazix',
+        networkType:'ethereum',
+        filecoinAddress0:'',
+        create_time:create_time+4,
+        decimals:18,
+        image:'eth.svg',
+        disabled:true,
+        deriveIndex:0
+    },
+    {
+      name:'以太坊Kovan测试网络',
+      rpc: 'https://kovan.infura.io/v3/96837d28a772466ca6ed88eddb221e09',
+      chainID: '42',
+      symbol:'ETH',
+      ids:'ethereum',
+      browser: 'https://kovan.etherscan.io',
+      khazix:'khazix',
+      networkType:'ethereum',
+      filecoinAddress0:'',
+      create_time:create_time+5,
+      decimals:18,
+      image:'eth.svg',
+      disabled:true,
+      deriveIndex:0
+    },
+    {
+      name:'以太坊Rinkeby测试网络',
+      rpc: 'https://rinkeby.infura.io/v3/96837d28a772466ca6ed88eddb221e09',
+      chainID: '4',
+      symbol:'ETH',
+      ids:'ethereum',
+      browser: 'https://rinkeby.etherscan.io',
+      khazix:'khazix',
+      networkType:'ethereum',
+      filecoinAddress0:'',
+      create_time:create_time+6,
+      decimals:18,
+      image:'eth.svg',
+      disabled:true,
+      deriveIndex:0
+    },
+    {
+      name:'以太坊Goerli测试网络',
+      rpc: 'https://goerli.infura.io/v3/96837d28a772466ca6ed88eddb221e09',
+      chainID: '5',
+      symbol:'ETH',
+      ids:'ethereum',
+      browser: 'https://goerli.etherscan.io',
+      khazix:'khazix',
+      networkType:'ethereum',
+      filecoinAddress0:'',
+      create_time:create_time+7,
+      decimals:18,
+      image:'eth.svg',
+      disabled:true,
+      deriveIndex:0
+    },
+    {
+      name:'币安智能链测试网',
+      rpc:'https://data-seed-prebsc-1-s1.binance.org:8545',
+      chainID:'56',
+      symbol:'BNB',
+      ids:'binancecoin',
+      browser:'https://testnet.bscscan.com',
+      khazix:'khazix',
+      networkType:'ethereum',
+      filecoinAddress0:'',
+      create_time:create_time+8,
+      decimals:18,
+      image:'bnb.svg',
+      disabled:true,
+      deriveIndex:0
+    },
+  ]
 }
 export default zh
+

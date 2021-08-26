@@ -123,29 +123,6 @@ export default {
                 }
             })
         },
-        confirmEdit(){
-            let address = this.address
-            let rpc = this.rpc
-            let addressName = this.addressName
-            
-            this.SET_ACCOUNTNAME(addressName)
-            window.filecoinwalletDb.accountList.where({
-                address:address,
-                rpc:rpc
-            }).modify({
-                accountName:addressName
-            })
-            window.filecoinwalletDb.activeAccount.where({
-                address:address,
-                rpc:rpc
-            }).modify({
-                accountName:addressName
-            })
-            this.$emit("update:editNameVisable",false)
-        },
-        closeEdit(){
-            this.$emit("update:editNameVisable",false)
-        },
         menuClick(item){
             let action = item.action
             switch (action){
@@ -181,21 +158,6 @@ export default {
                 this.$message.error(this.$t('wallet.noBrowser'))
             }
             
-        },
-        async confirmDelete(){
-            await window.filecoinwalletDb.activeAccount.where({khazix:'khazix'}).delete()
-            await window.filecoinwalletDb.accountList.where({address:this.address}).delete()
-            let accountList = await window.filecoinwalletDb.accountList.where({ khazix:'khazix'}).toArray () || [];
-            if(accountList.length){
-                let first = accountList.filter((n,index)=>{
-                    return index === 0
-                })
-                await window.filecoinwalletDb.activeAccount.bulkPut(first).then(res=>{
-                    window.location.href = './wallet.html'
-                })
-            }else{
-                window.location.href = './welcome.html'
-            }
         },
         sendFil(){
             window.location.href = './send-fil.html'

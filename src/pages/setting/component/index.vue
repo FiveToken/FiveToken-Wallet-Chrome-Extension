@@ -60,6 +60,7 @@ import kyBack from '@/components/back'
 import kyCurrency from './currency.vue'
 import kyLanguage from './language.vue'
 import { mapMutations, mapState } from 'vuex'
+import { Database } from '@/utils/database.js';
 
 export default {
     data(){
@@ -103,7 +104,8 @@ export default {
         kyLanguage
     },
     async mounted(){
-        let activeAccount = await window.filecoinwalletDb.activeAccount.where({ khazix:'khazix'}).toArray ();
+        let db = new Database()
+        let activeAccount = await db.getTable("activeAccount",{ khazix:'khazix'})
         let createType = activeAccount.length && activeAccount[0].createType
         this.createType = createType
     },
@@ -155,6 +157,7 @@ export default {
                 line-height: 50px;
                 border-bottom: 1px solid #eee;
                 position: relative;
+                cursor: pointer;
                 &:hover{
                     background: #f5f5f5;
                 }
@@ -169,8 +172,10 @@ export default {
                         font-size: 14px;
                         color: #222;
                         text-decoration: none;
+                        cursor: pointer;
                     }
                     .right{
+                        cursor: pointer;
                         .text{
                             position: absolute;
                             right: 40px;

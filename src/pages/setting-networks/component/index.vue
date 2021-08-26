@@ -23,13 +23,15 @@
 import networksList from './networks-list'
 import networksFrom from './networks-form'
 import layout from '@/components/layout'
+import { Database,reverseOrder } from '@/utils/database.js';
 export default {
     data(){
         return{
            pageType:'list',
            detail:null,
            deletaRpc:'',
-           networks:[]
+           networks:[],
+           db:null
         }
     },
     components:{
@@ -38,12 +40,13 @@ export default {
        layout
     },
     async mounted(){
-        let networks = await window.filecoinwalletDb.networks.where({ khazix:'khazix'}).sortBy('create_time');
+        let db = new Database()
+        this.db = db
+        let networks = await db.getTable('networks',{ khazix:'khazix'});
         this.networks = networks
     },
     methods:{
         networksItemClick(obj){
-            console.log(obj,'oobbjj')
             this.detail = obj
             this.deletaRpc = obj.rpc
             this.pageType = 'detail'
@@ -54,12 +57,12 @@ export default {
             this.pageType = 'detail'
         },
         async deleteNetworkCb(){
-            let networks = await window.filecoinwalletDb.networks.where({ khazix:'khazix'}).sortBy('create_time');
+            let networks = await this.db.getTable('networks',{ khazix:'khazix'},reverseOrder,'create_time')
             this.networks = networks
             this.pageType = 'list'
         },
         async addNetworkCb(){
-            let networks = await window.filecoinwalletDb.networks.where({ khazix:'khazix'}).sortBy('create_time');
+            let networks = await this.db.getTable('networks',{ khazix:'khazix'},reverseOrder,'create_time')
             this.networks = networks
             this.pageType = 'list'
         },

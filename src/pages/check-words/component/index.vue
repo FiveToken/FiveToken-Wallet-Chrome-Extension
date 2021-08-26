@@ -36,10 +36,9 @@ import layout from '@/components/layout'
 import kyButton from '@/components/button'
 import { mapMutations, mapState } from 'vuex'
 import kyBack from '@/components/back'
-import { MyGlobalApi } from '@/utils/api'
 import { getQueryString,getF1ByMne,setGlabolKek } from '@/utils'
 import { genSalt,genKek,AESEncrypt } from '@/utils/key'
-
+import { Database } from '@/utils/database.js';
 
 export default {
     data(){
@@ -50,7 +49,8 @@ export default {
             accountName:'',
             password:'',
             mnemonicWords:[],
-            error:false
+            error:false,
+            db:null
         }
     },
     computed:{
@@ -77,6 +77,8 @@ export default {
         this.accountName = accountName
         this.password = password
         this.mnemonicWords = this.shuffle(mnemonicWords)
+        const db = new Database();
+        this.db = db
     },
     methods:{
         ...mapMutations('app',[
@@ -135,16 +137,18 @@ export default {
                         let accountName = this.accountName
                         let create_time =  parseInt(new Date().getTime() / 1000)
                         this.SET_DERIVEINDEX(1)
-                        await window.filecoinwalletDb.activenNetworks.where({
-                            rpc:this.rpc
-                        }).modify({
-                            deriveIndex:1
-                        })
+                        await this.db.modifyTable(
+                            'activenNetworks',
+                            { rpc:this.rpc },
+                            { deriveIndex:1 }
+                        )
                         
+                        let _account = []
+                        let _networks = []
                         for (let n of this.networks){
                             let _index = n.deriveIndex + 1
                             if(n.filecoinAddress0 === 'f'){
-                                await window.filecoinwalletDb.accountList.add({
+                                _account.push({
                                     accountName,
                                     address:filecoinF1.address,
                                     createType:'mnemonic',
@@ -156,7 +160,7 @@ export default {
                                     rpc:n.rpc
                                 })
                             }else if(n.filecoinAddress0 === 't'){
-                                await window.filecoinwalletDb.accountList.add({
+                                _account.push({
                                     accountName,
                                     address:calibrationF1.address,
                                     createType:'mnemonic',
@@ -168,7 +172,7 @@ export default {
                                     rpc:n.rpc
                                 })
                             }else{
-                                await window.filecoinwalletDb.accountList.add({
+                                _account.push({
                                     accountName,
                                     address:ethereumF1.address,
                                     createType:'mnemonic',
@@ -180,13 +184,15 @@ export default {
                                     rpc:n.rpc
                                 })
                             }
-                            await window.filecoinwalletDb.networks.where({
-                                rpc:n.rpc
-                            }).modify({
+                            _networks.push({
+                                ...n,
                                 deriveIndex:1
                             })
+                            awai
                         }
-                        await window.filecoinwalletDb.activeAccount.add({
+                        await this.db.bulkAddTable('accountList',_account)
+                        await this.db.bulkPutTable('networks',_networks)
+                        await this.db.addTable('activeAccount',{
                             address,
                             accountName,
                             privateKey,
@@ -201,7 +207,7 @@ export default {
                         let salt = genSalt(this.password)
                         setGlabolKek(kek)
                         let mnemonic = AESEncrypt(mne,kek)
-                        await window.filecoinwalletDb.walletKey.add({
+                        await this.db.addTable('walletKey',{
                             mnemonicWords:mnemonic,
                             salt,
                             rpc:this.rpc,

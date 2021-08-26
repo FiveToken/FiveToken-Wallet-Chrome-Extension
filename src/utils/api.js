@@ -13,7 +13,318 @@ import {
 } from '@/utils/fil-api'
 import request from '@/utils/request'
 
-class GlobalApi{
+
+class BSCChainAPI{
+    constructor(){
+        this.provider = null;
+        this.walletWithProvider = null
+    }
+    setWalletWithProvider(privateKey){
+        this.walletWithProvider = new ethers.Wallet(privateKey, this.provider)
+    }
+    setProvider(rpc){
+        this.provider = ethers.getDefaultProvider(rpc);
+    }
+    async getBalance(address){
+        try{
+            let res = await this.provider.getBalance(address)
+            let balance = Number(res.toString())
+            return balance
+        }catch(err){
+            console.log(err,'BSCChainAPI.getBalance')
+            return 0
+        }
+    }
+    async sendTransaction(tx){
+        try{
+            let res = await this.walletWithProvider.sendTransaction(tx)
+            return res
+        }catch(err){
+            console.log(err,'BSCChainAPI.sendTransaction')
+            if(err.error && err.error.message){
+                Message({
+                    type:'error',
+                    message:err.error && err.error.message
+                })
+            }
+            return null
+        }
+        
+    }
+    async getTransaction(hash){
+        try{
+            let res = await this.provider.getTransaction(hash)
+            console.log(res,hash,'bsc res3444')
+            return res
+        }catch(error){
+            console.log(error,'BSCChainAPI.getTransaction error')
+            return null
+        }
+        
+    }
+    async getTransactionReceipt(hash){
+        try{
+            let res = await this.provider.getTransactionReceipt(hash)
+            return res
+        }catch(error){
+            console.log(error,'BSCChainAPI.getTransactionReceipt error')
+            return null
+        }
+    }
+    async getGasPrice(){
+        try{
+            let res = await this.provider.getGasPrice()
+            return res
+        }catch(err){
+            console.log(err,'BSCChainAPI.getTransaction')
+            return null
+        }
+        
+    }
+    async getEstimateGas(transaction){
+        try{
+            let res = await this.provider.estimateGas(transaction)
+            return res
+        }catch(err){
+            console.log(err,'BSCChainAPI.getTransaction')
+            return null
+        }
+        
+    }
+    async getBlock(block){
+        try{
+            let res = await this.provider.getBlock(block)
+            return res
+        }catch(err){
+            console.log(err,'BSCChainAPI.getBlock')
+            return null
+        }
+        
+    }
+    async getBlockNumber(rpc){
+        try{
+            let res = await this.provider.getBlockNumber()
+            return res
+        }catch(err){
+            console.log(err,'BSCChainAPI.getBlockNumber')
+            return null
+        }
+        
+    }
+}
+
+class FilecoinAPI{
+    constructor(){
+        this.rpc = ''
+    }
+    setRpc(rpc){
+        this.rpc = rpc
+    }
+    async getStateNetworkName(){
+        try{
+            let params = {
+                "id": 0,
+                "jsonrpc": "2.0",
+                "method": "Filecoin.StateNetworkName",
+                "params": []
+            }
+            let res = await request({
+                url:this.rpc,
+                method: 'post',
+                data:params,
+            })
+            return res
+        }catch(error){
+            console.log(error,'error filecoin StateNetworkName')
+        }
+    }
+    async getBalance(address){
+        try{
+            let params = {
+                "id": 0,
+                "jsonrpc": "2.0",
+                "method": "Filecoin.WalletBalance",
+                "params": [address]
+            }
+            let res = await request({
+                url:this.rpc,
+                method: 'post',
+                data:params,
+            })
+            if(res && res.result){
+                let balance = Number(res.result || 0)
+                return balance
+            }else{
+                return 0
+            }
+        }catch(error){
+            console.log(error,'error filecoin getBalance')
+            return 0
+        }
+    }
+    async getBaseFeeAndGas(from,to,nonce){
+        try{
+            let params = {
+                "id": 0,
+                "jsonrpc": "2.0",
+                "method": "Filecoin.GasEstimateMessageGas",
+                "params": [
+                    {
+                        "Version": 0,
+                        "To": to,
+                        "From": from,
+                        "Nonce": nonce,
+                        "Value": "0",
+                        "GasLimit": 0,
+                        "GasFeeCap": "0",
+                        "GasPremium": "0",
+                        "Method": 0,
+                        "Params": null
+                    },
+                    {
+                        "MaxFee":"0"
+                    },
+                    []
+                ]
+            }
+            let res = await request({
+                url:this.rpc,
+                method: 'post',
+                data:params,
+            })
+            let gasLimit = 0
+            let gasPremium = 0
+            let gasFeeCap = 0
+            console.log(res,'getBaseFeeAndGas res')
+            if(res && res.result){
+                gasLimit = res.result.GasLimit
+                gasPremium = res.result.GasPremium
+                gasFeeCap = res.result.GasFeeCap
+            }
+            return {
+                gasLimit,
+                gasPremium,
+                gasFeeCap
+            }
+        }catch(error){
+            console.log(error,'getBaseFeeAndGas err')
+            return {
+                gasLimit:0,
+                gasPremium:0,
+                gasFeeCap:0
+            }
+        }
+    }
+    async getNonce(address){
+        try{
+            let params = {
+                "id": 0,
+                "jsonrpc": "2.0",
+                "method": "Filecoin.MpoolGetNonce",
+                "params": [address]
+            }
+            let res = await request({
+                url:this.rpc,
+                method: 'post',
+                data:params,
+            })
+            if(res && res.result){
+                return res.result
+            }else{
+                return 0
+            }
+        }catch(error){
+            return 0
+        }
+    }
+    async MpoolPush(data){
+        try{
+            let params = {
+                "id": 0,
+                "jsonrpc": "2.0",
+                "method": "Filecoin.MpoolPush",
+                "params": data
+            }
+            let res = await request({
+                url:this.rpc,
+                method: 'post',
+                data:params,
+            })
+            if(res && res.result){
+                return res.result['/']
+            }else{
+                if(res && res.error && res.error.message){
+                    Message({
+                        type:'error',
+                        message:res.error.message
+                    })
+                }
+                return ''
+            }
+        }catch(error){
+            console.log(error,'error2')
+            return ''
+        }
+    }
+    async chainGetMessage(hash){
+        try{
+            let params = {
+                "id": 0,
+                "jsonrpc": "2.0",
+                "method": "Filecoin.ChainGetMessage",
+                "params": [ 
+                    {
+                        '/':hash
+                    } 
+                ]
+            }
+            let res = await request({
+                url:this.rpc,
+                method: 'post',
+                data:params,
+            })
+            if(res && res.result){
+                return res.result
+            }else{
+                return null
+            }
+        }catch(error){
+            console.log(err,'err chainGetMessage')
+            return null
+        }
+    }
+    async stateGetReceipt(hash){
+        try{
+            let params = {
+                "id": 0,
+                "jsonrpc": "2.0",
+                "method": "Filecoin.StateGetReceipt",
+                "params": [ 
+                    {
+                        '/':hash
+                    },
+                    []
+                ]
+            }
+            let res = await request({
+                url:this.rpc,
+                method: 'post',
+                data:params,
+            })
+            if(res && res.result){
+                return res.result
+            }else{
+                return null
+            }
+        }catch(error){
+            console.log(error,'err StateGetReceipt')
+            return null
+        }
+    }
+}
+
+
+export class GlobalApi{
     constructor(){
         this.rpc = ''
         // proxy  ethereum  filecoin
@@ -39,12 +350,19 @@ class GlobalApi{
                 case 'proxy':
                     let result = await BalanceNonceByAddress(address,this.rpc)
                     if(result && result.code === 200){
-                        let proxyRes = result && result.data
-                        let balance = Number(proxyRes && proxyRes.balance || 0)
-                        let nonce = proxyRes.nonce
-                        return {
-                            balance,
-                            nonce
+                        if(result && result.data){
+                            let proxyRes = result && result.data
+                            let balance = Number(proxyRes && proxyRes.balance || 0)
+                            let nonce = proxyRes.nonce
+                            return {
+                                balance,
+                                nonce
+                            }
+                        }else{
+                            return {
+                                balance:0,
+                                nonce:0
+                            }
                         }
                     }else{
                         return {
@@ -83,7 +401,7 @@ class GlobalApi{
             console.log(err,'GlobalApi.getBalance error')
             Message({
                 type:'error',
-                message:'Network error !!!'
+                message:'Network Connection Error.'
             })
             return {
                 balance:0,
@@ -475,314 +793,3 @@ class GlobalApi{
         
     }
 }
-
-class BSCChainAPI{
-    constructor(){
-        this.provider = null;
-        this.walletWithProvider = null
-    }
-    setWalletWithProvider(privateKey){
-        this.walletWithProvider = new ethers.Wallet(privateKey, this.provider)
-    }
-    setProvider(rpc){
-        this.provider = ethers.getDefaultProvider(rpc);
-    }
-    async getBalance(address){
-        try{
-            let res = await this.provider.getBalance(address)
-            let balance = Number(res.toString())
-            return balance
-        }catch(err){
-            console.log(err,'BSCChainAPI.getBalance')
-            return 0
-        }
-    }
-    async sendTransaction(tx){
-        try{
-            let res = await this.walletWithProvider.sendTransaction(tx)
-            return res
-        }catch(err){
-            console.log(err,'BSCChainAPI.sendTransaction')
-            if(err.error && err.error.message){
-                Message({
-                    type:'error',
-                    message:err.error && err.error.message
-                })
-            }
-            return null
-        }
-        
-    }
-    async getTransaction(hash){
-        try{
-            let res = await this.provider.getTransaction(hash)
-            console.log(res,hash,'bsc res3444')
-            return res
-        }catch(error){
-            console.log(error,'BSCChainAPI.getTransaction error')
-            return null
-        }
-        
-    }
-    async getTransactionReceipt(hash){
-        try{
-            let res = await this.provider.getTransactionReceipt(hash)
-            return res
-        }catch(error){
-            console.log(error,'BSCChainAPI.getTransactionReceipt error')
-            return null
-        }
-    }
-    async getGasPrice(){
-        try{
-            let res = await this.provider.getGasPrice()
-            return res
-        }catch(err){
-            console.log(err,'BSCChainAPI.getTransaction')
-            return null
-        }
-        
-    }
-    async getEstimateGas(transaction){
-        try{
-            let res = await this.provider.estimateGas(transaction)
-            return res
-        }catch(err){
-            console.log(err,'BSCChainAPI.getTransaction')
-            return null
-        }
-        
-    }
-    async getBlock(block){
-        try{
-            let res = await this.provider.getBlock(block)
-            return res
-        }catch(err){
-            console.log(err,'BSCChainAPI.getBlock')
-            return null
-        }
-        
-    }
-    async getBlockNumber(rpc){
-        try{
-            let res = await this.provider.getBlockNumber()
-            return res
-        }catch(err){
-            console.log(err,'BSCChainAPI.getBlockNumber')
-            return null
-        }
-        
-    }
-}
-
-class FilecoinAPI{
-    constructor(){
-        this.rpc = ''
-    }
-    setRpc(rpc){
-        this.rpc = rpc
-    }
-    async getStateNetworkName(){
-        try{
-            let params = {
-                "id": 0,
-                "jsonrpc": "2.0",
-                "method": "Filecoin.StateNetworkName",
-                "params": []
-            }
-            let res = await request({
-                url:this.rpc,
-                method: 'post',
-                data:params,
-            })
-            return res
-        }catch(error){
-            console.log(error,'error filecoin StateNetworkName')
-        }
-    }
-    async getBalance(address){
-        try{
-            let params = {
-                "id": 0,
-                "jsonrpc": "2.0",
-                "method": "Filecoin.WalletBalance",
-                "params": [address]
-            }
-            let res = await request({
-                url:this.rpc,
-                method: 'post',
-                data:params,
-            })
-            if(res && res.result){
-                let balance = Number(res.result || 0)
-                return balance
-            }else{
-                return 0
-            }
-        }catch(error){
-            console.log(error,'error filecoin getBalance')
-            return 0
-        }
-    }
-    async getBaseFeeAndGas(from,to,nonce){
-        try{
-            let params = {
-                "id": 0,
-                "jsonrpc": "2.0",
-                "method": "Filecoin.GasEstimateMessageGas",
-                "params": [
-                    {
-                        "Version": 0,
-                        "To": to,
-                        "From": from,
-                        "Nonce": nonce,
-                        "Value": "0",
-                        "GasLimit": 0,
-                        "GasFeeCap": "0",
-                        "GasPremium": "0",
-                        "Method": 0,
-                        "Params": null
-                    },
-                    {
-                        "MaxFee":"0"
-                    },
-                    []
-                ]
-            }
-            let res = await request({
-                url:this.rpc,
-                method: 'post',
-                data:params,
-            })
-            let gasLimit = 0
-            let gasPremium = 0
-            let gasFeeCap = 0
-            console.log(res,'getBaseFeeAndGas res')
-            if(res && res.result){
-                gasLimit = res.result.GasLimit
-                gasPremium = res.result.GasPremium
-                gasFeeCap = res.result.GasFeeCap
-            }
-            return {
-                gasLimit,
-                gasPremium,
-                gasFeeCap
-            }
-        }catch(error){
-            console.log(error,'getBaseFeeAndGas err')
-            return {
-                gasLimit:0,
-                gasPremium:0,
-                gasFeeCap:0
-            }
-        }
-    }
-    async getNonce(address){
-        try{
-            let params = {
-                "id": 0,
-                "jsonrpc": "2.0",
-                "method": "Filecoin.MpoolGetNonce",
-                "params": [address]
-            }
-            let res = await request({
-                url:this.rpc,
-                method: 'post',
-                data:params,
-            })
-            if(res && res.result){
-                return res.result
-            }else{
-                return 0
-            }
-        }catch(error){
-            return 0
-        }
-    }
-    async MpoolPush(data){
-        try{
-            let params = {
-                "id": 0,
-                "jsonrpc": "2.0",
-                "method": "Filecoin.MpoolPush",
-                "params": data
-            }
-            let res = await request({
-                url:this.rpc,
-                method: 'post',
-                data:params,
-            })
-            if(res && res.result){
-                return res.result['/']
-            }else{
-                if(res && res.error && res.error.message){
-                    Message({
-                        type:'error',
-                        message:res.error.message
-                    })
-                }
-                return ''
-            }
-        }catch(error){
-            console.log(error,'error2')
-            return ''
-        }
-    }
-    async chainGetMessage(hash){
-        try{
-            let params = {
-                "id": 0,
-                "jsonrpc": "2.0",
-                "method": "Filecoin.ChainGetMessage",
-                "params": [ 
-                    {
-                        '/':hash
-                    } 
-                ]
-            }
-            let res = await request({
-                url:this.rpc,
-                method: 'post',
-                data:params,
-            })
-            if(res && res.result){
-                return res.result
-            }else{
-                return null
-            }
-        }catch(error){
-            console.log(err,'err chainGetMessage')
-            return null
-        }
-    }
-    async stateGetReceipt(hash){
-        try{
-            let params = {
-                "id": 0,
-                "jsonrpc": "2.0",
-                "method": "Filecoin.StateGetReceipt",
-                "params": [ 
-                    {
-                        '/':hash
-                    },
-                    []
-                ]
-            }
-            let res = await request({
-                url:this.rpc,
-                method: 'post',
-                data:params,
-            })
-            if(res && res.result){
-                return res.result
-            }else{
-                return null
-            }
-        }catch(error){
-            console.log(error,'err StateGetReceipt')
-            return null
-        }
-    }
-}
-
-export const MyGlobalApi = new GlobalApi()

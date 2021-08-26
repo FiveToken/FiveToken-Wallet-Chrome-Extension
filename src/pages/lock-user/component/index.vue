@@ -29,6 +29,7 @@ import { validatePassword } from '@/utils'
 import layout from '@/components/layout'
 import kyInput from '@/components/input'
 import kyButton from '@/components/button'
+import { Database } from '@/utils/database.js';
 export default {
     data(){
       return{ 
@@ -36,7 +37,8 @@ export default {
         suffix:true,
         password:'',
         passwordType:'password',
-        salt:null
+        salt:null,
+        db:null
       }
     },
     computed:{
@@ -50,7 +52,8 @@ export default {
       kyButton
     },
     async mounted(){
-        let walletKey = await window.filecoinwalletDb.walletKey.where({khazix:'khazix'}).toArray()
+      let db = new Database()
+        let walletKey = await db.getTable('walletKey',{khazix:'khazix'})
         if(walletKey.length){
             this.salt = walletKey[0].salt
         }
@@ -67,7 +70,7 @@ export default {
           let voild = await validatePassword(this.password,this.salt)
           if(voild){
             window.location.href = './wallet.html'
-            await window.filecoinwalletDb.lockUser.where({ khazix:'khazix'}).delete();
+            await this.db.deleteTable('lockUser',{ khazix:'khazix'})
           }else{
             this.$message.error(this.$t('lock.passwordError')) 
           }

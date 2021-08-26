@@ -6,6 +6,7 @@
 
 <script>
 import { mapMutations } from 'vuex';
+import { Database } from '@/utils/database.js';
 export default {
     name:'ky-layout',
     data(){
@@ -16,11 +17,19 @@ export default {
         let currency = window.localStorage.getItem('fiveTokenCurrency')
         this.SET_LANGUAGE(language)
         this.SET_CURRENCY(currency)
-        let activenNetworks = await window.filecoinwalletDb.activenNetworks.where({ khazix:'khazix'}).toArray ();
-        let activeAccount = await window.filecoinwalletDb.activeAccount.where({ khazix:'khazix'}).toArray ()|| [];
-        this.SET_ACTIVENETWORKS(activenNetworks)
-        this.SET_ACTIVEACCOUNT(activeAccount)
-        if(activenNetworks.length){
+
+        const db = new Database();
+        let networks = await db.getTable('networks',{ khazix:'khazix' })
+        let activenNetworks = await db.getTable('activenNetworks',{ khazix:'khazix' })
+        let defaultNetworks = this.$t('defaultNetworks')
+        if(!networks.length){
+            db.bulkAddTable('networks',defaultNetworks)
+        }
+        if(!activenNetworks.length){
+            let _first = defaultNetworks.length && defaultNetworks[0]
+            db.addTable('activenNetworks',_first)
+        }else{
+            this.SET_ACTIVENETWORKS(activenNetworks)
             let rpc = activenNetworks[0].rpc
             let rpcName = activenNetworks[0].name
             let symbol = activenNetworks[0].symbol
@@ -34,9 +43,8 @@ export default {
             let deriveIndex = activenNetworks[0].deriveIndex
             this.SET_RPC(rpc)
             this.SET_RPCNAME(rpcName)
-            let networks = await window.filecoinwalletDb.networks.where({ khazix:'khazix'}).toArray()|| [];
             this.SET_NETWORKS(networks)
-            let accountList = await window.filecoinwalletDb.accountList.where({ rpc:rpc }).toArray ()|| [];
+            let accountList = await db.getTable('accountList',{ rpc })
             this.SET_ACCOUNTLIST(accountList)
             this.SET_SYMBOL(symbol)
             this.SET_IDS(ids)
@@ -48,7 +56,10 @@ export default {
             this.SET_RPCIMAGE(image)
             this.SET_DERIVEINDEX(deriveIndex)
         }
-        if(activeAccount.length ){
+
+        let activeAccount = await db.getTable('activeAccount',{ khazix:'khazix' })
+        if(activeAccount.length){
+            this.SET_ACTIVEACCOUNT(activeAccount)
             let address = activeAccount[0].address
             let privateKey = activeAccount[0].privateKey
             let digest = activeAccount[0].digest

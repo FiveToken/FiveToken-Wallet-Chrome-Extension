@@ -25,6 +25,12 @@
       .el-message{
         top:0 !important;
       }
+      .fivetoken .el-message--error{
+        width: 100%;
+      }
+      .fivetoken .el-message--error .el-message__content{
+        word-break: break-all;
+      }
       .el-message-box{
         width: 90% !important;
       }
@@ -75,8 +81,6 @@
       }
     </style>
     <script src="../popup.js"></script>
-    <script src="../dexie.js"></script>
-    <script src="../db.js"></script>
   <body class="fivetoken">
     <noscript>
       <strong>We're sorry but <%= htmlWebpackPlugin.options.title %> doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>

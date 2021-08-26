@@ -74,8 +74,8 @@ import { AESDecrypt } from '@/utils/key'
 import { mapMutations, mapState } from 'vuex'
 import kyBack from '@/components/back'
 import kyAdd from './add.vue'
-import { MyGlobalApi } from '@/utils/api'
 import { BigNumber } from "bignumber.js";
+import { Database } from '@/utils/database.js';
 export default {
     data(){
         return{
@@ -90,6 +90,7 @@ export default {
             ethereumF1:null,
             filecoinF1:null,
             calibrationF1:null,
+            db:null
         }
     },
     computed:{
@@ -132,7 +133,9 @@ export default {
         kyAdd
     },
     async mounted(){
-        let walletKey = await window.filecoinwalletDb.walletKey.where({khazix:'khazix'}).toArray()
+        const db = new Database();
+        this.db = db
+        let walletKey = await db.getTable('walletKey',{ khazix:'khazix' })
         if(walletKey.length){
             this.nme = walletKey[0].mnemonicWords
         }
@@ -180,19 +183,25 @@ export default {
                 this.addAccountVisable = false
                 let accountName = this.addName
                 let create_time =  parseInt(new Date().getTime() / 1000)
-                await window.filecoinwalletDb.activeAccount.where({khazix:'khazix'}).delete()
-                await window.filecoinwalletDb.activeAccount.add({
-                    address:this.activeF1.address,
-                    accountName,
-                    privateKey:this.activeF1.privateKey,
-                    create_time,
-                    khazix:'khazix',
-                    rpc:this.rpc,
-                    fil:0,
-                    createType:'mnemonic',
-                    digest:this.activeF1.digest
-                })
+                await this.db.modifyTable(
+                    'activeAccount',
+                    { rpc:this.rpc },
+                    {
+                       address:this.activeF1.address,
+                        accountName,
+                        privateKey:this.activeF1.privateKey,
+                        create_time,
+                        khazix:'khazix',
+                        rpc:this.rpc,
+                        fil:0,
+                        createType:'mnemonic',
+                        digest:this.activeF1.digest 
+                    }
+                )
+                
                 let _accountList = []
+                let _networks = []
+                let _index = this.deriveIndex + 1
                 for (let n of this.networks){
                     if(n.filecoinAddress0 === 't'){
                         _accountList.push({
@@ -231,24 +240,21 @@ export default {
                             fil:0
                         })
                     }
-                }
-                console.log(_accountList,'_accountList')
-                let _index = this.deriveIndex + 1
-                await window.filecoinwalletDb.accountList.bulkAdd(_accountList)
-                let _networks = this.networks.map(n=>{
-                    return {
+                    _networks.push({
                         ...n,
                         deriveIndex:_index
-                    }
-                })
-                await window.filecoinwalletDb.networks.bulkPut(_networks)
+                    })
+                }
+                
+                await this.db.bulkAddTable('accountList',_accountList)
+                await this.db.bulkPutTable('networks',_networks)
+                await this.db.modifyTable(
+                    'activenNetworks',
+                    { rpc:this.rpc },
+                    { deriveIndex:_index }
+                )
 
                 this.SET_DERIVEINDEX(_index)
-                await window.filecoinwalletDb.activenNetworks.where({
-                    rpc:this.rpc
-                }).modify({
-                    deriveIndex:_index
-                })
                 this.isFetch = false
                 window.location.href = './wallet.html'
             }catch(err){
@@ -265,7 +271,8 @@ export default {
         },
         async lockUser(){
             let create_time =  parseInt(new Date().getTime() / 1000)
-            await window.filecoinwalletDb.lockUser.add({
+            
+            await this.db.addTable('lockUser',{
                 address:this.address,
                 privateKey:this.privateKey,
                 create_time,
@@ -275,32 +282,32 @@ export default {
             window.location.href = './filecoinwallet.html'
         },
         async changeAccount(item){
-            let {address,accountName,privateKey,create_time,digest,createType} = item
+            let {address,accountName,privateKey,create_time,digest,createType,rpc } = item
             this.settingVisible = false
             this.SET_PRIVATEKEY(privateKey)
             this.SET_ADDRESS(address)
             this.SET_DIGEST(digest)
             this.SET_ACCOUNTNAME(accountName)
-            MyGlobalApi.setRpc(this.rpc)
-            MyGlobalApi.setNetworkType(this.networkType)
-            let res = await MyGlobalApi.getBalance(address)
-            let { balance } = res
-            console.log(balance,'balance 1234')
-            await window.filecoinwalletDb.activeAccount.where({khazix:'khazix'}).delete()
-            await window.filecoinwalletDb.activeAccount.add({
-                address,
-                accountName,
-                privateKey,
-                create_time,
-                khazix:'khazix',
-                fil:balance,
-                createType,
-                digest
-            })
+            
+            await this.db.modifyTable(
+                'activeAccount',
+                { rpc:rpc },
+                {
+                    address,
+                    accountName,
+                    privateKey,
+                    create_time,
+                    khazix:'khazix',
+                    rpc:rpc,
+                    fil:0,
+                    createType,
+                    digest
+                }
+            )
             window.location.href = './wallet.html'
         },
         createWallet(){
-            this.addName = `Account` + (this.deriveIndex + 1)
+            this.addName = `Account` + (this.accountList.length + 1)
             this.addAccountVisable = true
             setTimeout(()=>{
                 this.initAdd()
@@ -387,7 +394,7 @@ export default {
     .content-account{
         max-height: 390px;
         overflow-y: auto;
-        box-shadow: 0 2px 2px 0 rgb(0 0 0 / 20%);
+        box-shadow: 0 2px 10px 0 rgb(0 0 0 / 15%);
         .mne-account,.pk-account{
             .mne-tit{
                     height: 40px;
@@ -411,7 +418,7 @@ export default {
                         height:1px;
                         background: #E6F0F0;
                         left: 50px;
-                        bottom: 0;
+                        bottom: -1px;
                     }
                     &:hover{
                         background: #f5f5f5;

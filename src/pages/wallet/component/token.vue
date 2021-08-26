@@ -82,8 +82,8 @@ export default {
             this.$emit("update:receiveVisible",true)
         },
         showDetail(item){
-            let { from,to,fil,all_gas_fee,create_time,block_time,type,signed_cid,value,allGasFee,token,decimals } = item
-            let listObj = { from,to,fil,all_gas_fee,create_time,block_time,type,signed_cid,value,allGasFee,token,decimals }
+            let { from,to,fil,all_gas_fee,create_time,block_time,type,signed_cid,value,allGasFee,token,decimals,height } = item
+            let listObj = { from,to,fil,all_gas_fee,create_time,block_time,type,signed_cid,value,allGasFee,token,decimals,height }
             let listObjStr = JSON.stringify(listObj)
             window.location.href = `./message-detail.html?signed_cid=${signed_cid}&listObjStr=${listObjStr}`
         }

@@ -43,6 +43,8 @@
 import layout from '@/components/layout'
 import kyButton from '@/components/button'
 import { Web3Storage } from 'web3.storage/dist/bundle.esm.min.js'
+
+import { Database } from '@/utils/database.js';
 export default {
     data(){
         return{
@@ -56,7 +58,8 @@ export default {
             isFetch:false,
             connectOrigin:'',
             accountName:'',
-            active:true
+            active:true,
+            db:null
         }
     },
     components:{
@@ -73,6 +76,8 @@ export default {
         }
     },
     async mounted(){
+        let db = new Database()
+        this.db = db
          let update = popupGetVal('uploadWeb3')
         if(update && update.info){
             this.src = update.file
@@ -102,13 +107,13 @@ export default {
                 console.log(info,'info 999999')
                 let result = await client.put([web3File,infoFile],option)
                 console.log(result,'result 44444444')
-                // web3File:'address,rpc,nickname,describe,cid,create_time,khazix'
-                await window.filecoinwalletDb.web3File.where({ 
+                
+                await this.db.deleteTable('web3File',{
                     address:info.address,
                     rpc:info.rpc,
-                }).delete()
+                })
                 let create_time =  parseInt(new Date().getTime() / 1000)
-                await window.filecoinwalletDb.web3File.add({
+                await this.db.addTable('web3File',{
                     address:info.address,
                     rpc:info.rpc,
                     nickname:info.nickname,

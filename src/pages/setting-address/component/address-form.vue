@@ -48,6 +48,7 @@ import kyBack from '@/components/back'
 import kyButton from '@/components/button'
 import kyInput from '@/components/input'
 import deleteAdress from './delete-address.vue'
+import { Database } from '@/utils/database.js';
 export default {
     data(){
         return{
@@ -58,6 +59,7 @@ export default {
                 address:''
             },
             editAddressError:'',
+            db:null
         }
     },
     props:{
@@ -102,13 +104,14 @@ export default {
         kyInput,
         deleteAdress
     },
-    mounted(){ },
+    mounted(){ 
+        let db = new Database()
+        this.db = db
+    },
     methods:{
         async confirmDelete(){
             let that = this
-            await window.filecoinwalletDb.addressBook.where({
-                address:this.editAddress
-            }).delete().then(res=>{
+            await this.db.deleteTable('addressBook',{ address:this.editAddress }).then(res=>{
                 that.deleteAddressVisible = false
                 that.$emit("deleteAddressCb")
                 that.$message({
@@ -142,9 +145,8 @@ export default {
             if(voild){
                 // edit address
                 if(this.detail){
-                     window.filecoinwalletDb.addressBook.where("address").equals(this.editAddress).modify({
-                        address:this.form.address,
-                        accountName:this.form.accountName
+                    this.db.modifyTable('addressBook',{
+                        address:this.editAddress
                     }).then(res=>{
                         this.form = Object.assign({}, this.form, { accountName:this.form.accountName, address:this.form.address})
                         this.$message.success(this.$t('settingAddress.editSuccess'))
@@ -158,7 +160,7 @@ export default {
                         this.$message.error(this.$t('settingAddress.addressIsExist')) 
                     }else{
                         let create_time =  parseInt(new Date().getTime() / 1000)
-                        await window.filecoinwalletDb.addressBook.add({
+                        await this.db.addTable('addressBook',{
                             address:this.form.address,
                             accountName:this.form.accountName,
                             create_time,

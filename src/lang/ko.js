@@ -1,3 +1,4 @@
+const create_time =  parseInt(new Date().getTime() / 1000)
 const ko = {
   header:{
     customRpc:'사용자 지정 RPC'
@@ -99,8 +100,8 @@ const ko = {
     deleteTips:'비밀 키가 백업되었는지 확인하세요. 삭제 후, 해당 지갑을 보여주려면 비밀 키로 가져와야 합니다.',
     copyAddress:'주소 복사',
     copySuccess:'复制성공',
-    tranRecord:'거래 기록',
-    noTransactionRecord:'거래 없음',
+    tranRecord:'활동 기록',
+    noTransactionRecord:'활동 기록 없음',
     waiting:'대기',
     noBrowser:'현재 네트워크에 블록체인 브라우저을 추가하지 않았습니다'
   },
@@ -115,6 +116,7 @@ const ko = {
     success:'성공',
     error:'실패',
     pending:'확인 중',
+    height:'높이.',
     noBrowser:'현재 네트워크에 블록체인 브라우저을 추가하지 않았습니다'
   },
   addToken:{
@@ -252,7 +254,153 @@ const ko = {
     title:'FiveToken으로 연결하기',
     cancel:'취소',
     connect:'연결'
-  },
+  },   
+  defaultNetworks:[
+    {
+        name:'Filcoin Mainnet',
+        rpc:'http://192.168.1.161:8081',
+        chainID:'',
+        symbol:'FIL',
+        ids:'filecoin',
+        browser:'https://filscan.io',
+        khazix:'khazix',
+        create_time:create_time,
+        networkType:'proxy',
+        filecoinAddress0:'f',
+        decimals:18,
+        disabled:true,
+        image:'fil.svg',
+        deriveIndex:0
+    },
+    {
+        name:'Ethereum Mainnet',
+        rpc:'https://mainnet.infura.io/v3/96837d28a772466ca6ed88eddb221e09',
+        chainID:'1',
+        symbol:'ETH',
+        browser:'https://etherscan.io',
+        ids:'ethereum',
+        khazix:'khazix',
+        networkType:'ethereum',
+        filecoinAddress0:'',
+        create_time:create_time+1,
+        decimals:18,
+        image:'eth.svg',
+        disabled:true,
+        deriveIndex:0
+    },
+    {
+        name:'Binance Smart Chain',
+        rpc:'https://bsc-dataseed.binance.org',
+        chainID:'56',
+        symbol:'BNB',
+        ids:'binancecoin',
+        browser:'https://bscscan.com',
+        khazix:'khazix',
+        networkType:'ethereum',
+        filecoinAddress0:'',
+        create_time:create_time+2,
+        decimals:18,
+        image:'bnb.svg',
+        disabled:true,
+        deriveIndex:0
+    },
+    {
+        name:'Filecoin Calibration Testnet',
+        rpc:'http://192.168.1.161:9091',
+        chainID:'',
+        symbol:'FIL',
+        ids:'filecoin',
+        browser:'https://calibration.filscan.io',
+        khazix:'khazix',
+        networkType:'proxy',
+        filecoinAddress0:'t',
+        create_time:create_time+3,
+        decimals:18,
+        image:'fil.svg',
+        disabled:true,
+        deriveIndex:0
+    },
+    {
+        name:'Ropsten Test Network',
+        rpc: 'https://ropsten.infura.io/v3/96837d28a772466ca6ed88eddb221e09',
+        chainID: '3',
+        symbol:'ETH',
+        ids:'ethereum',
+        browser: 'https://ropsten.etherscan.io',
+        khazix:'khazix',
+        networkType:'ethereum',
+        filecoinAddress0:'',
+        create_time:create_time+4,
+        decimals:18,
+        image:'eth.svg',
+        disabled:true,
+        deriveIndex:0
+    },
+    {
+      name:'Kovan Test Network',
+      rpc: 'https://kovan.infura.io/v3/96837d28a772466ca6ed88eddb221e09',
+      chainID: '42',
+      symbol:'ETH',
+      ids:'ethereum',
+      browser: 'https://kovan.etherscan.io',
+      khazix:'khazix',
+      networkType:'ethereum',
+      filecoinAddress0:'',
+      create_time:create_time+5,
+      decimals:18,
+      image:'eth.svg',
+      disabled:true,
+      deriveIndex:0
+    },
+    {
+      name:'Rinkeby Test Network',
+      rpc: 'https://rinkeby.infura.io/v3/96837d28a772466ca6ed88eddb221e09',
+      chainID: '4',
+      symbol:'ETH',
+      ids:'ethereum',
+      browser: 'https://rinkeby.etherscan.io',
+      khazix:'khazix',
+      networkType:'ethereum',
+      filecoinAddress0:'',
+      create_time:create_time+6,
+      decimals:18,
+      image:'eth.svg',
+      disabled:true,
+      deriveIndex:0
+    },
+    {
+      name:'Goerli Test Network',
+      rpc: 'https://goerli.infura.io/v3/96837d28a772466ca6ed88eddb221e09',
+      chainID: '5',
+      symbol:'ETH',
+      ids:'ethereum',
+      browser: 'https://goerli.etherscan.io',
+      khazix:'khazix',
+      networkType:'ethereum',
+      filecoinAddress0:'',
+      create_time:create_time+7,
+      decimals:18,
+      image:'eth.svg',
+      disabled:true,
+      deriveIndex:0
+    },
+    {
+      name:'Binance TEST',
+      rpc:'https://data-seed-prebsc-1-s1.binance.org:8545',
+      chainID:'56',
+      symbol:'BNB',
+      ids:'binancecoin',
+      browser:'https://testnet.bscscan.com',
+      khazix:'khazix',
+      networkType:'ethereum',
+      filecoinAddress0:'',
+      create_time:create_time+8,
+      decimals:18,
+      image:'bnb.svg',
+      disabled:true,
+      deriveIndex:0
+    },
+  ]
 }
 
 export default ko

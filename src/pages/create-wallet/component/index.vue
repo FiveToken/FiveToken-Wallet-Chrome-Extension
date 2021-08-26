@@ -78,8 +78,8 @@ export default {
             diff:false,
             form:{
                 accountName:'',
-                password:'',
-                confirmPassword:''
+                password:'Aa123456',
+                confirmPassword:'Aa123456'
             },
             placeholder:'',
             createType:''
@@ -88,7 +88,8 @@ export default {
     computed: {
         ...mapState("app",[
             'rpc',
-            'deriveIndex'
+            'deriveIndex',
+            'accountList'
         ]),
         disabled(){
             let values = Object.values(this.form)
@@ -110,8 +111,7 @@ export default {
     },
     methods:{
         async layoutMounted(){
-            let accountList = await window.filecoinwalletDb.accountList.where({ rpc:this.rpc }).toArray () || [];
-            let len = this.deriveIndex + 1
+            let len = this.accountList.length + 1
             this.$set(this.form,'accountName','Account' + len)
         },
         nameChange(val){

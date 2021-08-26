@@ -71,16 +71,17 @@ import { getQueryString,formatNumber,minimumPrecision } from '@/utils'
 import transactionItem from './transaction-item.vue'
 import ABI from '@/utils/abi'
 import { ethers } from 'ethers'
-import { MyGlobalApi } from '@/utils/api'
+import { GlobalApi } from '@/utils/api'
 import { BigNumber } from "bignumber.js";
-
 import kyCanvas from "@/components/canvas";
+import { Database,reverseOrder } from '@/utils/database.js';
 export default {
     data(){
         return{
             type:'1',
             activityList:[],
-            tokenList:[]
+            tokenList:[],
+            db:null
         }
     },
     props:{
@@ -176,6 +177,8 @@ export default {
         }
     },
     async mounted(){
+        const db = new Database();
+        this.db = db
         let fromPage = getQueryString('fromPage')
         if(fromPage === 'sendFil' || fromPage === 'messageDetail'){
             this.type = '2'
@@ -189,9 +192,8 @@ export default {
     },
     methods:{
         async updateActivityList(){
-            let mesList = await window.filecoinwalletDb.messageList.where({ 
-                rpc:this.rpc
-            }).toArray ()
+            let mesList = await this.db.getTable('messageList',{ rpc:this.rpc })
+
             let myMesList = mesList.filter(n=>{
                 return n.from === this.address || n.to === this.address
             })
@@ -203,11 +205,16 @@ export default {
                     if(itemRes){
                         // get detail, update db messageList (type,allGasFee,block_time)
                         if(itemRes){
-                            await window.filecoinwalletDb.messageList.where("signed_cid").equals(n.signed_cid).modify({
-                                type:itemRes.type,
-                                allGasFee:itemRes.all_gas_fee,
-                                block_time:itemRes.block_time
-                            })
+                            await this.db.modifyTable(
+                                'messageList',
+                                { signed_cid: n.signed_cid },
+                                {
+                                    type:itemRes.type,
+                                    allGasFee:itemRes.all_gas_fee,
+                                    block_time:itemRes.block_time,
+                                    height:itemRes.height
+                                }
+                            )
                         }
                     }
                 }
@@ -216,9 +223,14 @@ export default {
             this.deleteSameNonce()
         },
         async getActivityList(){
-            let mesList = await window.filecoinwalletDb.messageList.where({ 
-                rpc:this.rpc
-            }).reverse().sortBy('create_time')|| []
+            
+            let mesList = await this.db.getTable(
+                'messageList',
+                { rpc:this.rpc },
+                reverseOrder,
+                'create_time',
+            )
+
             let myMesList = mesList.filter(n=>{
                 return n.from === this.address || n.to === this.address
             })
@@ -226,10 +238,14 @@ export default {
         },
         // get token list
         async getTokenList(){
-            let list = await window.filecoinwalletDb.tokenList.where({ 
-                rpc:this.rpc,
-                address:this.address
-            }).toArray () || [];
+            let list = await this.db.getTable(
+                'tokenList',
+                { 
+                    rpc:this.rpc,
+                    address:this.address
+                }
+            )
+            
             let tokenList = []
             let provider = ethers.getDefaultProvider(this.rpc);
             list.forEach(async (n)=>{
@@ -255,6 +271,7 @@ export default {
         },
         // get detail by hash
         async getDetail(signed_cid,itemObj){
+            let MyGlobalApi = new GlobalApi()
             MyGlobalApi.setRpc(this.rpc)
             MyGlobalApi.setNetworkType(this.networkType)
             let detail = await MyGlobalApi.getTransaction(signed_cid)
@@ -264,13 +281,14 @@ export default {
             this.$emit('tokenShow',{symbol,decimals,balance,isMain})
         },
         async deleteSameNonce(){
-            let mesList = await window.filecoinwalletDb.messageList.where({ 
+
+            let mesList = await this.db.getTable('messageList', { 
                 rpc:this.rpc,
                 address:this.address
             })
             let obj = {};
             let nonce = 0
-            for(var i =0; i<mesList.length; i++){
+            for(var i =0; i< mesList.length; i++){
                 if(!obj.nonce){
                     obj.nonce = mesList[i].nonce
                 }else{
@@ -278,13 +296,12 @@ export default {
                 }
             }
             if(nonce){
-                console(nonce,'delete nonce')
-                await window.filecoinwalletDb.messageList.where({ 
+                await this.db.deleteTable('messageList',{
                     rpc:this.rpc,
                     address:this.address,
                     nonce,
                     type:'pending'
-                }).delete()
+                })
             }
         },
         selectType(type){
@@ -303,7 +320,8 @@ export default {
                 value,
                 allGasFee,
                 token,
-                decimals 
+                decimals,
+                height
             } = item
             let listObj = { 
                 from,
@@ -317,7 +335,8 @@ export default {
                 value,
                 allGasFee,
                 token,
-                decimals 
+                decimals,
+                height 
             }
             let listObjStr = JSON.stringify(listObj)
             window.location.href = `./message-detail.html?signed_cid=${signed_cid}&listObjStr=${listObjStr}`

@@ -1,18 +1,19 @@
 import request from '@/utils/request'
 
+const base_api = '/api/test'
+
 const api = {
     // BaseFeeAndGas:'/v1/filscan/BaseFeeAndGas',
     // BalanceNonceByAddress:'/v1/filscan/BalanceNonceByAddress',
     // MessageDetails:'/v1/filscan/MessageDetails',
     // MessagePush:'/v1/chainmessage/MessagePush',
     // pricePoints:'http://8.209.219.115:8090/third/priceByType'
-
-    BalanceNonceByAddress:'/api/actor/balance',
-    MessageDetails:'/api/message',
-    MessagePush:'/api/message',
-    Message:'/api/actor/messages',
-    MessageBuild:'/api/message/build',
-    BaseFeeAndGas:'/api/recommend/fee',
+    BalanceNonceByAddress: base_api + '/actor/balance',
+    MessageDetails: base_api + '/message',
+    MessagePush: base_api + '/message',
+    Message: base_api + '/actor/messages',
+    MessageBuild: base_api + '/message/build',
+    BaseFeeAndGas: base_api + '/recommend/fee',
     pricePoints:'http://8.209.219.115:8090/third/priceByType'
 }
 

@@ -29,6 +29,7 @@ import addressFrom from './address-form'
 import layout from '@/components/layout'
 import { getQueryString } from '@/utils'
 import { mapState } from 'vuex'
+import { Database } from '@/utils/database.js';
 export default {
     data(){
         return{
@@ -37,7 +38,8 @@ export default {
             to:'',
             editAddress:'',
             addressRecordLast:[],
-            addressBook:[]
+            addressBook:[],
+            db:null
         }
     },
     components:{
@@ -59,11 +61,11 @@ export default {
     methods:{
         async layoutMounted(){
             let rpc = this.rpc
-            let addressRecordLast = await window.filecoinwalletDb.addressRecordLast.where({ rpc: rpc}).toArray () || [];
-            this.addressRecordLast = addressRecordLast.filter(n=>{
-                return n.address === this.address
-            })
-            let addressBook = await window.filecoinwalletDb.addressBook.where({ rpc:rpc}).toArray () || [];
+            let db = new Database()
+            this.db = db
+            let addressRecordLast = await db.getTable('addressRecordLast',{ rpc: rpc,address: this.address })
+            this.addressRecordLast = addressRecordLast
+            let addressBook = await db.getTable("addressBook",{ rpc:rpc})
             this.addressBook = addressBook
         },
         addressDetail(detailObj){
@@ -77,13 +79,13 @@ export default {
         },
         async addEditAddressCb(){
             let rpc = this.rpc
-            let addressBook = await window.filecoinwalletDb.addressBook.where({ rpc:rpc}).toArray () || [];
+            let addressBook = await this.db.getTable('addressBook',{ rpc:rpc })
             this.addressBook = addressBook
             this.pageType = 'list'
         },
         async deleteAddressCb(){
             let rpc = this.rpc
-            let addressBook = await window.filecoinwalletDb.addressBook.where({ rpc:rpc}).toArray () || [];
+            let addressBook = await this.db.getTable('addressBook',{ rpc:rpc })
             this.addressBook = addressBook
             this.pageType = 'list'
         }

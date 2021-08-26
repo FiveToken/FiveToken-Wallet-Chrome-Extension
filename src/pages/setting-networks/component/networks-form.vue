@@ -52,10 +52,11 @@ import kyBack from '@/components/back'
 import kyInput from '@/components/input'
 import kyButton from '@/components/button'
 import deleteNetwork from './delete-network.vue'
-import { MyGlobalApi } from '@/utils/api'
+import { GlobalApi } from '@/utils/api'
 import { getF1ByMne,getGlobalKek } from '@/utils'
 import { AESDecrypt } from '@/utils/key'
 import { mapState ,mapMutations} from 'vuex'
+import { Database,reverseOrder } from '@/utils/database.js';
 export default {
     data(){
         return{
@@ -71,7 +72,8 @@ export default {
             loading:require('@/assets/image/loading.png'),
             isFetch:false,
             kek:'',
-            mnemonicWords:''
+            mnemonicWords:'',
+            db:null
         }
     },
     props:{
@@ -124,7 +126,9 @@ export default {
     async mounted(){
         let kek = getGlobalKek()
         this.kek = kek
-        let walletKey = await window.filecoinwalletDb.walletKey.where({khazix:'khazix'}).toArray()
+        let db = new Database()
+        this.db = db
+        let walletKey = await db.getTable('walletKey',{khazix:'khazix'})
         if(walletKey.length){
             let nme = walletKey[0].mnemonicWords
             let mnemonicWords = AESDecrypt(nme,kek)
@@ -153,10 +157,8 @@ export default {
         ]),
         async confirmDelete(){
             let that = this
-            await window.filecoinwalletDb.networks.where({
-                rpc:this.deletaRpc
-            }).delete().then(res=>{
-                window.filecoinwalletDb.accountList.where({ rpc:this.deletaRpc}).delete()
+            await this.db.deleteTable('networks',{ rpc:this.deletaRpc }).then(res =>{
+                this.db.deleteTable('accountList',{ rpc:this.deletaRpc})
                 that.deleteNetworkVisible = false
                 that.$emit("deleteNetworkCb")
                 that.$message({
@@ -169,11 +171,12 @@ export default {
                 })
             })
             if(this.rpc === this.deletaRpc){
-                await window.filecoinwalletDb.activenNetworks.where({ khazix:'khazix'}).delete()
-                let networks = await window.filecoinwalletDb.networks.where({ rpc:rpc }).toArray ()|| [];
+                await this.db.deleteTable('activenNetworks',{ khazix:'khazix' })
+                
+                let networks = await this.db.getTable('networks',{ rpc:rpc })
                 let obj = networks.length && networks[0]
                 let {name,rpc,chainID,symbol,browser,ids,networkType,filecoinAddress0,decimals,image,disabled,deriveIndex } = obj
-                window.filecoinwalletDb.activenNetworks.add({
+                await this.db.addTable('activenNetworks',{
                     name,
                     rpc,
                     chainID,
@@ -189,7 +192,7 @@ export default {
                     disabled
                 }).then(async (res)=>{
                     this.$emit('networkChange',obj)
-                    let accountList = await window.filecoinwalletDb.accountList.where({ rpc:rpc }).toArray ()|| [];
+                    let accountList = await this.db.getTable('accountList',{ rpc:rpc })
                     this.SET_RPC(rpc)
                     this.SET_RPCNAME(name)
                     this.SET_BROWSER(browser)
@@ -223,7 +226,7 @@ export default {
         },
         async save(){
             if(!this.detail){
-               let networks = await window.filecoinwalletDb.networks.where({ khazix:'khazix'}).toArray();
+               let networks = await this.db.getTable('networks',{ khazix:'khazix'})
                 let isExist = networks.find(n=>{
                     return n.rpc === this.form.rpc
                 })
@@ -234,28 +237,24 @@ export default {
             }
             if(this.active){
                 this.isFetch = true
+                let MyGlobalApi = new GlobalApi()
                 MyGlobalApi.setRpc(this.form.rpc)
                 MyGlobalApi.setNetworkType(this.networkType)
                 let create_time =  parseInt(new Date().getTime() / 1000)
-                let filRec = await MyGlobalApi.getFIleCoinChainHead(this.form.rpc)
                 let ethRec = await MyGlobalApi.getBlockNumber(this.form.rpc)
-                if(filRec && filRec.networkType === 'filecoin'){
-                    this.isFetch = false
-                    this.$message.error(this.$t('settingNetworks.addError'))
-                    return
+                // let filRec = await MyGlobalApi.getFIleCoinChainHead(this.form.rpc)
+                // if(filRec && filRec.networkType === 'filecoin'){
+                    // this.isFetch = false
                     // let { networkType,filecoinAddress0 } = filRec
                     // let _index = 1
                     // if(this.detail){
                     //     _index = this.detail.deriveIndex
-                    //     await window.filecoinwalletDb.networks.where({
-                    //         rpc:this.deletaRpc
-                    //     }).delete()
-                        
+                    //        await this.db.deleteTable('networks',{rpc:this.deletaRpc})
                     // }else{
                     //     await this.addUser(networkType,filecoinAddress0,create_time,0)
                     //     _index = 1
                     // }
-                    // await window.filecoinwalletDb.networks.add({
+                    // await this.db.addTable('networks',{
                     //     name:this.form.name,
                     //     rpc:this.form.rpc,
                     //     chainID:this.form.chainID,
@@ -271,7 +270,8 @@ export default {
                     //     deriveIndex:_index,
                     //     khazix:'khazix'
                     // })
-                }else if(ethRec && ethRec.networkType === 'ethereum'){
+                // } 
+                if(ethRec && ethRec.networkType === 'ethereum'){
                     let ids = '' 
                     if(this.form.symbol.toUpperCase() === 'ETH'){
                         ids = 'ethereum'
@@ -283,9 +283,7 @@ export default {
                     let _index = 1
                     if(this.detail){
                         _index = this.detail.deriveIndex
-                        await window.filecoinwalletDb.networks.where({
-                            rpc:this.deletaRpc
-                        }).delete()
+                        await this.db.deleteTable('networks',{  rpc:this.deletaRpc })
                     }else{
                         await this.addUser(networkType,filecoinAddress0,create_time,0)
                         _index = 1
@@ -299,9 +297,7 @@ export default {
                             await this.addUser(networkType,filecoinAddress0,create_time,0)
                             dIndex = 1
                         }
-                        await window.filecoinwalletDb.activenNetworks.where({ 
-                            rpc: this.deletaRpc
-                        }).modify({
+                        await this.db.modifyTable('activenNetworks',{
                             name:this.form.name,
                             rpc:this.form.rpc,
                             chainID:this.form.chainID,
@@ -317,7 +313,8 @@ export default {
                             khazix:'khazix'
                         })
                     }
-                    await window.filecoinwalletDb.networks.add({
+                    
+                    await this.db.addTable('networks',{
                         name:this.form.name,
                         rpc:this.form.rpc,
                         chainID:this.form.chainID,
@@ -343,18 +340,15 @@ export default {
             }
         },
         async addUser(networkType,filecoinAddress0,create_time,index){
-            let rpcAccount = await window.filecoinwalletDb.accountList.where({rpc:this.form.rpc}).toArray() || []
             let accountName = `Account` + 1
             let f1 = await getF1ByMne(this.mnemonicWords,this.kek,networkType,filecoinAddress0,index)
             let { address,privateKey,digest } = f1
-            let res = await MyGlobalApi.getBalance(address)
-            let { balance,nonce } = res
-            await window.filecoinwalletDb.accountList.add({
+            await this.db.addTable('accountList',{
                 address,
                 accountName,
                 createType:'mnemonic',
                 privateKey,
-                fil:balance,
+                fil:0,
                 create_time,
                 khazix:'khazix',
                 digest,

@@ -14,6 +14,7 @@
 import welcome from '@/pages/welcome/component/index.vue'
 import wallet from '@/pages/wallet/component/index.vue'
 import lock from '@/pages/lock-user/component/index.vue'
+import { Database } from '@/utils/database.js';
 export default {
     data(){
       return{ 
@@ -27,13 +28,14 @@ export default {
         lock
     },
     async beforeCreate(){
-      let activenNetworks = await window.filecoinwalletDb.activenNetworks.where({ khazix:'khazix'}).toArray ();
+      const db = new Database();
+      let activenNetworks = await db.getTable('activenNetworks',{ khazix:'khazix' })
       let rpc = activenNetworks.length && activenNetworks[0].rpc
-      let lockUser = await window.filecoinwalletDb.lockUser.where({ khazix:'khazix'}).toArray ();
+      let lockUser = await db.getTable('lockUser',{ khazix:'khazix' })
       if(lockUser.length){
         this.lock = true
       }
-      let accountList = await window.filecoinwalletDb.accountList.where({ rpc:rpc}).toArray ();
+      let accountList = await db.getTable('accountList',{ rpc:rpc })
       this.accountList = accountList || []
     },
 }

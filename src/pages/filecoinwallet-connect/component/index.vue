@@ -32,6 +32,7 @@ import welcome from '@/pages/welcome/component/index.vue'
 import lockUser from '@/pages/lock-user/component/index.vue'
 import layout from '@/components/layout'
 import { mapState } from 'vuex'
+import { Database } from '@/utils/database.js';
 export default {
     data(){
       return{
@@ -40,7 +41,7 @@ export default {
         lockUser:[],
         connectAccount:null,
         logo:require('@/assets/image/logo.png'),
-        vv:1
+        db:null
       }
     },
     computed:{
@@ -65,20 +66,23 @@ export default {
       },
     },
     async created(){
-        this.lockUser = await window.filecoinwalletDb.lockUser.where({ khazix:'khazix'}).toArray();
-        let accountList = await window.filecoinwalletDb.accountList.where({ khazix:'khazix'}).toArray();
-        this.accountList = accountList
-        if(accountList.length){
-          let frist = accountList[0]
-          this.address = frist.address
-          this.connectAccount = {
-            address:frist.address,
-            fil:frist.fil,
-            accountName:frist.accountName
-          }
+      let db = new Database()
+      this.db = db
+      let lockUser = await db.getTable('lockUser',{ khazix:'khazix' })
+      let accountList = await db.getTable('accountList',{ rpc:this.rpc })
+      this.lockUser = lockUser
+      this.accountList = accountList
+      if(accountList.length){
+        let frist = accountList[0]
+        this.address = frist.address
+        this.connectAccount = {
+          address:frist.address,
+          fil:frist.fil,
+          accountName:frist.accountName
         }
-        let origin = popupGetVal('origin')
-        this.origin = origin
+      }
+      let origin = popupGetVal('origin')
+      this.origin = origin
     },
     methods:{
       layoutMounted(){

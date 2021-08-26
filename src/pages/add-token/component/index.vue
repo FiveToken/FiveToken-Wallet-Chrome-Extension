@@ -65,6 +65,7 @@ import kyCanvas from "@/components/canvas";
 import { ethers } from 'ethers'
 import ABI from '@/utils/abi'
 import { mapState } from 'vuex';
+import { Database } from '@/utils/database.js';
 export default {
   data() {
     return {
@@ -78,7 +79,8 @@ export default {
       name:'',
       tokenList:[],
       isExists:false,
-      logoArr:[]
+      logoArr:[],
+      db:null
     };
   },
   computed:{
@@ -96,10 +98,15 @@ export default {
     kyButton,
     kyCanvas
   },
-   mounted() {},
+  mounted() {},
   methods: {
     async layoutMounted() {
-      let tokenList = await window.filecoinwalletDb.tokenList.where({ rpc:this.rpc,address:this.address }).toArray () || [];
+      let db = new Database()
+      this.db = db
+      let tokenList = await db.getTable('tokenList',{
+        rpc:this.rpc,
+        address:this.address
+      })
       this.tokenList = tokenList
     },
     contractInput(val){
@@ -134,16 +141,16 @@ export default {
     async addContract() {
         // rpc,name,decimals,symbol,khazix
         if(this.contractEffective && !this.isExists){
-            await window.filecoinwalletDb.tokenList.add({
-                chainName:this.name,
-                decimals:this.decimals,
-                rpc:this.rpc,
-                symbol:this.symbol,
-                contract:this.contract,
-                address:this.address,
-                khazix:'khazix',
-            })
-            window.location.href = './wallet.html'
+          await this.db.addTable('tokenList',{
+            chainName:this.name,
+            decimals:this.decimals,
+            rpc:this.rpc,
+            symbol:this.symbol,
+            contract:this.contract,
+            address:this.address,
+            khazix:'khazix',
+          })
+          window.location.href = './wallet.html'
         }
     },
   },

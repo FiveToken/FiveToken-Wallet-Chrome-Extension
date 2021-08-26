@@ -30,11 +30,12 @@ import stepOne from './step-1'
 import stepTwo from './step-2'
 import layout from '@/components/layout'
 import { getDecodePrivateKey,formatNumber,getGlobalKek } from '@/utils'
-import { MyGlobalApi } from '@/utils/api'
+import { GlobalApi } from '@/utils/api'
 import { mapMutations, mapState } from 'vuex'
 import ABI from '@/utils/abi'
 import { ethers } from 'ethers'
 import { BigNumber } from "bignumber.js";
+import { Database } from '@/utils/database.js';
 export default {
     data(){
         return{
@@ -47,6 +48,8 @@ export default {
             baseFeeCap:0,
             baseLimit:0,
             pkk:'',
+            contractSigner:null,
+            db:null,
             formData:{
                 balance:0,
                 to:'',
@@ -93,12 +96,15 @@ export default {
         async layoutMounted(){
             let kek = getGlobalKek()
             this.pkk = getDecodePrivateKey(this.privateKey,kek,this.networkType)
-            let recordLast = await window.filecoinwalletDb.addressRecordLast.where({ rpc:this.rpc }).toArray () || [];
-            let myRecordLast = recordLast.filter(n=>{
-                return n.address === this.address
+            let db = new Database()
+            this.db = db
+            let myRecordLast = await db.getTable('addressRecordLast',{
+                rpc:this.rpc,
+                address:this.address
             })
             this.SET_ADDRESSRECORDLAST(myRecordLast)
-            let addressBook = await window.filecoinwalletDb.addressBook.where({ rpc:this.rpc }).toArray () || [];
+            let addressBook =  await db.getTable('addressBook',{rpc:this.rpc})
+            
             this.SET_ADDRESSBOOK(addressBook)
             this.SET_ACCOUNTLIST(this.accountList)
             let chainName = this.activenNetworks.length && this.activenNetworks[0].name
@@ -110,7 +116,10 @@ export default {
             this.getTokenList()
         },
         async getTokenList(){
-            let list = await window.filecoinwalletDb.tokenList.where({ rpc:this.rpc,address:this.address }).toArray () || [];
+            let list = await this.db.getTable('tokenList',{
+                rpc:this.rpc,
+                address:this.address 
+            })
             let chainImg = this.activenNetworks.length && this.activenNetworks[0].image
             let customNetwork = this.activenNetworks.length && !this.activenNetworks[0].disabled
             let tokenList = [
@@ -187,7 +196,7 @@ export default {
         },
         async getNextNonce(){
             let time = parseInt(new Date().getTime() / 1000)
-            let messageList = await window.filecoinwalletDb.messageList.where({ rpc:this.rpc }).toArray () || [];
+            let messageList = await this.db.getTable('messageList',{ rpc:this.rpc })
             let myMsgList =  messageList.filter(n=>{
                 return n.from === this.address
             })
@@ -204,6 +213,7 @@ export default {
             this.maxNonce = maxNonce
         },
         async getBalanceNonceByAddress(){
+            let MyGlobalApi = new GlobalApi()
             MyGlobalApi.setRpc(this.rpc)
             MyGlobalApi.setNetworkType(this.networkType)
             let res = await MyGlobalApi.getBalance(this.address)
@@ -216,6 +226,7 @@ export default {
             this.getNextNonce()
         },
         async getBaseFeeAndGas(from,to,nonce){
+            let MyGlobalApi = new GlobalApi()
             MyGlobalApi.setRpc(this.rpc)
             MyGlobalApi.setNetworkType(this.networkType)
             let res = await MyGlobalApi.getGasFee(from,to,nonce)
@@ -232,6 +243,7 @@ export default {
         },
         async getFilPricePoints(){
             if(this.ids){
+                let MyGlobalApi = new GlobalApi()
                 MyGlobalApi.setRpc(this.rpc)
                 MyGlobalApi.setNetworkType(this.networkType)
                 let res = await MyGlobalApi.getPrice(this.ids)
@@ -270,6 +282,10 @@ export default {
                     if(this.formData.isMain !== 1){
                         let double = this.formData.gasLimit * 2.5
                         this.$set(this.formData,'gasLimit',double)
+                        let provider = ethers.getDefaultProvider(this.rpc);
+                        let wallet = new ethers.Wallet(this.pkk, provider);
+                        let contractSigner = new ethers.Contract(this.formData.contract, ABI, wallet);
+                        this.contractSigner = contractSigner
                     }
                 }
             }else{
@@ -278,59 +294,59 @@ export default {
             
         },
         async sendToken(){
+            this.isFetch = true
             try{
-                let provider = ethers.getDefaultProvider(this.rpc);
-                console.log(provider,'provider')
-                let wallet = new ethers.Wallet(this.pkk, provider);
-                console.log(wallet,'wallet')
-                let contractSigner = new ethers.Contract(this.formData.contract, ABI, wallet);
-                console.log(contractSigner,'contractSigner')
+                // let provider = ethers.getDefaultProvider(this.rpc);
+                // let wallet = new ethers.Wallet(this.pkk, provider);
+                // let contractSigner = new ethers.Contract(this.formData.contract, ABI, wallet);
                 let numberOfTokens = ethers.utils.parseUnits(this.formData.fil, this.formData.decimals);
-                console.log(numberOfTokens,'numberOfTokens')
                 let allGasFee = this.formData.gasFeeCap * this.formData.gasLimit * Math.pow(10, 9)
-                let res = await contractSigner.transfer(this.formData.to,numberOfTokens,{
+                let res = await this.contractSigner.transfer(this.formData.to,numberOfTokens,{
                     gasPrice: this.formData.gasFeeCap * Math.pow(10, 9),
                     gasLimit: Math.ceil(this.formData.gasLimit),
                 })
                 if(res){
                     let create_time =  parseInt(new Date().getTime() / 1000)
-                        await window.filecoinwalletDb.messageList.add({
-                            signed_cid:res.hash,
-                            from:this.address,
-                            to:this.formData.to,
-                            create_time,
-                            block_time:0,
-                            nonce:res.nonce,
-                            decimals:this.formData.decimals,
-                            token:this.formData.symbol,
-                            allGasFee,
-                            type:'pending',
-                            khazix:'khazix',
-                            value:this.formData.fil*Math.pow(10, Number(this.formData.decimals)),
-                            rpc:this.rpc
-                        })
-                        await window.filecoinwalletDb.addressRecordLast.where({address:this.formData.to}).delete()
-                        await window.filecoinwalletDb.addressRecordLast.add({
-                            address:this.formData.to,
-                            create_time,
-                            rpc:this.rpc,
-                            khazix:'khazix',
-                        })
-                        window.location.href = './wallet.html?fromPage=sendFil'
+                    let _value = this.formData.fil * Math.pow(10, Number(this.formData.decimals))
+                    await this.db.addTable('messageList',{
+                        signed_cid:res.hash,
+                        from:this.address,
+                        to:this.formData.to,
+                        create_time,
+                        block_time:0,
+                        nonce:res.nonce,
+                        decimals:this.formData.decimals,
+                        token:this.formData.symbol,
+                        allGasFee,
+                        type:'pending',
+                        khazix:'khazix',
+                        value:_value,
+                        rpc:this.rpc
+                    })
                 }
             }catch(error){
-                this.isFetch = false
-                console.log(error,'sendtoken error')
                 if(error.error && error.error.message){
-                    this.$message({
-                        type:'error',
-                        message:error.error && error.error.message
-                    })
+                    if(error.error.message.indexOf('insufficient funds') > -1){
+                        this.$message({
+                            type:'error',
+                            message:'insufficient funds for gas * price + value',
+                            onClose:()=>{
+                                this.isFetch = false
+                            }
+                        })
+                    }else{
+                        this.$message({
+                            type:'error',
+                            message:error.error && error.error.message,
+                            onClose:()=>{
+                                this.isFetch = false
+                            }
+                        })
+                    }
                 }
             }
         },
         async sendFil(){
-            this.isFetch = true
             let balance = Number(this.formData.balance)
             let gas = (this.formData.gasFeeCap * this.formData.gasLimit) / Math.pow(10, 9)
             let fil = Number(this.formData.fil)
@@ -338,8 +354,9 @@ export default {
                 this.$message.error(this.$t('sendFil.insufficientBalance'))
                 return
             }
-
+            let create_time =  parseInt(new Date().getTime() / 1000)
             if(this.formData.isMain === 1){
+                this.isFetch = true
                 try{
                     let address = this.address
                     let tx = {
@@ -352,13 +369,15 @@ export default {
                         GasFeeCap: this.formData.gasFeeCap * Math.pow(10, 9),
                         GasLimit: Math.ceil(this.formData.gasLimit),
                     }
+
+                    let MyGlobalApi = new GlobalApi()
                     MyGlobalApi.setRpc(this.rpc)
                     MyGlobalApi.setNetworkType(this.networkType)
                     let result = await MyGlobalApi.sendTransaction(tx)
                     let allGasFee = this.formData.gasFeeCap * this.formData.gasLimit * Math.pow(10, 9)
                     if(result && result.signed_cid){
-                        let create_time =  parseInt(new Date().getTime() / 1000)
-                        await window.filecoinwalletDb.messageList.add({
+                        let _value = this.formData.fil*Math.pow(10, Number(this.formData.decimals))
+                        await this.db.addTable('messageList',{
                             signed_cid:result.signed_cid,
                             from:address,
                             to:this.formData.to,
@@ -370,17 +389,9 @@ export default {
                             token:this.formData.symbol,
                             type:'pending',
                             khazix:'khazix',
-                            value:this.formData.fil*Math.pow(10, Number(this.formData.decimals)),
+                            value:_value,
                             rpc:this.rpc
                         })
-                        await window.filecoinwalletDb.addressRecordLast.where({address:this.formData.to}).delete()
-                        await window.filecoinwalletDb.addressRecordLast.add({
-                            address:this.formData.to,
-                            create_time,
-                            rpc:this.rpc,
-                            khazix:'khazix',
-                        })
-                       window.location.href = './wallet.html?fromPage=sendFil'
                     }
                 }catch(err){
                     this.isFetch = false
@@ -389,7 +400,19 @@ export default {
             }else{
                 this.sendToken()
             }
+
+            await this.db.deleteTable('addressRecordLast',{
+                address:this.formData.to,
+                rpc:this.rpc
+            })
+            await this.db.addTable('addressRecordLast',{
+                address:this.formData.to,
+                create_time,
+                rpc:this.rpc,
+                khazix:'khazix',
+            })
             this.isFetch = false
+            window.location.href = './wallet.html?fromPage=sendFil'
         },
     }
 }

@@ -29,6 +29,7 @@
 import layout from '@/components/layout'
 import kyButton from '@/components/button'
 import { Web3Storage } from 'web3.storage/dist/bundle.esm.min.js'
+import { Database } from '@/utils/database.js';
 export default {
     data(){
         return{
@@ -40,7 +41,8 @@ export default {
             isFetch:false,
             connectOrigin:'',
             accountName:'',
-            active:true
+            active:true,
+            db:null
         }
     },
     components:{
@@ -63,6 +65,8 @@ export default {
             this.address = get.address
             this.accountName = get.accountName
         }
+        let db = new Database()
+        this.db = db
         console.log(get,'get update ,999')
     },
     methods:{
@@ -76,8 +80,8 @@ export default {
             console.log(12312)
             let res = popupGetVal('getWeb3')
             try{
-                let {address,rpc} = res
-                let web3FileDb = await window.filecoinwalletDb.web3File.where({ rpc:rpc,address:address}).toArray () || [];
+                let { address,rpc } = res
+                let web3FileDb = await this.db.getTable("web3File",{rpc:rpc,address:address})
                 console.log(address,rpc,web3FileDb,'web3FileDb')
                 if(web3FileDb.length){
                     this.isFetch = true

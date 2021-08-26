@@ -28,6 +28,12 @@
               </div>
             </div>
           </div>
+          <div class="info-item" v-if="detail.height">
+            <div class="label">{{ $t("messageDetail.height") }}:</div>
+            <div class="value">
+              <div class="text">{{ detail.height }}</div>
+            </div>
+          </div>
           <div class="info-item">
             <div class="label">{{ $t("messageDetail.from") }}:</div>
             <div class="value">

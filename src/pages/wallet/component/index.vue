@@ -112,10 +112,11 @@ import kyTop from './top.vue'
 import kyList from './transaction-list.vue'
 import kyToken from './token.vue'
 import kyNetwork from '@/components/header/network.vue'
-import { MyGlobalApi } from '@/utils/api'
+import { GlobalApi } from '@/utils/api'
 import QRCode from 'qrcode'
 import { mapGetters, mapMutations, mapState } from 'vuex'
 import { formatDate } from '@/utils'
+import { Database,reverseOrder } from '@/utils/database.js';
 export default {
     data(){
         return{
@@ -137,6 +138,7 @@ export default {
             tokenBalance:0,
             tokenIsMain:0,
             networkVisible:false,
+            db:null
         }
     },
     computed:{
@@ -161,6 +163,10 @@ export default {
         kyList,
         kyToken,
         kyNetwork
+    },
+    mounted(){
+        const db = new Database();
+        this.db = db
     },
     methods:{
         ...mapMutations('app',[
@@ -198,42 +204,50 @@ export default {
             let rpc = this.rpc
             let addressName = this.addressName
             this.SET_ACCOUNTNAME(addressName)
-            window.filecoinwalletDb.accountList.where({
-                address:address,
-                rpc:rpc
-            }).modify({
-                accountName:addressName
-            })
-            window.filecoinwalletDb.activeAccount.where({
-                address:address,
-                rpc:rpc
-            }).modify({
-                accountName:addressName
-            })
+            this.db.modifyTable(
+                'accountList',
+                {
+                    address:address,
+                    rpc:rpc
+                },
+                {
+                    accountName:addressName
+                }
+            )
+            this.db.this.db.modifyTable(
+                'activeAccount',
+                {
+                    address:address,
+                    rpc:rpc
+                },
+                {
+                    accountName:addressName
+                }
+            )
             this.editNameVisable = false
         },
         closeEdit(){
             this.editNameVisable = false
         },
         async confirmDelete(){
-            await window.filecoinwalletDb.activeAccount.where({khazix:'khazix'}).delete()
-            await window.filecoinwalletDb.accountList.where({
+            await this.db.deleteTable('activeAccount',{ khazix:'khazix' })
+            await this.db.deleteTable('accountList',{  
                 address:this.address,
-                rpc:this.rpc
-            }).delete()
-            let accountList = await window.filecoinwalletDb.accountList.where({ rpc:this.rpc }).toArray () || [];
+                rpc:this.rpc 
+            })
+
+            let accountList = await this.db.getTable('accountList',{ rpc:this.rpc });
             if(accountList.length){
-                let first = accountList.filter((n,index)=>{
+                let first = accountList.find((n,index)=>{
                     return index === 0
                 })
-                let{privateKey,address,digest,accountName} = first
+                let{ privateKey,address,digest,accountName } = first
                 this.SET_PRIVATEKEY(privateKey)
                 this.SET_ADDRESS(address)
                 this.SET_DIGEST(digest)
                 this.SET_ACCOUNTNAME(accountName)
-                await window.filecoinwalletDb.activeAccount.bulkPut(first).then(res=>{
-                    window.location.href = './wallet.html'
-                })
+                await this.db.addTable('activeAccount',first)
+                window.location.href = './wallet.html'
             }else{
                 window.location.href = './welcome.html'
             }
@@ -243,6 +257,7 @@ export default {
         },
         async getPrice(){
             if(this.ids){
+                let MyGlobalApi = new GlobalApi()
                 MyGlobalApi.setRpc(this.rpc)
                 MyGlobalApi.setNetworkType(this.networkType)
                 let res = await MyGlobalApi.getPrice(this.ids)
@@ -260,28 +275,32 @@ export default {
         async getBalanceNonce(){
             let address = this.address
             let rpc = this.rpc
+            let MyGlobalApi = new GlobalApi()
             MyGlobalApi.setRpc(rpc)
             MyGlobalApi.setNetworkType(this.networkType)
             let res = await MyGlobalApi.getBalance(address)
             let { balance,nonce } = res
             this.balance = balance
-            window.filecoinwalletDb.accountList.where({
-                address:address,
-                rpc:rpc
-            }).modify({
-                fil:balance,
-            }).then(res=>{
-                console.log(balance,'balance update1')
-            })
-            
-            await window.filecoinwalletDb.activeAccount.where({
-                address:address,
-                rpc:rpc
-            }).modify({
-                fil:balance,
-            }).then(res=>{
-                console.log(balance,'balance update2')
-            })
+            this.db.modifyTable(
+                'accountList',
+                {
+                    address:address,
+                    rpc:rpc
+                },
+                {
+                    fil:balance,
+                }
+            )
+            this.db.modifyTable(
+                'activeAccount',
+                {
+                    address:address,
+                    rpc:rpc
+                },
+                {
+                    fil:balance,
+                }
+            )
         },
         openReceive(){
             this.receiveVisible = true
@@ -302,9 +321,13 @@ export default {
             this.tokenDecimals = Number(decimals)
             this.tokenBalance = balance
             this.tokenIsMain = isMain
-            let mesList = await window.filecoinwalletDb.messageList.where({ 
-                rpc:this.rpc
-            }).reverse().sortBy('create_time')|| []
+            
+            let mesList = await this.db.getTable(
+                'messageList',
+                { rpc:this.rpc },
+                reverseOrder,
+                'create_time',
+            )
             let tokenList = mesList.filter(n=>{
                 return (n.from === this.address) && (n.token === symbol) || (n.to === this.address) && (n.token === symbol)
             })

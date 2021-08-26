@@ -14,7 +14,6 @@ const chromeName = [
   'wallet',
   'send-fil',
   'setting',
-  'setting-currency',
   'setting-address',
   'setting-backups',
   'setting-about',
@@ -58,14 +57,6 @@ const plugins = [
   {
     from: path.resolve("src/background.js"),
     to: `${path.resolve("dist")}/background.js`
-  },
-  {
-    from: path.resolve("src/db.js"),
-    to: `${path.resolve("dist")}/db.js`
-  },
-  {
-    from: path.resolve("src/dexie.js"),
-    to: `${path.resolve("dist")}/dexie.js`
   }
 ]
   

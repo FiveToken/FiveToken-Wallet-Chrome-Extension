@@ -38,13 +38,14 @@
 <script>
 import { debounce } from 'lodash'
 import { getQueryString,trimStr,getF1ByPrivateKey,isFilecoinChain,getGlobalKek } from '@/utils'
-import { MyGlobalApi } from '@/utils/api'
 import layout from '@/components/layout'
 import kyInput from '@/components/input'
 import kyButton from '@/components/button'
 import kyBack from '@/components/back'
 import kyNetwork from './select-network.vue'
 import { mapMutations, mapState } from 'vuex'
+
+import { Database } from '@/utils/database.js';
 export default {
     data(){
         return{
@@ -57,7 +58,8 @@ export default {
             mnePsd:null,
             customNetworkType:'',
             customFilecoinAddress0:'',
-            kek:null
+            kek:null,
+            db:null
         }
     },
     computed: {
@@ -68,7 +70,7 @@ export default {
             'activeAccount',
             'networkType',
             'filecoinAddress0',
-            'deriveIndex'
+            'deriveIndex',
         ]),
         active(){
             return this.net !== '' 
@@ -94,6 +96,8 @@ export default {
     async mounted(){
         let kek = getGlobalKek()
         this.kek = kek
+        let db = new Database()
+        this.db = db
     },
     methods:{
         ...mapMutations('app',[
@@ -141,44 +145,46 @@ export default {
                         return n.address === address
                     })
                     if(!isExist){
-                        let obj = this.networks.find(n=>{
-                            return n.rpc === this.net
-                        })
-                        let {name, rpc,chainID,symbol,browser,networkType,filecoinAddress0,ids,decimals,image,disabled,deriveIndex} = obj
-                        let index = deriveIndex + 1
-                        let accountName = `Account` + index
+                        let obj = null
+                        let isFileCoin = isFilecoinChain(this.customNetworkType)
+                        let _account = []
+                        let accountName = `Account` + (this.accountList.length + 1)
                         let create_time =  parseInt(new Date().getTime() / 1000)
-                        await window.filecoinwalletDb.accountList.add({
-                            accountName,
-                            address,
-                            createType:'privateKey',
-                            privateKey,
-                            create_time,
-                            khazix:'khazix',
-                            digest,
-                            fil:0,
-                            rpc:this.net
+                        this.networks.forEach(n=>{
+                            if(n.rpc === this.net) {
+                                obj = n
+                            }
+                            if( isFileCoin === isFilecoinChain(n.networkType)){
+                                if(isFileCoin){
+                                    let _add = address.substring(1,address.length)
+                                    _account.push({
+                                        accountName,
+                                        address: n.filecoinAddress0 + _add,
+                                        createType:'privateKey',
+                                        privateKey,
+                                        create_time,
+                                        khazix:'khazix',
+                                        digest,
+                                        fil:0,
+                                        rpc:n.rpc
+                                    })
+                                }else{
+                                    _account.push({
+                                        accountName,
+                                        address,
+                                        createType:'privateKey',
+                                        privateKey,
+                                        create_time,
+                                        khazix:'khazix',
+                                        digest,
+                                        fil:0,
+                                        rpc:n.rpc
+                                    })
+                                }
+                            }
                         })
-                        await window.filecoinwalletDb.activeAccount.where({khazix:'khazix'}).delete()
-                        await window.filecoinwalletDb.activeAccount.add({
-                            address,
-                            accountName,
-                            privateKey,
-                            create_time,
-                            khazix:'khazix',
-                            createType:'privateKey',
-                            fil:0,
-                            digest,
-                            rpc:this.net
-                        })
-                        await window.filecoinwalletDb.networks.where({
-                            rpc:rpc
-                        }).modify({
-                            deriveIndex:index
-                        })
-                        await window.filecoinwalletDb.activenNetworks.where({ khazix:'khazix'}).delete()
-                        await window.filecoinwalletDb.activenNetworks.add({
-                            name,
+                        let { 
+                            name, 
                             rpc,
                             chainID,
                             symbol,
@@ -189,23 +195,39 @@ export default {
                             decimals,
                             image,
                             disabled,
-                            deriveIndex:index,
-                            khazix:'khazix'
-                        }).then(async ()=>{
-                            let accountList = await window.filecoinwalletDb.accountList.where({ rpc:rpc }).toArray ()|| [];
-                            this.SET_RPC(rpc)
-                            this.SET_RPCNAME(name)
-                            this.SET_BROWSER(browser)
-                            this.SET_ACCOUNTLIST(accountList)
-                            this.SET_SYMBOL(symbol)
-                            this.SET_IDS(ids)
-                            this.SET_NETWORKTYPE(networkType)
-                            this.SET_FILECOINADDRESS0(filecoinAddress0)
-                            this.SET_DECIMALS(decimals)
-                            this.SET_OWENCHAIN(disabled)
-                            this.SET_RPCIMAGE(image)
-                            this.SET_DERIVEINDEX(index)
+                            deriveIndex 
+                        } = obj
+                        await this.db.bulkAddTable('accountList',_account)
+                        await this.db.deleteTable('activeAccount',{khazix:'khazix'})
+                        await this.db.addTable('activeAccount',{
+                            address,
+                            accountName,
+                            privateKey,
+                            create_time,
+                            khazix:'khazix',
+                            createType:'privateKey',
+                            fil:0,
+                            digest,
+                            rpc:this.net
                         })
+                        await this.db.deleteTable('activenNetworks',{khazix:'khazix'})
+                        await this.db.addTable('activenNetworks',{
+                            ...obj,
+                            khazix:'khazix'
+                        })
+                        let accountList = await this.db.getTable('accountList',{ rpc:rpc })
+                        this.SET_RPC(rpc)
+                        this.SET_RPCNAME(name)
+                        this.SET_BROWSER(browser)
+                        this.SET_ACCOUNTLIST(accountList)
+                        this.SET_SYMBOL(symbol)
+                        this.SET_IDS(ids)
+                        this.SET_NETWORKTYPE(networkType)
+                        this.SET_FILECOINADDRESS0(filecoinAddress0)
+                        this.SET_DECIMALS(decimals)
+                        this.SET_OWENCHAIN(disabled)
+                        this.SET_RPCIMAGE(image)
+                        this.SET_DERIVEINDEX(deriveIndex)
                         this.isFetch = false
                         window.location.href = './wallet.html'
                     }else{

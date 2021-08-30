@@ -1,8 +1,6 @@
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 const path = require("path");
-// 是否为生产环境
-const isProduction = true
 const pagesObj = {};
 
 const chromeName = [

@@ -120,7 +120,7 @@ Return data
 Example:
 ``` js
 // tag: string;
-// callback:Funtion;
+// callback: Funtion;
 window.AppLink.onMessage('filecoinWalletAddress',(data)=>{
     console.log(data)
 })

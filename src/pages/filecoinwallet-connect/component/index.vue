@@ -2,51 +2,61 @@
   <div class="content-page">
     <welcome v-if="accountList.length === 0"/>
     <lockUser v-else-if="lockUser.length"/>
-    <div class="content-wrap" v-else>
-      <div class="logo">
-        <img class="img" :src="logo" />
+    <layout  v-else @layoutMounted="layoutMounted">
+      <div class="content-wrap">
+        <div class="logo">
+          <img class="img" :src="logo" />
+        </div>
+        <div class="www">{{origin}}</div>
+        <div class="title">{{$t('connect.title')}}</div>
+        <div class="select-address" v-if="accountList.length">
+          <el-radio-group v-model="address" @change="radioClick">
+            <el-radio :label="item.address" v-for="(item,index) in accountList" :key="index">
+              <div class="name">{{item.accountName}}</div>
+              <div class="address">{{item.address | formatAddress}}</div>
+            </el-radio>
+          </el-radio-group>
+        </div>
+        <div class="btn-wrap" v-if="accountList.length">
+          <el-button @click="cancel">{{$t('connect.cancel')}}</el-button>
+          <el-button type="primary" :disabled='disabled' @click="connect">{{$t('connect.connect')}}</el-button>
+        </div>
       </div>
-      <div class="www">{{origin}}</div>
-      <div class="title">{{$t('connect.title')}}</div>
-      <div class="select-address" v-if="accountList.length">
-        <el-radio-group v-model="address" @change="radioClick">
-          <el-radio :label="item.address" v-for="(item,index) in accountList" :key="index">
-            <div class="name">{{item.accountName}}</div>
-            <div class="address">{{item.address | formatAddress}}</div>
-          </el-radio>
-        </el-radio-group>
-      </div>
-      <div class="btn-wrap" v-if="accountList.length">
-        <el-button @click="cancel">{{$t('connect.cancel')}}</el-button>
-        <el-button type="primary" :disabled='disabled' @click="connect">{{$t('connect.connect')}}</el-button>
-      </div>
-    </div>
+    </layout>
+    
   </div>
 </template>
 
 <script>
-import { validatePrivateKey} from '@/utils/key'
 import welcome from '@/pages/welcome/component/index.vue'
 import lockUser from '@/pages/lock-user/component/index.vue'
+import layout from '@/components/layout'
+import { mapState } from 'vuex'
+import { Database } from '@/utils/database.js';
 export default {
     data(){
       return{
+        rpc:'',
         address:'',
         accountList:[],
         lockUser:[],
         connectAccount:null,
         logo:require('@/assets/image/logo.png'),
-        vv:1
+        db:null
       }
     },
     computed:{
       disabled(){
         return this.address === ''
-      }
+      },
+      ...mapState('app',[
+        'networkType'
+      ])
     },
     components:{
       welcome,
-      lockUser
+      lockUser,
+      layout
     },
     filters:{
       formatAddress(address){
@@ -58,9 +68,16 @@ export default {
         } 
       },
     },
-    async mounted(){
-        this.lockUser = await window.filecoinwalletDb.lockUser.where({ kunyao:'kunyao'}).toArray();
-        let accountList = await window.filecoinwalletDb.accountList.where({ kunyao:'kunyao'}).toArray();
+    async created(){
+      let db = new Database()
+      this.db = db
+      let lockUser = await db.getTable('lockUser',{ khazix:'khazix' })
+      this.lockUser = lockUser
+      let activenNetworks = await db.getTable('activenNetworks',{ khazix:'khazix' })
+      if(activenNetworks.length){
+        let rpc = activenNetworks[0].rpc
+        this.rpc = rpc
+        let accountList = await db.getTable('accountList',{ rpc:rpc,isDelete:0, })
         this.accountList = accountList
         if(accountList.length){
           let frist = accountList[0]
@@ -71,25 +88,31 @@ export default {
             accountName:frist.accountName
           }
         }
-        let origin = popupGetVal()
-        this.origin = origin
+      }
+      
+      let origin = popupGetVal('origin')
+      this.origin = origin
     },
     methods:{
+      layoutMounted(){
+      },
       createAccount(){
-        window.location.href = './first-wallet.html'
+        window.location.href = './welcome.html'
       },
       radioClick(){
         this.connectAccount = this.accountList.find(n=>{
           return n.address === this.address
         })
+        console.log(this.connectAccount,'connectAccount')
       },
       cancel(){
         popupWindowRemove()
       },
       connect(){
         let { address,fil,accountName } = this.connectAccount
-        let obj = { address }
+        let obj = { address,rpc:this.rpc,accountName,networkType:this.networkType }
         popupToBackground('filecoinWalletConnect', obj)
+        console.log(this.networkType,this.rpc,'rconnectpc')
       }
     }
 }

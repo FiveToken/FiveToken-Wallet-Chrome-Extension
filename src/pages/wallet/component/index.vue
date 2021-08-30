@@ -1,340 +1,354 @@
 <template>
-<div class="wallet-page">
-    <bHeader :etitCount="etitCount"/>
-    <div class="content">
-        <div class="top">
-            <!-- <div class="connect-left" @click="openConnect">{{$t('wallet.connected')}}</div> -->
-            <div class="center">
-                <div class="account">{{accountName}}</div>
-                <el-popover
-                    v-model="copyAddressTips"
-                    placement="bottom"
-                    width="100"
-                    trigger="click"
-                    :content="$t('wallet.copySuccess')"
-                >
-                    <div class="copy-wrap" slot="reference">
-                        <div 
-                            class="address copy-address-box1" 
-                            @mouseover="mouseOverAddress"
-                            @mouseleave="mouseLeaveAddress" 
-                            @click="copyAddress1" 
-                            :data-clipboard-text="address"
-                        >
-                            {{address|addressFormat}}
-                        </div>
-                        <div class="copy-title" v-if="copyTitleVisable">{{$t('wallet.copyAddress')}}</div>
-                    </div>
-                    
-                </el-popover>
+    <layout @layoutMounted="layoutMounted">
+        <div class="wallet-page" >
+            <bHeader 
+                @openNetwork="openNetwork" 
+            />
+            <div class="content">
+                <kyTop
+                    v-if="rpc"
+                    :balance="balance"
+                    :mask.sync="mask"
+                    :editNameVisable.sync="editNameVisable"
+                    :deleteUserVisible.sync="deleteUserVisible"
+                    :receiveVisible.sync="receiveVisible"
+                />
+                <kyList
+                    v-if="address && rpc"
+                    :price_currency="price_currency"
+                    :balance="balance"
+                    @tokenShow="tokenShow"
+                />
             </div>
-        </div>
-        <div class="middle">
-            <div class="logo">
-                <img class="img" :src="filLogo" />
-            </div>
-            <div class="fil">{{balance|formatBalance}} FIL</div>
-            <div class="usd">$ {{(balance*this.price_usd).toFixed(2)}}</div>
-            <div class="action">
-                <div class="receive" @click="openReceive">
-                    <div class="icon">
-                        <img class="img" :src="send" />
-                    </div>
-                    <div class="text">{{$t('wallet.receive')}}</div>
-                </div>
-                <div class="send" @click="sendFil">
-                    <div class="icon">
-                        <img class="img" :src="rec" />
-                    </div>
-                    <div class="text">{{$t('wallet.send')}}</div>
-                </div>
-            </div>
-        </div>
-        <list 
-            :address="address" 
-            :price_usd="price_usd"
-            :balance="balance" 
-            :walletNonce="walletNonce"
-            @openDetail="openDetail"
-        />
-    </div>
-    <div class="help">
-      <div class="text">Need help? </div>
-      <div class="link" @click="toDocs">Contact FiveToken Docs</div>
-    </div>
-    <el-dialog
-        :visible.sync="receiveVisible"
-        width="94%"
-        :show-close="false"
-    >
-        <receive 
-            :receiveVisible.sync="receiveVisible"
-            :exportSecretVisible.sync="exportSecretVisible"
-            :QRUrl="QRUrl"
-            :accountName.sync="accountName"
-            :etitCount.sync="etitCount"
-            :address="address"
-        />
-    </el-dialog>
-    <el-dialog
-        :visible.sync="exportSecretVisible"
-        width="94%"
-        :show-close="false"
-    >
-        <exportPKey
-            :accountName="accountName"
-            :address="address"
-            :exportSecretVisible.sync="exportSecretVisible"
-            :showPkVisible.sync="showPkVisible"
-            :encodePrivateKey="encodePrivateKey"
-            :digest="digest"
-            :hexPrivateKey.sync="hexPrivateKey"
-        />
-    </el-dialog>
-    <el-dialog
-        :visible.sync="showPkVisible"
-        width="94%"
-        top="10vh"
-        :show-close="false"
-    >
-        <showPKey 
-            :accountName="accountName"
-            :address="address"
-            :showPkVisible.sync="showPkVisible"
-            :hexPrivateKey.sync="hexPrivateKey"
-        />
-    </el-dialog>
 
-    <el-dialog
-        :visible.sync="transactionDetails"
-        width="94%"
-        top="8vh"
-        :show-close="false"
-    >
-        <detail 
-            :signed_cid="signed_cid" 
-            :transactionDetails.sync="transactionDetails" 
-            :detail="detail"
-        />
-    </el-dialog>
 
-    <el-dialog
-        :visible.sync="connectDialogVisable"
-        width="94%"
-        :show-close="false"
-    >
-        <connect />
-    </el-dialog>
-</div>
+            <el-dialog
+                :visible.sync="networkVisible"
+                width="100%"
+                :show-close="false"
+                class="network-dialog"
+                :modal="false"
+                :top="'0'"
+            >
+                <kyNetwork 
+                    @closeNetwork="closeNetwork"
+                    @networkChange="networkChange"
+                />
+            </el-dialog>
+
+            <el-dialog
+                :visible.sync="editNameVisable"
+                width="300px"
+                :show-close="false"
+                :top="'31vh'"
+            >
+                <editName
+                    :addressName.sync="addressName"
+                    @confirmEdit="confirmEdit"
+                    @closeEdit="closeEdit"
+                />
+            </el-dialog>
+            
+            <el-dialog
+                :visible.sync="deleteUserVisible"
+                width="300px"
+                :top="'31vh'"
+                :show-close="false"
+            >
+                <deleteUser
+                    @confirmDelete="confirmDelete"
+                    @closeDelete="closeDelete"
+                />
+            </el-dialog>
+
+            <el-dialog
+                :visible.sync="receiveVisible"
+                width="100%"
+                :fullscreen='true'
+                :top="'0'"
+                :show-close="false"
+            >
+                <receive
+                    :QRUrl="QRUrl"
+                    :accountName.sync="accountName"
+                    :address="address"
+                    @closeReceive="closeReceive"
+                />
+            </el-dialog>
+
+            <el-dialog
+                :visible.sync="tokenVisible"
+                width="100%"
+                :fullscreen='true'
+                :top="'0'"
+                :show-close="false"
+            >
+                <kyToken
+                    :tokenIsMain="tokenIsMain"
+                    :tokenDecimals="tokenDecimals"
+                    :tokenBalance="tokenBalance"
+                    :tokenName="tokenName"
+                    :price_currency="price_currency"
+                    :receiveVisible.sync="receiveVisible"
+                    :symbol="symbol"
+                    :tokenList="tokenList"
+                    @closeToken="tokenVisible = false"
+                />
+            </el-dialog>
+            <div class="loading" v-if="isLoading">
+                <img :src="loading" alt="" class="img">
+            </div>
+            <div class="mask" v-if="mask" @click="maskClick"></div>
+        </div>
+    </layout>
 </template>
-
 <script>
 import bHeader from '@/components/header'
-import connect from './connect.vue'
-import detail from './detail.vue'
-import list from './list.vue'
+import layout from '@/components/layout'
+import editName from './edit-name.vue'
+import deleteUser from './delete-user.vue'
 import receive from './receive.vue'
-import exportPKey from './export-p-key.vue'
-import showPKey from './show-p-key.vue'
-import { BalanceNonceByAddress,FilPricePoints,MessageDetails } from '@/utils/api'
-import ClipboardJS from 'clipboard'
+import kyTop from './top.vue'
+import kyList from './transaction-list.vue'
+import kyToken from './token.vue'
+import kyNetwork from '@/components/header/network.vue'
+import { GlobalApi } from '@/utils/api'
 import QRCode from 'qrcode'
-import { getNowFormatDateEn,formatDate } from '@/utils'
+import { mapGetters, mapMutations, mapState } from 'vuex'
+import { formatDate } from '@/utils'
+import { Database,reverseOrder } from '@/utils/database.js';
 export default {
     data(){
         return{
+            mask:false,
+            loading:require('@/assets/image/loading.png'),
+            isLoading:false,
+            addressName:'',
+            editNameVisable:false,
+            deleteUserVisible:false,
             receiveVisible:false,
-            exportSecretVisible:false,
-            showPkVisible:false,
-            transactionDetails:false,
-            connectDialogVisable:false,
-            copyTitleVisable:false,
-            copyAddressTips:false,
-            filLogo:require('@/assets/image/fil-w.png'),
-            logo:require('@/assets/image/logo.png'),
-            rec:require('@/assets/image/rec.png'),
-            send:require('@/assets/image/send.png'),
-            address:'',
-            encodePrivateKey:'',
-            digest:'',
-            walletNonce:0,
+            tokenVisible:false,
             balance:0,
-            accountName:'',
-            price_usd:0,
+            price_currency:0,
             QRUrl:'',
             signed_cid:'',
-            hexPrivateKey:'',
-            etitCount:0,
-            detail:{
-                from:'',
-                to:'',
-                nonce:0,
-                fil:0,
-                all_gas_fee:0,
-                totalFil:0,
-                totalUsd:0,
-                create_time:'',
-                block_time:''
-            },
+            tokenName:'',
+            tokenDecimals:0,
+            tokenList:[],
+            tokenBalance:0,
+            tokenIsMain:0,
+            networkVisible:false,
+            db:null
         }
     },
-    filters:{
-        addressFormat(val){
-            if(val.length>12){
-                return val.substr(0,6) + '...' + val.substr(val.length-6,6)
-            }else{
-                return val
-            } 
-        },
-        formatBalance(val){
-            let isZ = val%1 === 0
-            if(isZ) {
-                return val
-            }else{
-                return val.toFixed(8)
-            }
-        }
+    computed:{
+        ...mapState('app',[
+            'rpc',
+            'symbol',
+            'accountName',
+            'address',
+            'privateKey',
+            'ids',
+            'networkType',
+            'currency',
+            'accountList'
+        ]),
     },
     components:{
+        layout,
         bHeader,
-        detail,
-        connect,
-        list,
+        editName,
+        deleteUser,
         receive,
-        exportPKey,
-        showPKey
+        kyTop,
+        kyList,
+        kyToken,
+        kyNetwork
     },
-    async mounted(){
-        this.getFilPricePoints()
-        let activeAccount = await window.filecoinwalletDb.activeAccount.where({ kunyao:'kunyao'}).toArray ()|| [];
-        if(activeAccount.length){
-            this.encodePrivateKey = activeAccount[0].privateKey
-            this.digest = activeAccount[0].digest
-            this.accountName = activeAccount[0].accountName
-            let address =  activeAccount[0].address
-            this.address = address
-            this.getBalanceNonce(address)
-            this.getQRCode(address)
-        }
+    mounted(){
+        const db = new Database();
+        this.db = db
     },
     methods:{
-        toDocs(){
-            openUrl(`https://docs.filecoinwallet.com/`)
+        ...mapMutations('app',[
+            'SET_PRIVATEKEY',
+            'SET_ADDRESS',
+            'SET_DIGEST',
+            'SET_ACCOUNTNAME'
+        ]),
+        async layoutMounted(){
+            let address = this.address
+            let rpc = this.rpc
+            let networkType = this.networkType
+            try{
+                this.getQRCode()
+                this.isLoading = true
+                this.addressName = this.accountName
+                await this.getPrice()
+                let balance = await this.getBalanceNonce(address,rpc,networkType)
+                this.balance = balance
+                await this.db.modifyTable(
+                    'activeAccount',
+                    {
+                        address:address,
+                        rpc:rpc
+                    },
+                    {
+                        fil:balance,
+                    }
+                )
+                this.isLoading = false
+            }catch(error){
+                this.isLoading = false
+            }
         },
-        openConnect(){
-            this.connectDialogVisable = true
+        networkChange(){
+            this.closeNetwork()
+            this.layoutMounted()
         },
-        // get usd 
-        async getFilPricePoints(){
-             FilPricePoints(['real']).then(result=>{
-                let res = result.data
-                if(res && res.data && res.data.length){
-                    this.price_usd = Number(res.data[0].price_usd)
+        openNetwork(){
+            this.mask = true
+            this.networkVisible = true
+        },
+        closeNetwork(){
+            this.mask = false
+            this.networkVisible = false
+        },
+        maskClick(){
+             this.mask = false
+            this.networkVisible = false
+        },
+        confirmEdit(){
+            let addressName = this.addressName
+            if(addressName) {
+                let address = this.address
+                let rpc = this.rpc
+                this.SET_ACCOUNTNAME(addressName)
+                this.db.modifyTable(
+                    'accountList',
+                    {
+                        address:address,
+                        rpc:rpc
+                    },
+                    {
+                        accountName:addressName
+                    }
+                )
+                this.db.modifyTable(
+                    'activeAccount',
+                    {
+                        address:address,
+                        rpc:rpc
+                    },
+                    {
+                        accountName:addressName
+                    }
+                )
+                this.editNameVisable = false
+            }
+            
+        },
+        closeEdit(){
+            this.editNameVisable = false
+        },
+        async confirmDelete(){
+            if(this.accountList.length === 1){
+                await this.db.clearTable()
+                window.location.href = './welcome.html'
+            }else{
+                if(this.accountList.length){
+                    await this.db.deleteTable('activeAccount',{ khazix:'khazix' })
+                    await this.db.modifyTable(
+                        'accountList',
+                        {  
+                            address:this.address,
+                            rpc:this.rpc 
+                        },
+                        {
+                            isDelete:1,
+                        }
+                    )
+                    let _accountList = await this.db.getTable('accountList',{ rpc:this.rpc ,isDelete:0 });
+                    let first = _accountList.find((n,index)=>{
+                        return index === 0
+                    })
+                    let{ privateKey,address,digest,accountName } = first
+                    this.SET_PRIVATEKEY(privateKey)
+                    this.SET_ADDRESS(address)
+                    this.SET_DIGEST(digest)
+                    this.SET_ACCOUNTNAME(accountName)
+                    await this.db.addTable('activeAccount',first)
+                    window.location.href = './wallet.html'
+                }else{
+                    window.location.href = './welcome.html'
                 }
-            }).catch(err=>{
-                this.price_usd = 0
-                console.log(err,'FilPricePoints err')
-            })
+            }
+        },
+        closeDelete(){
+            this.deleteUserVisible = false
+        },
+        async getPrice(){
+            if(this.ids){
+                let MyGlobalApi = new GlobalApi()
+                MyGlobalApi.setRpc(this.rpc)
+                MyGlobalApi.setNetworkType(this.networkType)
+                let res = await MyGlobalApi.getPrice(this.ids)
+                let { usd,cny } = res
+                if(this.currency === 'cny'){
+                    this.price_currency = cny
+                }else{
+                    this.price_currency = usd
+                }
+            }  
         },
         sendFil(){
             window.location.href = './send-fil.html'
         },
-        // get balance and nonce
-        getBalanceNonce(address){
-            BalanceNonceByAddress([{address}]).then((result)=>{
-                if(result && result.data){
-                    let res = result && result.data
-                    let balance = Number(res.balance || 0) / Math.pow(10, 18)
-                    this.balance = balance
-                    this.walletNonce = res.nonce
-                    window.filecoinwalletDb.accountList.where("address").equals(this.address).modify({fil:balance}).then(res=>{
-                        this.etitCount += 1
-                    })
-                    window.filecoinwalletDb.activeAccount.where("address").equals(this.address).modify({fil:balance}).then(res=>{
-                        this.etitCount += 1
-                    })
-                }
-            }).catch(err=>{
-                 this.balance = 0
-                 this.walletNonce = 0
-                console.log(err,'BalanceNonceByAddressErr')
-            })
+        async getBalanceNonce(address,rpc,networkType){
+            let balance = 0
+            let MyGlobalApi = new GlobalApi()
+            MyGlobalApi.setRpc(rpc)
+            MyGlobalApi.setNetworkType(networkType)
+            let res = await MyGlobalApi.getBalance(address)
+            balance = res && res.balance
+            return balance
         },
         openReceive(){
-            this.exportSecretVisible = false
             this.receiveVisible = true
         },
-        getQRCode(address){
-             QRCode.toDataURL(address).then(QRUrl => {
+        closeReceive(){
+            this.receiveVisible = false
+        },
+        getQRCode(){
+             QRCode.toDataURL(this.address).then(QRUrl => {
                 this.QRUrl = QRUrl
             }).catch(err => {
                 console.error(err)
             })
         },
-        copyAddress1(){
-            this.copyTitleVisable = false
-            let that = this
-            const clipboard = new ClipboardJS('.copy-address-box1')
-            this.copyAddressTips = true
-            clipboard.on('success', function(e) {
-                that.copyAddressTips = true
-                console.log(that.copyAddressTips,'that.copyAddressTips 123')
-                setTimeout(()=>{
-                    that.copyAddressTips = false
-                },2000)
+        async tokenShow(obj){
+            let {symbol,decimals,balance,isMain} = obj
+            this.tokenName = symbol
+            this.tokenDecimals = Number(decimals)
+            this.tokenBalance = balance
+            this.tokenIsMain = isMain
+            
+            let mesList = await this.db.getTable(
+                'messageList',
+                { rpc:this.rpc },
+                reverseOrder,
+                'create_time',
+            )
+            let tokenList = mesList.filter(n=>{
+                return (n.from === this.address) && (n.token === symbol) || (n.to === this.address) && (n.token === symbol)
             })
-            clipboard.on('error', function(e) {})
-        },
-        mouseOverAddress(){
-            this.copyTitleVisable = true
-        },
-        mouseLeaveAddress(){
-            this.copyTitleVisable = false
-        },
-        openDetail(signed_cid,obj){
-            this.signed_cid = signed_cid
-            this.getDetail(signed_cid,obj)
-        },
-        // get message Details
-        getDetail(signed_cid,itemObj){
-            MessageDetails([signed_cid]).then(async (result)=>{
-                console.log(result,'MessageDetails')
-                try{
-                    let res = result.data
-                    let fil = Number(res.value)/Math.pow(10, 18)
-                    let all_gas_fee = Number(res.all_gas_fee)/Math.pow(10, 18)
-                    let totalFil = fil + all_gas_fee
-                    let totalUsd = totalFil * this.price_usd
-                    this.$set(this.detail,'from',res.from)
-                    this.$set(this.detail,'to',res.to)
-                    this.$set(this.detail,'nonce',res.nonce)
-                    this.$set(this.detail,'fil',fil)
-                    this.$set(this.detail,'all_gas_fee',all_gas_fee)
-                    this.$set(this.detail,'totalFil',totalFil)
-                    this.$set(this.detail,'totalUsd',totalUsd.toFixed(2))
-                    this.$set(this.detail,'signed_cid',signed_cid)
-                    // signed_cid
-                    let messageList = await window.filecoinwalletDb.messageList.where({ kunyao:'kunyao'}).toArray () || [];
-                    let signedMess = messageList.find(n=>{
-                        return n.signed_cid === res.signed_cid
-                    })
-                    let create_time = signedMess.create_time ? formatDate(signedMess.create_time,true):''
-                    let block_time = res.block_time ? formatDate(res.block_time,true) : ""
-                    this.$set(this.detail,'block_time',block_time)
-                    this.$set(this.detail,'create_time',create_time)
-                    console.log(this.detail,signedMess,'this.detail 222')
-                }catch{
-                    let fil = Number(itemObj.value)/Math.pow(10, 18)
-                    this.$set(this.detail,'from',itemObj.from)
-                    this.$set(this.detail,'to',itemObj.to)
-                    this.$set(this.detail,'fil',fil)
-                    this.$set(this.detail,'signed_cid',signed_cid)
-                    console.log('MessageDetails try catch err')
+            console.log(tokenList,' tokenList 2222')
+            this.tokenList = tokenList.map(n=>{
+                return {
+                    ...n,
                 }
-            }).catch(err=>{
-                console.log(err,'MessageDetails err')
             })
-            this.transactionDetails = true
+            this.tokenVisible = true
         },
     }
 }
@@ -346,188 +360,48 @@ export default {
     margin: 0 auto;
     background: #fff;
     box-sizing: border-box;
-    .content{
-        .top{
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            text-align: center;
-            border-bottom:1px solid #eee;
-            padding:15px 0;
-            .position{
-                position: absolute;
-                top: 50%;
-                right:20px;
-                transform: translateY(-50%);
-                font-size: 14px;
-                color: #222;
-            }
-            .connect-left{
-                padding-left: 15px;
-                position: absolute;
-                top: 50%;
-                left:20px;
-                transform: translateY(-50%);
-                color: #222;
-                font-size: 14px;
-                cursor: pointer;
-                &::after{
-                    content: '';
-                    width: 3px;
-                    height: 3px;
-                    background: #5CC1CB;
-                    border-radius: 2px;
-                    position: absolute;
-                    left: 3px;
-                    top: 50%;
-                    transform: translateY(-50%);
-                }
-                &::before{
-                    content: '';
-                    width: 7px;
-                    height: 7px;
-                    background: transparent;
-                    border-radius: 7px;
-                    border: 1px solid #5CC1CB;
-                    position: absolute;
-                    left: 0px;
-                    top: 50%;
-                    transform: translateY(-50%);
-                }
-            }
-            .center{
-                font-size: 14px;
-                color: #666;
-                .copy-wrap{
-                    position: relative;
-                    .copy-title{
-                        position: absolute;
-                        top: calc(100% + 10px);
-                        left: 50%;
-                        transform: translateX(-50%);
-                        padding: 3px 10px;
-                        background: rgba(0,0,0,0.8);
-                        color: #fff;
-                        border-radius: 5px;
-                        text-align: center;
-                        white-space:nowrap;
-                        &::after{
-                            content: '';
-                            width: 0;
-                            height: 0;
-                            border: 8px solid;
-                            border-color: transparent transparent rgba(0,0,0,0.8);
-                            position: absolute;
-                            bottom: 100%;
-                            left: 50%;
-                            transform: translateX(-50%);
-                        }
-                    }
-                }
-                .account{
-                    font-size: 24px;
-                    color: #222;
-                    font-weight: bolder;
-                    margin-bottom: 10px;
-                }
-                .address{
-                    cursor: pointer;
-                    background: #f2f2f2;
-                    padding: 5px 10px;
-                    border-radius: 5px;
-                    color: #999;
-                }
-            }
-        }
-        .middle{
-            padding: 20px 0;
-            .logo{
-                width: 60px;
-                height: 60px;
-                background: #5CC1CB;
-                margin:0 auto 20px;
-                border-radius: 30px;
-                .img{
-                    width: 60px;
-                    height: 60px;
-                }
-            }
-            .fil{
-                text-align: center;
-                font-size: 28px;
-                font-weight: bolder;
-                color: #222;
-                margin-bottom: 10px;
-                padding: 0 10px;
-                word-break: break-all;
-            }
-            .usd{
-                text-align: center;
-                font-size: 14px;
-                color: #999;
-                margin-bottom: 10px;
-            }
-            .action{
-                padding-top: 10px;
-                display: flex;
-                justify-content: center;
-                .receive{
-                    margin-right: 40px;
-                    .icon{
-                        background: #5CC1CB;
-                    }
-                }
-                .send{
-                    .icon{
-                        background: #5C8BCB;
-                    }
-                }
-                .receive,.send{
-                    text-align: center;
-                    cursor: pointer;
-                    .icon{
-                        width: 30px;
-                        height: 30px;
-                        border-radius: 15px;
-                        margin: 0 auto 10px;
-                        line-height: 30px;
-                        text-align: center;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        cursor: pointer;
-                        .img{
-                            width: 22px;
-                            height: 22px;
-                        }
-                    }
-                    .text{
-                        font-size: 14px;
-                        color: #999;
-
-                    }
-                }
-            }
-        }
+    .mask{
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.6);
+        z-index: 999;
     }
-    .help{
+    .loading{
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.6);
         display: flex;
-        justify-content: center;
         align-items: center;
-        padding: 20px 20px 10px;
-        .text{
-            color: #222;
-            font-size: 14px;
-            margin-right: 8px;
+        justify-content: center;
+        z-index: 999;
+        .img{
+            animation:turnX 3s linear infinite;
         }
-        .link{
-            font-size: 14px;
-            color:#5CC1CB;
+        @keyframes turnX{
+            0%{
+                transform:rotateZ(0deg);
+            }
+            100%{
+                transform:rotateZ(360deg);
+            }
         }
     }
     /deep/.el-dialog{
         margin: 0 auto;
+        border-radius: 10px;
+        &.is-fullscreen{
+            border-radius: 0;
+            .el-dialog__body{
+                width: 100%;
+                height: 100%;
+            }
+        }
     }
     /deep/.el-dialog__header{
         padding:0;
@@ -538,6 +412,14 @@ export default {
     /deep/.el-dialog__footer{
         padding: 30px;
         border-top:1px solid #eee;
+    }
+
+    /deep/.network-dialog{
+        bottom: 0;
+        top: auto;
+        .el-dialog{
+            border-radius: 10px 10px 0 0;
+        }
     }
 }
 </style>

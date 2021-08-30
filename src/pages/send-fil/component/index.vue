@@ -1,162 +1,206 @@
 <template>
-<div class="send-fil">
-    <bHeader />
-    <stepOne 
-        v-if="step === 1" 
-        :type.sync="type"
-        :customVisible.sync="customVisible"
-        :to.sync="to"
-        :fil.sync="fil"
-        :price_usd="price_usd"
-        :ordinary='ordinary'
-        :fast="fast"
-        :custom="custom"
-        :step.sync="step"
-        :pageType.sync="pageType"
-        :balance="balance"
-        :address="address"
-        @next="next"
-        @reset="reset"
-    />
-    <stepTwo 
-        v-else 
-        :step.sync="step"
-        :accountName="accountName"
-        :to="to"
-        :fil="fil"
-        :filUsd="filUsd"
-        :price_usd="price_usd"
-        :gasFee="gasFee"
-        :totalFee="totalFee"
-        :gasFeeUsd="gasFeeUsd"
-        :totalFeeUsd="totalFeeUsd"
-        :pageType.sync="pageType"
-        :confrim.sync="confrim"
-        @sendFil="sendFil"
-    />
-    <el-dialog
-        :visible.sync="customVisible"
-        width="95%"
-        :show-close="false"
-    >
-        <div class="dialog-content">
-            <div class="close" @click="customVisible = false"><i class="el-icon-close"></i></div>
-            <div class="top">
-                <div class="title">{{$t('sendFil.customFuel')}}</div>
-                <div class="sub-title">{{$t('sendFil.senior')}}</div>
-            </div>
-            <div class="miner-fee">
-                <div class="text">{{$t('sendFil.minerFees')}}</div>
-                <i class="el-icon-question"></i>
-                <el-input v-model="custom.nanofil" min='0' type='number' @input="customFil"><template slot="append">nanoFIL</template></el-input>
-            </div>
-            <div class="info-wrap">
-                <div class="info-item">
-                    <div class="key">{{$t('sendFil.sendAmount')}}</div>
-                    <div class="value">{{fil}} FIL</div>
-                </div>
-                <div class="info-item">
-                    <div class="key">{{$t('sendFil.transFees')}}</div>
-                    <div class="value">{{custom.cost/Math.pow(10, 18)}} FIL</div>
-                </div>
-                <div class="info-item">
-                    <div class="key">{{$t('sendFil.newTotal')}}</div>
-                    <div class="value">
-                        <div class="bolder">{{custom.totalFil/Math.pow(10, 18)}} FIL</div>
-                        <div> {{(custom.totalFil*price_usd/Math.pow(10, 18)).toFixed(2)}} USD</div>
-                    </div>
-                </div>
-            </div>
-            <div class="btn-wrap">
-                <el-button @click="save" type="primary" :disabled="!disabled">{{$t('sendFil.save')}}</el-button>
+    <layout @layoutMounted="layoutMounted">
+        <div class="send-fil">
+            <stepOne 
+                v-if="step === 1"
+                :formData="formData"
+                @formDataChange="formDataChange"
+                @next="next"
+            />
+            <stepTwo 
+                v-else
+                :price_currency="price_currency"
+                :formData="formData"
+                :mainBalance="mainBalance"
+                @formDataChange="formDataChange"
+                :baseFeeCap="baseFeeCap"
+                :baseLimit="baseLimit"
+                @previousStep="step = 1"
+                @sendFil="sendFil"
+            />
+
+            <div class="loading" v-if="isFetch">
+                <img :src="loading" alt="" class="img">
             </div>
         </div>
-    </el-dialog>
-</div>
+    </layout>
 </template>
 
 <script>
-import bHeader from '@/components/header'
 import stepOne from './step-1'
 import stepTwo from './step-2'
-import { fil2atto} from '@/utils'
-import { BalanceNonceByAddress,BaseFeeAndGas,MessagePush,FilPricePoints } from '@/utils/api'
-import { getT1SignedMsg } from '@/utils/message'
-import { privateKeyDecode,validatePrivateKey,genPrivateKeyDigest} from '@/utils/key'
-import { debounce } from 'lodash'
+import layout from '@/components/layout'
+import { getDecodePrivateKey,formatNumber,getGlobalKek } from '@/utils'
+import { GlobalApi } from '@/utils/api'
+import { mapMutations, mapState } from 'vuex'
+import ABI from '@/utils/abi'
+import { ethers } from 'ethers'
+import { BigNumber } from "bignumber.js";
+import { Database } from '@/utils/database.js';
 export default {
     data(){
         return{
-            confrim:false,
-            // send-fil , add-address , my-address , address-error
-            pageType:'add-address',
-            address:'',
-            balance:0,
-            type:1,
+            loading:require('@/assets/image/loading.png'),
+            isFetch:false,
             step:1,
-            price_usd:0,
-            customVisible:false,
-            ordinary:{
-                name:this.$t('sendFil.normal'),
-                type:2,
-                cost:0,
-            },
-            fast:{
-                name:this.$t('sendFil.fast'),
-                type:1,
-                cost:0,
-            },
-            custom:{
-                name:this.$t('sendFil.custom'),
-                type:3,
-                gasfee_cap:0,
-                nanofil:'',
-                cost:0,
-                totalFil:0,
-            },
-            base_fee:'',
-            gas_used:'',
-            accountName:'',
-            to:'',
-            fil:0,
-            gasFee:0,
-            gasFeeUsd:0,
-            totalFee:0,
-            totalFeeUsd:0,
-            filUsd:0,
-            digest:'',
+            price_currency:0,
             nonce:0,
             maxNonce:0,
+            baseFeeCap:0,
+            baseLimit:0,
+            pkk:'',
+            contractSigner:null,
+            db:null,
+            mainBalance:0,
+            formData:{
+                balance:0,
+                to:'',
+                toName:'',
+                fil:'',
+                symbol:'',
+                chainName:'',
+                gasLimit:0,
+                gasPremium:0,
+                gasFeeCap:0,
+                decimals:0,
+                isAll:0,
+                isMain:1,
+                contract:''
+            },
         }
     },
     computed:{
-        disabled(){
-            return this.custom.nanofil !== '' && this.custom.nanofil !== 0
-        }
+        ...mapState('app',[
+            'rpc',
+            'address',
+            'privateKey',
+            'networkType',
+            'accountList',
+            'activenNetworks',
+            'decimals',
+            'ids',
+            'symbol',
+            'currency'
+        ])
     },
     components:{
-        bHeader,
         stepOne,
+        layout,
         stepTwo
     },
-    watch:{
-        to(newVal){
-            this.getBaseFeeAndGas(newVal)
-        }
-    },
-    async mounted(){
-        let activeAccount = await window.filecoinwalletDb.activeAccount.where({ kunyao:'kunyao'}).toArray ()|| [];
-        this.address = activeAccount.length && activeAccount[0].address
-        this.accountName = activeAccount.length && activeAccount[0].accountName
-        this.digest = activeAccount.length && activeAccount[0].digest
-        this.getFilPricePoints()
-        this.getBalanceNonceByAddress()
-        
-    },
     methods:{
+        ...mapMutations('send-fil',[
+            'SET_ACCOUNTLIST',
+            'SET_ADDRESSBOOK',
+            'SET_ADDRESSRECORDLAST',
+            'SET_TOKENLIST'
+        ]),
+        async layoutMounted(){
+            let kek = getGlobalKek()
+            this.pkk = getDecodePrivateKey(this.privateKey,kek,this.networkType)
+            let db = new Database()
+            this.db = db
+            let myRecordLast = await db.getTable('addressRecordLast',{
+                rpc:this.rpc,
+                address:this.address
+            })
+            this.SET_ADDRESSRECORDLAST(myRecordLast)
+            let addressBook =  await db.getTable('addressBook',{rpc:this.rpc})
+            
+            this.SET_ADDRESSBOOK(addressBook)
+            this.SET_ACCOUNTLIST(this.accountList)
+            let chainName = this.activenNetworks.length && this.activenNetworks[0].name
+            this.$set(this.formData,'chainName',chainName)
+            this.$set(this.formData,'symbol',this.symbol)
+            this.$set(this.formData,'decimals',this.decimals)
+            this.getFilPricePoints()
+            await this.getBalanceNonceByAddress()
+            this.getTokenList()
+        },
+        async getTokenList(){
+            let list = await this.db.getTable('tokenList',{
+                rpc:this.rpc,
+                address:this.address 
+            })
+            let chainImg = this.activenNetworks.length && this.activenNetworks[0].image
+            let customNetwork = this.activenNetworks.length && !this.activenNetworks[0].disabled
+            let tokenList = [
+                {
+                    rpc:this.rpc,
+                    chainName:this.formData.chainName,
+                    decimals:this.decimals,
+                    symbol:this.symbol,
+                    contract:'',
+                    balance:this.formData.balance,
+                    isMain:1,
+                    image:chainImg,
+                    customNetwork
+                }
+            ]
+            let provider = ethers.getDefaultProvider(this.rpc);
+            list.forEach(async (n)=>{
+                try{
+                    let contract = new ethers.Contract(n.contract, ABI, provider);
+                    contract.balanceOf(this.address).then(res=>{
+                        let balance = res.toString()
+                        let num = Number(balance) / Math.pow(10,Number(n.decimals))
+                        let big = new BigNumber(num).toFixed()
+                        let _balance = formatNumber(big,12)
+                        tokenList.push(
+                            {
+                                ...n,
+                                balance:_balance,
+                                isMain:0,
+                                chainName:this.formData.chainName,
+                                image:'',
+                                contract:n.contract
+                            }
+                        )
+                    })
+                }catch(err){
+                    console.log(err,'getTokenList err')
+                }
+            })
+            this.SET_TOKENLIST(tokenList)
+        },
+        formDataChange(obj){
+            let {key,value} = obj
+            switch(key){
+                case 'to':
+                    if(value){
+                        this.getBaseFeeAndGas(this.address,value,this.maxNonce)
+                    }
+                    let { accountName } = obj
+                    this.$set(this.formData,'toName',accountName)
+                    break;
+                case 'isAll':
+                    if(value === 1){
+                        let fil = this.formData.balance
+                        this.$set(this.formData,'fil',fil)
+                    }
+                    break;
+                case 'token':
+                    let { balance ,symbol,chainName,decimals,isMain,contract } = value
+                    this.formData = Object.assign({},this.formData,{
+                        balance,
+                        fil:'',
+                        symbol,
+                        chainName,
+                        decimals,
+                        isAll:0,
+                        isMain,
+                        contract
+                    })
+                    break;
+                case 'fil':
+                    this.$set(this.formData,'isAll',0)
+                    break;
+            }
+            this.$set(this.formData,key,value)
+        },
         async getNextNonce(){
             let time = parseInt(new Date().getTime() / 1000)
-            let messageList = await window.filecoinwalletDb.messageList.where({ kunyao:'kunyao'}).toArray () || [];
+            let messageList = await this.db.getTable('messageList',{ rpc:this.rpc })
             let myMsgList =  messageList.filter(n=>{
                 return n.from === this.address
             })
@@ -169,251 +213,251 @@ export default {
             let maxDbCreateTime = creatTimeList.length && Math.max(...creatTimeList) || 0
             let maxDbNonce = nonceList.length && Math.max(...nonceList)
             // nonce time > 300s res.nonce ,else db none
-            // The time since the last transmission is greater than 5 minutes nonce = res.nonce,
             let maxNonce = time - maxDbCreateTime > 300 ? this.nonce : Math.max(this.nonce,maxDbNonce)
             this.maxNonce = maxNonce
         },
-        // get balance and nonce
-        getBalanceNonceByAddress(){
-            let address = this.address
-            BalanceNonceByAddress([{address}]).then(result=>{
-                try{
-                    let res = result.data
-                    if(res && res.code === -32603){
-                        this.balance = 0
-                    }else{
-                        this.nonce = res.nonce
-                        this.balance = Number(res.balance)/Math.pow(10, 18)
-                        this.getNextNonce()
-                    }
-                }catch(e){
-                    this.balance = 0
-                }
-            })
+        async getBalanceNonceByAddress(){
+            let MyGlobalApi = new GlobalApi()
+            MyGlobalApi.setRpc(this.rpc)
+            MyGlobalApi.setNetworkType(this.networkType)
+            let res = await MyGlobalApi.getBalance(this.address)
+            let { balance,nonce } = res
+            let dec = balance / Math.pow(10,Number(this.decimals))
+            let big = new BigNumber(dec).toFixed()
+            let num = formatNumber(big,12)
+            this.$set(this.formData,'balance',num)
+            this.mainBalance = Number(num)
+            this.nonce = nonce
+            this.getNextNonce()
         },
-        // get service charge
-        getBaseFeeAndGas(address){
-            let params = [address, 0]
-            BaseFeeAndGas(params).then(result=>{
-                let res = result.data
-                if(res.base_fee){
-                    this.base_fee = Number(res.base_fee)
-                    this.gas_used = Number(res.gas_used)
-                    let gas_premium = Number(res.gas_premium)// this.gasPremium()
-                    let ordinary_gasfee_cap = this.gasFeeCap(res.base_fee,2.9,4.9,gas_premium)
-                    let gas_limit = this.gasLimit(res.actor_exist,res.gas_used)
-                    this.$set(this.ordinary,'gas_premium',gas_premium)
-                    this.$set(this.ordinary,'gasfee_cap',ordinary_gasfee_cap)
-                    this.$set(this.ordinary,'gas_limit',gas_limit)
-                    this.$set(this.ordinary,'cost',ordinary_gasfee_cap*gas_limit)
-
-                    let fast_gasfee_cap = this.gasFeeCap(res.base_fee,3,5,gas_premium)
-                    this.$set(this.fast,'gas_premium',gas_premium)
-                    this.$set(this.fast,'gasfee_cap',fast_gasfee_cap)
-                    this.$set(this.fast,'gas_limit',gas_limit)
-                    this.$set(this.fast,'cost',fast_gasfee_cap*gas_limit)
+        async getBaseFeeAndGas(from,to,nonce){
+            let MyGlobalApi = new GlobalApi()
+            MyGlobalApi.setRpc(this.rpc)
+            MyGlobalApi.setNetworkType(this.networkType)
+            let res = await MyGlobalApi.getGasFee(from,to,nonce)
+            let { gasLimit, gasPremium ,gasFeeCap } = res
+            this.$set(this.formData,'gasLimit',gasLimit)
+            this.$set(this.formData,'gasPremium',gasPremium)
+            this.$set(this.formData,'gasFeeCap',gasFeeCap)
+            this.baseFeeCap = gasFeeCap
+            this.baseLimit = gasLimit
+            if(this.formData.isAll === 1){
+                let fil = this.formData.balance
+                this.$set(this.formData,'fil',fil)
+            }
+        },
+        async getFilPricePoints(){
+            if(this.ids){
+                let MyGlobalApi = new GlobalApi()
+                MyGlobalApi.setRpc(this.rpc)
+                MyGlobalApi.setNetworkType(this.networkType)
+                let res = await MyGlobalApi.getPrice(this.ids)
+                let { usd,cny } = res
+                if(this.currency === 'cny'){
+                    this.price_currency = cny
                 }else{
-                    this.errorInit()
+                    this.price_currency = usd
                 }
-            }).catch(err=>{
-                this.errorInit()
-            })
+            }
+            
         },
-        errorInit(){
-            this.base_fee = 0
-            this.gas_used = 0
-            this.$set(this.ordinary,'gas_premium',0)
-            this.$set(this.ordinary,'gasfee_cap',0)
-            this.$set(this.ordinary,'gas_limit',0)
-            this.$set(this.ordinary,'cost',0)
+        async next(){
+            let balance = Number(this.formData.balance)
+            let fil = Number(this.formData.fil)
+            let isNumber = new BigNumber(fil).isPositive()
+            if(isNumber){
+                if( fil > balance){
+                    this.$message.error(this.$t('sendFil.insufficientBalance'))
+                }else{
+                    this.step = 2
+                    this.isFetch = true
+                    await this.getBaseFeeAndGas(this.address,this.formData.to,this.maxNonce)
+                    this.isFetch = false
+                    let gas = (this.formData.gasFeeCap * this.formData.gasLimit) / Math.pow(10, 9)
+                    if(this.formData.isMain === 1){
+                        if(this.formData.isAll === 1){
+                            if(balance > gas){
+                                let fil = balance - gas
+                                let big = new BigNumber(fil)
+                                let str = big.toFixed()
+                                let num = formatNumber(str,12)
+                                this.$set(this.formData,'fil',num)
+                            }else{
+                                this.$message.error(this.$t('sendFil.insufficientBalance'))
+                            }
+                        }
+                    }else{
+                        if(this.formData.isAll === 1){
+                            if(this.mainBalance > gas){
+                                this.$set(this.formData,'fil',balance)
+                            }else{
+                                this.$message.error(this.$t('sendFil.insufficientBalance'))
+                            }
+                        }
+                    }
+                    
+                    if(this.formData.isMain !== 1){
+                        let double = this.formData.gasLimit * 2.5
+                        this.$set(this.formData,'gasLimit',double)
+                        let provider = ethers.getDefaultProvider(this.rpc);
+                        let wallet = new ethers.Wallet(this.pkk, provider);
+                        let contractSigner = new ethers.Contract(this.formData.contract, ABI, wallet);
+                        this.contractSigner = contractSigner
+                    }
+                }
+            }else{
+                this.$message.error(this.$t('sendFil.vaildNumber'))
+            }
+            
+        },
+        async sendToken(){
+            try{
+                this.isFetch = true
+                // let provider = ethers.getDefaultProvider(this.rpc);
+                // let wallet = new ethers.Wallet(this.pkk, provider);
+                // let contractSigner = new ethers.Contract(this.formData.contract, ABI, wallet);
+                let fil = this.formData.fil.toString()
+                let numberOfTokens = ethers.utils.parseUnits(fil, this.formData.decimals);
+                let allGasFee = this.formData.gasFeeCap * this.formData.gasLimit * Math.pow(10, 9)
+                    console.log("00000000")
+                this.contractSigner.transfer(this.formData.to,numberOfTokens,{
+                    gasPrice: this.formData.gasFeeCap * Math.pow(10, 9),
+                    gasLimit: Math.ceil(this.formData.gasLimit),
+                }).then(async (res)=>{
+                    let create_time =  parseInt(new Date().getTime() / 1000)
+                    let _value = this.formData.fil * Math.pow(10, Number(this.formData.decimals))
+                    await this.db.addTable('messageList',{
+                        signed_cid:res.hash,
+                        from:this.address,
+                        to:this.formData.to,
+                        create_time,
+                        block_time:0,
+                        nonce:res.nonce,
+                        decimals:this.formData.decimals,
+                        token:this.formData.symbol,
+                        allGasFee,
+                        type:'pending',
+                        khazix:'khazix',
+                        value:_value,
+                        rpc:this.rpc
+                    })
+                    await this.db.deleteTable('addressRecordLast',{
+                        address:this.formData.to,
+                        rpc:this.rpc
+                    })
+                    await this.db.addTable('addressRecordLast',{
+                        address:this.formData.to,
+                        create_time,
+                        rpc:this.rpc,
+                        khazix:'khazix',
+                    })
+                    this.isFetch = false
+                    window.location.href = './wallet.html?fromPage=sendFil'
+                }).catch(error=>{
+                    console.log(error,222222)
+                    if(error.error && error.error.message){
+                        if(error.error.message.indexOf('insufficient funds') > -1){
+                            this.$message({
+                                type:'error',
+                                message:'insufficient funds for gas * price + value'
+                            })
+                        }else{
+                            this.$message({
+                                type:'error',
+                                message:error.error && error.error.message,
+                            })
+                        }
+                    }
+                    setTimeout(()=>{
+                        this.isFetch = false
+                    },2000)
+                })
+            }catch(error){
+                console.log(error,33333)
+                this.$message({
+                    type:'error',
+                    message:error && error.message
+                })
+                this.isFetch = false
+            }
+        },
+        async sendFil(){
+            let balance = Number(this.formData.balance)
+            let gas = (this.formData.gasFeeCap * this.formData.gasLimit) / Math.pow(10, 9)
+            let fil = Number(this.formData.fil)
+            console.log(this.formData.isMain,'this.formData.isMain')
+            if(this.formData.isMain === 1){
+                if( fil + gas > balance) {
+                    this.$message.error(this.$t('sendFil.insufficientBalance'))
+                    return
+                }
+            }else{
+                if( gas > this.mainBalance || fil > balance) {
+                    this.$message.error(this.$t('sendFil.insufficientBalance'))
+                    return
+                }
+            }
+            let create_time =  parseInt(new Date().getTime() / 1000)
+            if(this.formData.isMain === 1){
+                this.isFetch = true
+                try{
+                    let address = this.address
+                    let tx = {
+                        from:address,
+                        to:this.formData.to,
+                        value:this.formData.fil,
+                        privateKey:this.pkk,
+                        nonce:this.maxNonce,
+                        GasPremium: this.formData.gasPremium,
+                        GasFeeCap: this.formData.gasFeeCap * Math.pow(10, 9),
+                        GasLimit: Math.ceil(this.formData.gasLimit),
+                    }
 
-            this.$set(this.fast,'gas_premium',0)
-            this.$set(this.fast,'gasfee_cap',0)
-            this.$set(this.fast,'gas_limit',0)
-            this.$set(this.fast,'cost',0)
-        },
-        gasLimit(actor_exist,gas_used){
-            let gas = (Number(gas_used))*1.25
-            let gas_limit = actor_exist ? Math.floor(gas) : 2200000;
-            return gas_limit
-        },
-        gasFeeCap(base_fee,base_fee_ratio,nano_ratio,gas_premium){
-            // let gasfee_cap = Math.max(base_fee_ratio * Number(base_fee), nano_ratio * Math.pow(10, 9));
-            let gasfee_cap = base_fee_ratio * Number(base_fee) + gas_premium
-            return gasfee_cap
-        },
-        gasPremium(){
-            let gas_premium = Math.pow(10, 6)
-            return gas_premium
-        },
-        getFilPricePoints(){
-            FilPricePoints(['real']).then(result=>{
-                let res = result.data
-                if(res && res.data.length){
-                    this.price_usd = Number(res.data[0].price_usd)
+                    let MyGlobalApi = new GlobalApi()
+                    MyGlobalApi.setRpc(this.rpc)
+                    MyGlobalApi.setNetworkType(this.networkType)
+                    let result = await MyGlobalApi.sendTransaction(tx)
+                    let allGasFee = this.formData.gasFeeCap * this.formData.gasLimit * Math.pow(10, 9)
+                    if(result && result.signed_cid){
+                        let _value = this.formData.fil*Math.pow(10, Number(this.formData.decimals))
+                        await this.db.addTable('messageList',{
+                            signed_cid:result.signed_cid,
+                            from:address,
+                            to:this.formData.to,
+                            create_time,
+                            block_time:0,
+                            nonce:result.nonce,
+                            allGasFee,
+                            decimals:this.formData.decimals,
+                            token:this.formData.symbol,
+                            type:'pending',
+                            khazix:'khazix',
+                            value:_value,
+                            rpc:this.rpc
+                        })
+                        await this.db.deleteTable('addressRecordLast',{
+                            address:this.formData.to,
+                            rpc:this.rpc
+                        })
+                        await this.db.addTable('addressRecordLast',{
+                            address:this.formData.to,
+                            create_time,
+                            rpc:this.rpc,
+                            khazix:'khazix',
+                        })
+                        this.isFetch = false
+                        window.location.href = './wallet.html?fromPage=sendFil'
+                    }else{
+                        this.isFetch = false
+                    }
+                }catch(err){
+                    this.isFetch = false
+                    console.log(err,'senFIl err')
                 }
-            })
-        },
-        next(){
-            this.filUsd = this.fil * this.price_usd
-            switch(this.type){
-                case 1:
-                    this.gasFee = this.fast.gasfee_cap * this.fast.gas_limit
-                    this.gasFeeUsd = this.gasFee * this.price_usd
-                    this.totalFee = this.gasFee + this.fil*Math.pow(10, 18)
-                    this.totalFeeUsd = this.totalFee * this.price_usd
-                    break;
-                case 2:
-                    this.gasFee = this.ordinary.gasfee_cap * this.ordinary.gas_limit
-                    this.gasFeeUsd = this.gasFee * this.price_usd
-                    this.totalFee = this.gasFee + this.fil*Math.pow(10, 18)
-                    this.totalFeeUsd = this.totalFee * this.price_usd
-                    break;
-                case 3:
-                    this.gasFee = this.custom.cost
-                    this.gasFeeUsd = this.gasFee * this.price_usd
-                    this.totalFee = this.custom.totalFil
-                    this.totalFeeUsd = this.totalFee * this.price_usd
-                    break;
-            }
-            if(this.totalFee/Math.pow(10, 18) > this.balance){
-                this.$message.error(this.$t('sendFil.insufficientBalance'))
             }else{
-                this.step = 2
+                this.sendToken()
             }
         },
-        getCostGas(){
-            switch(this.type) {
-                case 1:
-                    return {
-                       gas_premium:this.fast.gas_premium,
-                       gasfee_cap:this.fast.gasfee_cap,
-                       gas_limit:this.fast.gas_limit,
-                    }
-                    break;
-                case 2:
-                    return {
-                       gas_premium:this.ordinary.gas_premium,
-                       gasfee_cap:this.ordinary.gasfee_cap,
-                       gas_limit:this.ordinary.gas_limit,
-                    }
-                    break;
-                case 3:
-                    return {
-                       gas_premium:this.custom.gas_premium,
-                       gasfee_cap:this.custom.gasfee_cap,
-                       gas_limit:this.custom.gas_limit,
-                    }
-                    break;
-                default:
-                    return {
-                       gas_premium:this.fast.gas_premium,
-                       gasfee_cap:this.fast.gasfee_cap,
-                       gas_limit:this.fast.gas_limit,
-                    }
-            } 
-        },
-        // custom service charge
-        customFil(){
-            // transactionCosts gas_limit * gasfee_cap
-            // totalFil  cost + fil
-            // totalUsd  totalFil *  price_usd
-            if(this.custom.nanofil){
-                let gasfee_cap = this.custom.nanofil*Math.pow(10, 9) + this.base_fee
-                let gas_premium = 0.01*Math.pow(10, 9)
-                let gas_limit = this.gas_used * 1.25
-                let cost = gasfee_cap * gas_limit
-                let totalFil = cost + this.fil*Math.pow(10, 18)
-                this.$set(this.custom,'gas_premium',gas_premium)
-                this.$set(this.custom,'gasfee_cap',gasfee_cap)
-                this.$set(this.custom,'gas_limit',gas_limit)
-                this.$set(this.custom,'cost',cost)
-                this.$set(this.custom,'totalFil',totalFil)
-            }else{
-                this.$set(this.custom,'gas_premium','')
-                this.$set(this.custom,'gasfee_cap',0)
-                this.$set(this.custom,'gas_limit','')
-                this.$set(this.custom,'cost',0)
-                this.$set(this.custom,'totalFil',0)
-            }
-        },
-        reset(){
-            this.type = 1
-            this.$set(this.custom,'gas_premium','')
-            this.$set(this.custom,'gasfee_cap',0)
-            this.$set(this.custom,'gas_limit','')
-            this.$set(this.custom,'cost',0)
-            this.$set(this.custom,'totalFil',0)
-            this.$set(this.custom,'nanofil','')
-        },
-        // send message
-        async sendFil(password){
-            let activeAccount = await window.filecoinwalletDb.activeAccount.where({ kunyao:'kunyao'}).toArray ()|| [];
-            let encodePrivateKey = activeAccount.length && activeAccount[0].privateKey
-            let address = this.address
-            let privateKey = privateKeyDecode(encodePrivateKey,address, password)
-            let voild = await validatePrivateKey(address,password,encodePrivateKey,this.digest)
-            if(voild){
-                let costGas = this.getCostGas()
-                let { gas_premium ,gasfee_cap,gas_limit} = costGas
-                let value = fil2atto(this.fil)
-                let msg = {
-                    Version: 0,
-                    To: this.to,
-                    From: this.address,
-                    Nonce:this.maxNonce,
-                    Value: value,
-                    GasPremium: gas_premium.toString(),
-                    GasFeeCap: gasfee_cap.toString(),
-                    GasLimit: Math.ceil(gas_limit),
-                    Method: 0,
-                    Params: ''
-                };
-                // SignedMessage
-                let signedMsg = await getT1SignedMsg(msg, privateKey)
-                let objparams = [{
-                    ...signedMsg
-                }]
-                this.mesgPush(objparams)
-            }else{
-                this.confrim = false
-                this.$message.error(this.$t('sendFil.error')) 
-            }
-        },
-        // Message push
-        mesgPush(params){
-            MessagePush(params).then(async (res)=>{
-                this.confrim = false
-                let signed_cid = res.data['/']
-                let create_time =  parseInt(new Date().getTime() / 1000)
-                await window.filecoinwalletDb.messageList.add({
-                    signed_cid,
-                    from:this.address,
-                    to:this.to,
-                    create_time,
-                    block_time:create_time,
-                    nonce:this.maxNonce+1,
-                    type:'pending',
-                    typeName:this.$t('sendFil.waiting'),
-                    kunyao:'kunyao',
-                    value:this.fil*Math.pow(10, 18)
-                })
-                await window.filecoinwalletDb.addressRecordLast.where({address:this.to}).delete()
-                await window.filecoinwalletDb.addressRecordLast.add({
-                    address:this.to,
-                    create_time,
-                    kunyao:'kunyao',
-                })
-                window.location.href = './wallet.html'
-            }).catch(err=>{
-                this.confrim = false
-                console.log(err,'MessagePush error')
-            })
-        },
-        save(){
-            this.type = 3
-            this.customVisible = false
-        }
     }
 }
 </script>
@@ -421,85 +465,51 @@ export default {
 <style  lang="less" scoped>
 .send-fil{
     width: 100%;
-    margin: 0 auto;
-    box-shadow: 0px 4px 18px 0px rgb(19 30 47 / 9%);
-    border-radius: 5px;
+    height: 100%;
     position: relative;
-}
-/deep/.el-dialog__header{
-        padding: 0;
+
+    .loading{
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 999;
+        .img{
+            animation:turnX 3s linear infinite;
+        }
+        @keyframes turnX{
+            0%{
+                transform:rotateZ(0deg);
+            }
+            100%{
+                transform:rotateZ(360deg);
+            }
+        }
+    }
+    /deep/.el-dialog{
+        margin: 0 auto;
+        &.is-fullscreen{
+            border-radius: 0;
+            .el-dialog__body{
+                width: 100%;
+                height: 100%;
+            }
+        }
+    }
+    /deep/.el-dialog__header{
+        padding:0;
     }
     /deep/.el-dialog__body{
         padding: 0;
     }
-    .dialog-content{
-        position: relative;
-        .close{
-            position: absolute;
-            right: 10px;
-            top: 10px;
-        }
-        .title{
-            text-align: center;
-            font-size: 16px;
-            color: #222;
-            font-weight: bolder;
-            padding: 10px;
-        }
-        .sub-title{
-            font-size: 14px;
-            color: #666;
-            text-align: center;
-            padding: 0 10px 20px;
-            border-bottom: 1px solid #eee;
-        }
-        .transaction-cost{
-            padding: 10px;
-            font-size: 14px;
-            border-bottom: 1px solid #eee;
-            .text{
-                margin-bottom: 8px;
-                color: #666;
-            }
-            .amount{
-                color: #222;
-                font-weight: bolder;
-            }
-        }
-        .miner-fee{
-            display: flex;
-            padding: 10px;
-            align-items: center;
-            padding-bottom: 100px;
-            border-bottom: 1px solid #eee;
-            .text{
-                flex-shrink: 0;
-            }
-            .el-icon-question{
-                padding-right: 10px;
-            }
-        }
-        .info-wrap{
-            padding: 10px;
-            border-bottom: 1px solid #eee;
-            .info-item{
-                display: flex;
-                justify-content: space-between;
-                margin-bottom: 8px;
-                .value{
-                    text-align: right;
-                    .bolder{
-                        font-weight: bolder;
-                    }
-                }
-            }
-        }
-        .btn-wrap{
-            padding: 10px;
-            /deep/.el-button{
-                width: 100%;
-            }
-        }
+    /deep/.el-dialog__footer{
+        padding: 30px;
+        border-top:1px solid #eee;
     }
-
+}
 </style>

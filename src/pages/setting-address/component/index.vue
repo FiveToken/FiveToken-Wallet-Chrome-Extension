@@ -1,27 +1,54 @@
 <template>
-<div class="setting-address">
-    <div class="address-content">
-        <addressList v-if="pageType === 'list'" :pageType.sync='pageType' @addressDetail="addressDetail" />
-        <addressFrom v-else :pageType.sync="pageType" :detailObj="detailObj" :to="to"/>
-    </div>
-</div>
+    <layout @layoutMounted="layoutMounted">
+        <div class="setting-address">
+            <addressList 
+                v-if="pageType === 'list'" 
+                :pageType.sync='pageType' 
+                @addressDetail="addressDetail"
+                @addAddress="addAddress"
+                :addressRecordLast="addressRecordLast"
+                :addressBook="addressBook"
+            />
+            <addressFrom 
+                v-else
+                :editAddress="editAddress"
+                :addressBook="addressBook"
+                @addEditAddressCb="addEditAddressCb"
+                @deleteAddressCb="deleteAddressCb"
+                :pageType.sync="pageType" 
+                :detail="detail" 
+                :to="to"
+            />
+        </div>
+    </layout>
 </template>
 
 <script>
 import addressList from './address-list'
 import addressFrom from './address-form'
+import layout from '@/components/layout'
 import { getQueryString } from '@/utils'
+import { mapState } from 'vuex'
+import { Database } from '@/utils/database.js';
 export default {
     data(){
         return{
             pageType:'list',
-            detailObj:null,
-            to:''
+            detail:null,
+            to:'',
+            editAddress:'',
+            addressRecordLast:[],
+            addressBook:[],
+            db:null
         }
     },
     components:{
         addressList,
-        addressFrom
+        addressFrom,
+        layout
+    },
+    computed:{
+        ...mapState('app',['rpc','address'])
     },
     mounted(){
         let to = getQueryString('to')
@@ -32,10 +59,35 @@ export default {
         console.log(to,'ttoo')
     },
     methods:{
+        async layoutMounted(){
+            let rpc = this.rpc
+            let db = new Database()
+            this.db = db
+            let addressRecordLast = await db.getTable('addressRecordLast',{ rpc: rpc,address: this.address })
+            this.addressRecordLast = addressRecordLast
+            let addressBook = await db.getTable("addressBook",{ rpc:rpc})
+            this.addressBook = addressBook
+        },
         addressDetail(detailObj){
-            console.log(detailObj,'addressDetailaddressDetail')
-            this.pageType = 'detail'
-            this.detailObj = detailObj
+            this.pageType = 'edit'
+            this.detail = detailObj
+            this.editAddress = detailObj.address
+        },
+        addAddress(){
+            this.pageType = 'edit'
+            this.detail = null
+        },
+        async addEditAddressCb(){
+            let rpc = this.rpc
+            let addressBook = await this.db.getTable('addressBook',{ rpc:rpc })
+            this.addressBook = addressBook
+            this.pageType = 'list'
+        },
+        async deleteAddressCb(){
+            let rpc = this.rpc
+            let addressBook = await this.db.getTable('addressBook',{ rpc:rpc })
+            this.addressBook = addressBook
+            this.pageType = 'list'
         }
     }
 }
@@ -44,6 +96,7 @@ export default {
 <style  lang="less" scoped>
 .setting-address{
     width: 100%;
+    height: 100%;
     margin: 0 auto;
     min-height: 100%;
     background: #fff;

@@ -1,3 +1,13 @@
+# install dependencies
+$ npm install
+
+# serve with hot reload
+$ npm run build-watch
+
+# build for production
+$ npm run build
+
+
 # FiveToken Chrome Extension
 FiveToken Chrome Extension, to provide professional transaction service for Filecoin storage providers and to bridge Filecoin ecosystem to Web 3 metaverse with reliable ID management via website service.
 
@@ -63,4 +73,56 @@ Chrome (last 2 versions)
 
 # License
 [MIT](https://github.com/FiveToken/FiveToken-Wallet-Chrome-Extension/blob/master/LICENSE)
+
+
+
+
+# FiveToken API
+Welcome to use the developer documentation for FiveToken. This document is intended for browsers with the Chrome FiveToken Extension plug-in installed.
+The whole Window.dapplink API is injected into the websites that the users visit. The API allows websites to request the user's plug-in wallet account, read numbers from the blockchain that the user is connected to, sign messages and trade from the user.
+
+### DAppLink.version
+Plug-in Version Number
+
+### DAppLink.isConnected()
+Returning true indicates that the API has been injected into the current site. If the injection fails, the page must be reloaded before the connection can be re-established.
+
+### DAppLink.request(args)
+Example:
+```js
+args :{
+  method: string;
+  params: object;
+}
+DAppLink.request({
+    // open chrome plugins
+    method: "openFilecoinWallet",
+    params:{
+        // window width
+        width:window.outerWidth,
+        // origin
+        origin:'https://filscan.io'
+    }
+})
+```
+
+### DAppLink.onMessage(tag,callback)
+tag
+
+|  filecoinWalletAddress   | scriptUpdateWeb3Storage  | scriptWeb3Storage |
+|  ----  | ----  | ----  | 
+| Listen to the result of connection address and return to the connection address  | Listen to the result of data storage and return to CID | Listen to the result of accessing address information and return to the storage information of the address |
+
+data
+
+Return data
+
+Example:
+``` js
+// tag: string;
+// callback:Funtion;
+window.AppLink.onMessage('filecoinWalletAddress',(data)=>{
+    console.log(data)
+})
+```
 

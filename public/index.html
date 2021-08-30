@@ -12,7 +12,7 @@
         padding: 0;
       }
       html,body{
-        width: 375px;
+        width: 360px;
         height: 600px;
         overflow-y: auto;
         font-family: 'Avenir', Helvetica, Arial, sans-serif;
@@ -25,67 +25,63 @@
       .el-message{
         top:0 !important;
       }
+      .fivetoken .el-message--error{
+        width: 100%;
+      }
+      .fivetoken .el-message--error .el-message__content{
+        word-break: break-all;
+      }
       .el-message-box{
         width: 90% !important;
       }
-      .filecoinwallet .el-button--primary{
+      .fivetoken .el-button--primary{
         background: #5CC1CB;
         border-color:#5CC1CB;
       }
-      .filecoinwallet .el-button--primary:active{
+      .fivetoken .el-button--primary:active{
           background: #5CC1CB;
           border-color: #5CC1CB;
           color: #FFF;
       }
-      .filecoinwallet .el-button--primary.is-disabled:hover,
-      .filecoinwallet .el-button--primary.is-disabled{
+      .fivetoken .el-button--primary.is-disabled:hover,
+      .fivetoken .el-button--primary.is-disabled{
         opacity: 0.5;
         background: #5CC1CB;
         border-color:#5CC1CB;
       }
-      .filecoinwallet .el-button--primary:focus,
-      .filecoinwallet .el-button--primary:hover{
+      .fivetoken .el-button--primary:focus,
+      .fivetoken .el-button--primary:hover{
         background: #5CC1CB;
         border-color:#5CC1CB;
       }
-      .filecoinwallet .el-checkbox__input.is-checked .el-checkbox__inner{
+      .fivetoken .el-checkbox__input.is-checked .el-checkbox__inner{
         background: #5CC1CB;
         border-color:#5CC1CB;
       }
-      .filecoinwallet .el-popover{
-        background: rgba(0,0,0,0.8);
-        color: #fff;
-        text-align: center;
-        padding: 7px 0;
+      .fivetoken .el-popover{
+        text-align: left;
+        padding: 10px;
         min-width:100px;
       }
-      .filecoinwallet .el-select-dropdown.el-popper[x-placement^=bottom] .popper__arrow{
+      .fivetoken .el-select-dropdown.el-popper[x-placement^=bottom] .popper__arrow{
         border-bottom-color: #EBEEF5;
       }
-      .filecoinwallet .el-select-dropdown.el-popper[x-placement^=bottom] .popper__arrow::after{
+      .fivetoken .el-select-dropdown.el-popper[x-placement^=bottom] .popper__arrow::after{
         border-bottom-color: #ffffff;
       }
-      .filecoinwallet .el-popper[x-placement^=bottom] .popper__arrow{
-        border-bottom-color: rgba(0,0,0,0.8);
-      }
-      .filecoinwallet .el-popper[x-placement^=bottom] .popper__arrow::after{
-        border-bottom-color: rgba(0,0,0,0.8);
-      }
-      .filecoinwallet .el-button--primary.is-plain {
+      .fivetoken .el-button--primary.is-plain {
           color: #fff;
           background: #ddd;
           border-color: #ddd;
       }
-      .filecoinwallet .el-button--primary.is-plain:hover{
+      .fivetoken .el-button--primary.is-plain:hover{
           color: #fff;
           background: #ddd;
           border-color: #ddd;
       }
     </style>
     <script src="../popup.js"></script>
-    <script src="../dexie.js"></script>
-    <script src="../db.js"></script>
-  <body class="filecoinwallet">
+  <body class="fivetoken">
     <noscript>
       <strong>We're sorry but <%= htmlWebpackPlugin.options.title %> doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
     </noscript>

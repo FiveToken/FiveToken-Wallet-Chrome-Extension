@@ -1,6 +1,149 @@
 
 
 import {trim,toFixed} from 'mytoolkit'
+import { 
+  genT1WalletByMne,
+  genT1WalletByCK,
+  genPrivateKeyFromMne,
+  genPrivateKeyDigest,
+} from '@/utils/f1'
+import {
+  privateKeyEncode,
+  privateKeyDecode,
+  genSalt
+} from '@/utils/key'
+import { Wallet } from "ethers";
+
+const encodeKey = 'five'
+export const fiveTokenVersion = '1.1.0'
+
+export const minimumPrecision = 0.00000001
+
+export function formatNumber(str,n){
+  let index = str.indexOf('.')
+  if(index > -1){
+      let arr = str.split(".")
+      let num = arr[0] + "." + arr[1].substring(0,n)
+      return num
+  }else{
+      return str
+  }
+}
+
+export function isProxy(networkType){
+  return networkType === 'proxy'
+}
+
+export function isFilecoinChain(networkType){
+  return (networkType === 'proxy' || networkType === 'filecoin')
+}
+
+export function getGlobalKek(){
+  let kek = window.localStorage.getItem('ftKek');
+  return kek
+}
+
+export function setGlabolKek(kek){
+  window.localStorage.setItem('ftKek', kek);
+}
+
+export async function getF1ByMne(mnemonic,kek,networkType,filecoinAddress0,index) {
+  if(isFilecoinChain(networkType)){
+    let path = "m/44'/461'/0'/0"
+    let f1 = genT1WalletByMne(mnemonic,filecoinAddress0,path,index)
+    let { address,privateKey } = f1
+    let pk = privateKeyEncode(privateKey,kek)
+    let digest = await genPrivateKeyDigest(pk)
+    return {
+      address,
+      privateKey:pk,
+      digest
+    }
+  }else{
+    let path = "m/44'/60'/0'/0"
+    let ck = await genPrivateKeyFromMne(mnemonic,path,index)
+    let pk = ck.toString("hex")
+    let f1 = new Wallet(pk)
+    let { address,privateKey } = f1
+    let pkk = privateKeyEncode(privateKey,kek)
+    let digest = await genPrivateKeyDigest(pkk)
+    return {
+      address,
+      privateKey:pkk,
+      digest
+    }
+  }
+}
+
+export async function getF1ByPrivateKey(privateKey,kek,networkType,filecoinAddress0) { 
+  try{
+    if(isFilecoinChain(networkType)){
+      let f1 = genT1WalletByCK(privateKey,filecoinAddress0,[])
+      let { address } = f1
+      let pk = privateKeyEncode(privateKey,kek)
+      let digest = await genPrivateKeyDigest(pk)
+      return {
+        address,
+        privateKey:pk,
+        digest
+      }
+    }else{
+      let walletMnemonic = new Wallet(privateKey)
+      let pk = privateKeyEncode(privateKey,kek)
+      let digest = await genPrivateKeyDigest(pk)
+      return {
+        address:walletMnemonic.address,
+        privateKey:pk,
+        digest
+      }
+    }
+  }catch(err){
+    return null
+  }
+}
+
+export function getDecodePrivateKey(encodePrivateKey,kek,networkType,hex) {
+  if(isFilecoinChain(networkType)){
+    let pk = privateKeyDecode(encodePrivateKey,kek)
+    let privateKey1 = strToHexCharCode(pk)
+    if(hex){
+      let privateKey = strToHexCharCode(pk)
+      return privateKey
+    }else{
+      return pk
+    }
+  }else{
+    let pk = privateKeyDecode(encodePrivateKey,kek)
+    return pk
+  }
+}
+
+export async function validatePassword(password,salt) {
+  try{
+    let _salt = genSalt(password)
+    if(_salt === salt){
+      return true
+    }else{
+      return false
+    }
+  }catch(err){
+    return false
+  }
+}
+
+function strToHexCharCode(pk) {
+　　if(pk === "") return "";
+    let obj = {
+        Type:'secp256k1',
+        PrivateKey:pk
+    }
+    let str = JSON.stringify(obj)
+　　var hexCharCode = [];
+　　for(var i = 0; i < str.length; i++) {
+　　　　hexCharCode.push((str.charCodeAt(i)).toString(16));
+　　}
+　　return hexCharCode.join("");
+}
 
 export function getQueryString(name) { 
   var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i"); 
@@ -9,15 +152,6 @@ export function getQueryString(name) {
   return null; 
 }
 
-export function getNowFormatDateEn() {
-  let date = new Date();
-  let seperator = "-";
-  let year = date.getFullYear();
-  let month = date.getMonth() + 1;
-  let day = date.getDate();
-  let currentdate = add0(month) + seperator + add0(day) + seperator + year  ;
-  return currentdate;
-}
 
 export function formatDate(timestamp,second){
   if(timestamp === '') return
@@ -35,43 +169,8 @@ export function formatDate(timestamp,second){
   }
 }
 
-export function formatDateEn(timestamp){
-  if(timestamp === '') return
-  let date = new Date(timestamp * 1000);
-  let y = date.getFullYear();
-  let m = date.getMonth()+1;
-  let d = date.getDate() ;
-  let h = date.getHours();
-  let mm = date.getMinutes();
-  let s = date.getSeconds();
-  return add0(m) + '-' + add0(d)+ '-' + y
-}
 
 export function add0(m){return m<10?'0'+m:m }
-
-export function formatFilNum(num, size = 5) {
-  num = parseE(String(num))
-  let dot = String(num).split('.')[1]
-  let zero = 1
-  if (dot) {
-      for (let v of dot) {
-          if (Number(v) !== 0) {
-              break
-          } else {
-              zero++
-          }
-      }
-      if (zero <= 5) {
-          return fixedFloat(num,size) + ' FIL'
-      } else if (zero > 5 && zero <= 13) {
-          return fixedFloat((Number(num) * Math.pow(10, 9)),size) + ' nanoFIL'
-      } else {
-          return fixedFloat((Number(num) * Math.pow(10, 18)),size) + ' attoFIL'
-      }
-  } else {
-      return num + ' FIL'
-  }
-}
 
 
 export function parseE(str) {
@@ -102,16 +201,16 @@ export function parseE(str) {
   return r 
 }
 
-function fixedFloat(num,size=2){
-  const [int,dot]=String(num).split('.')
-  if(dot){
-    return Number(int)- -parseFloat('0.'+dot).toPrecision(size)
-  }else{
-    return num
-  }
-}
 
-export function isValidAddress(v){
+export function isValidAddress(v,networkType){
+  if(!isFilecoinChain(networkType)){
+    let bol = false
+    let start = v.startsWith('0x')
+    if(start && v.length === 42){
+      bol = true
+    }
+    return bol
+  }else{
     let str = trimStr(v)
     let bol = false
     if(str === '') return true
@@ -124,11 +223,12 @@ export function isValidAddress(v){
     }
     if((two === 't2' || two === 'f2') && str.length === 41){
       bol = true
-  }
+    }
     if((two === 't3' || two === 'f3') && str.length === 86){
         bol = true
     }
     return bol
+  }
 }
 
 export function trimStr(str){
@@ -148,4 +248,97 @@ export function fil2atto(v) {
 export function isDecimal(str) {
   let r = /(^\d+(?:\.\d+)?([eE]-?\d+)?$|^\.\d+([eE]-?\d+)?$)/
   return r.test(str)
+}
+
+export function getGasLimit(actor_exist,gas_limit){
+  // let res = (Number(gas_used))*1.25
+  let res = actor_exist ? gas_limit : 2200000;
+  return res
+}
+// this.gasFeeCap(res.base_fee,base_fee_ratio,nano_ratio,gas_premium,gasLimit)
+export function getGasFeeCap(base_fee,base_fee_ratio,gas_premium,gasLimit,networkType){
+    // let gasfee_cap = Math.max(base_fee_ratio * Number(base_fee), nano_ratio * Math.pow(10, 9));
+    try{
+      if(!isFilecoinChain(networkType)){
+        return base_fee * gasLimit
+      }else{
+        let gasfee_cap = base_fee_ratio * base_fee + gas_premium
+        return gasfee_cap
+      }
+    }catch(err){
+      console.log(err,'getGasFeeCap。err')
+    }
+    
+    
+}
+
+
+export function getGasPremium(){
+  let gas_premium = Math.pow(10, 6)
+  return gas_premium
+}
+
+
+export function addDb(key,data){
+  return new Promise((resolve, reject)=>{
+    try{
+      window.filecoinwalletDb[key].add({
+          ...data
+      }).then(res=>{
+        resolve()
+      }).catch(err=>{
+        reject()
+      })
+    }catch(error){
+      reject()
+    }
+  })
+}
+
+export function getDb(key,data){
+  return new Promise((resolve, reject)=>{
+    try{
+      window.filecoinwalletDb[key].add({
+          ...data
+      }).then(res=>{
+        resolve()
+      }).catch(err=>{
+        reject()
+      })
+    }catch(error){
+      reject()
+    }
+  })
+}
+
+export function deleteDb(key,data){
+  return new Promise((resolve, reject)=>{
+    try{
+      window.filecoinwalletDb[key].add({
+          ...data
+      }).then(res=>{
+        resolve()
+      }).catch(err=>{
+        reject()
+      })
+    }catch(error){
+      reject()
+    }
+  })
+}
+
+export function modifyDb(key,data){
+  return new Promise((resolve, reject)=>{
+    try{
+      window.filecoinwalletDb[key].add({
+          ...data
+      }).then(res=>{
+        resolve()
+      }).catch(err=>{
+        reject()
+      })
+    }catch(error){
+      reject()
+    }
+  })
 }

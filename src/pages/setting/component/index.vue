@@ -1,44 +1,158 @@
 <template>
-<div class="setting">
-    <div class="top-nav">
-        <div class="name">{{$t('setting.name')}}</div>
-        <div class="close" @click="back">
-            <i class="el-icon-close"></i>
-        </div>
-    </div>
-    <div class="setting-content">
-        <div class="menu">
-            <div v-for="(item,index) in $t('setting.menu')" :key="index">
-                <a :href="item.url" class="menu-item" v-if="!((item.url === './setting-backups.html') && !mnemonicWords)">
-                    <div class="left">{{ item.name }}</div>
-                    <div class="right">
-                        <i class="el-icon-arrow-right"></i>
-                    </div>
-                </a>
+    <layout>
+        <div class="setting">
+            <div class="top-nav">
+                <kyBack :name="$t('setting.name')" @pageBack='back'/>
             </div>
-            
+            <div class="setting-content">
+                <div class="menu">
+                    <div class="menu-item" @click="currencyVisible = true">
+                        <div class="link">
+                            <div class="left">{{$t('setting.currency')}}</div>
+                            <div class="right">
+                                <div class="text">{{currencyName}}</div>
+                                <i class="el-icon-arrow-right"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="menu-item" @click="languageVisible = true">
+                        <div class="link">
+                            <div class="left">{{$t('setting.language')}}</div>
+                            <div class="right">
+                                <div class="text">{{languageName}}</div>
+                                <i class="el-icon-arrow-right"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="menu-item" v-for="(item,index) in $t('setting.menu')" :key="index">
+                        <a class="link" :href="item.url">
+                            <div class="left">{{ item.name }}</div>
+                            <div class="right">
+                                <div class="text" v-if="item.url === './setting-networks.html'">{{rpcName}}</div>
+                                <i class="el-icon-arrow-right"></i>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
-</div>
+        <el-dialog
+            :visible.sync="currencyVisible"
+            width="300px"
+            :show-close="false"
+            :top="'38vh'"
+        >
+            <kyCurrency v-if="currencyVisible" @confirm="currencyChange" @close="currencyClose"/>
+        </el-dialog>
+        <el-dialog
+            :visible.sync="languageVisible"
+            width="300px"
+            :show-close="false"
+            :top="'30vh'"
+        >
+            <kyLanguage v-if="languageVisible" @confirm="languageChange" @close="languageClose"/>
+        </el-dialog>
+    </layout>
 </template>
-
 <script>
+import layout from '@/components/layout'
+import kyBack from '@/components/back'
+import kyCurrency from './currency.vue'
+import kyLanguage from './language.vue'
+import { mapMutations, mapState } from 'vuex'
+import { Database } from '@/utils/database.js';
 
 export default {
     data(){
         return{
-            mnemonicWords:''
+            createType:'',
+            currencyVisible:false,
+            languageVisible:false,
+            db:null
         }
     },
-    
+    computed:{
+        ...mapState('app',['currency','language','rpcName']),
+        currencyName(){
+            let str = ''
+            let obj = {
+                usd:'USD',
+                cny:'CNY'
+            }
+            if(obj.hasOwnProperty(this.currency)){
+                str = obj[this.currency]
+            }
+            return str
+        },
+        languageName(){
+            let str = ''
+            let obj = {
+                zh:'中文',
+                en:'English',
+                ko:'한국어',
+                ja:'日本語'
+            }
+            if(obj.hasOwnProperty(this.language)){
+                str = obj[this.language]
+            }
+            return str
+        }
+    },
+    components:{
+        layout,
+        kyBack,
+        kyCurrency,
+        kyLanguage
+    },
     async mounted(){
-        let activeAccount = await window.filecoinwalletDb.activeAccount.where({ kunyao:'kunyao'}).toArray ();
-        let mnemonicWords = activeAccount.length && activeAccount[0].mnemonicWords
-        this.mnemonicWords = mnemonicWords
+        let db = new Database()
+        this.db = db
+        let activeAccount = await db.getTable("activeAccount",{ khazix:'khazix'})
+        let createType = activeAccount.length && activeAccount[0].createType
+        this.createType = createType
     },
     methods:{
+        ...mapMutations('app',[
+            'SET_CURRENCY',
+            'SET_LANGUAGE',
+            'SET_RPCNAME'
+        ]),
         back(){
             window.location.href = './wallet.html'
+        },
+        currencyChange(val){
+            let currency = val.value
+            this.SET_CURRENCY(currency)
+            window.localStorage.setItem('fiveTokenCurrency',currency)
+            this.currencyVisible = false
+        },
+        currencyClose(){
+            this.currencyVisible = false
+        },
+        async languageChange(val){
+            let lang = val.value
+            this.SET_LANGUAGE(lang)
+            this.$i18n.locale = lang
+            window.localStorage.setItem('fiveTokenLanguage',lang)
+            this.languageVisible = false
+            
+            let defaultNetworks = this.$t('defaultNetworks')
+            console.log(defaultNetworks,'defaultNetworks 333')
+            await this.db.deleteTable('networks',{ khazix:'khazix' }).then(res=>{
+                this.db.bulkAddTable('networks',defaultNetworks)
+            })
+            if(defaultNetworks.length){
+                let _first = defaultNetworks[0]
+                let { name } = _first
+                this.SET_RPCNAME(name)
+                await this.db.deleteTable('activenNetworks',{ khazix:'khazix' }).then(res=>{
+                    this.db.addTable('activenNetworks',_first)
+                })
+                
+            }
+        },
+        languageClose(){
+            this.languageVisible = false
         }
     }
 }
@@ -47,28 +161,11 @@ export default {
 <style  lang="less" scoped>
 .setting{
     width: 100%;
-    margin: 0 auto;
-    min-height: 100%;
+    height: 100%;
     background: #fff;
-    box-sizing: border-box;
     .top-nav{
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 20px;
+        padding:15px 20px;
         border-bottom: 1px solid #eee;
-        .name{
-            font-size: 18px;
-            color: #222;
-            font-weight: bolder;
-        }
-        .close{
-            cursor: pointer;
-            i{
-                font-size: 18px;
-            color: #222;  
-            }
-        }
     }
     .setting-content{
         display: flex;
@@ -76,23 +173,53 @@ export default {
         .menu{
             width: 100%;
             .menu-item{
-                color: #222;
-                text-decoration: none;
-                padding:0 20px;
                 width: 100%;
                 height: 50px;
                 line-height: 50px;
-                display: flex;
                 border-bottom: 1px solid #eee;
-                box-sizing: border-box;
-                .left{
-                    flex-grow: 1;
-                    font-size: 14px;
+                position: relative;
+                cursor: pointer;
+                &:hover{
+                    background: #f5f5f5;
+                }
+                .link{
                     color: #222;
                     text-decoration: none;
+                    padding:0 20px;
+                    display: flex;
+                    box-sizing: border-box;
+                    .left{
+                        flex-grow: 1;
+                        font-size: 14px;
+                        color: #222;
+                        text-decoration: none;
+                        cursor: pointer;
+                    }
+                    .right{
+                        cursor: pointer;
+                        .text{
+                            position: absolute;
+                            right: 40px;
+                            top: 50%;
+                            transform: translateY(-50%);
+                        }
+                    }
                 }
             }
         }
     }
+}
+/deep/.el-dialog{
+    margin: 0 auto;
+    border-radius: 10px;
+}
+/deep/.el-dialog__header{
+    padding:0;
+}
+/deep/.el-dialog__body{
+    padding: 0;
+}
+/deep/.el-dialog__footer{
+    padding: 0;
 }
 </style>

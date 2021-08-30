@@ -1,65 +1,59 @@
 <template>
 <div class="address-list">
-    <div class="back" v-if="listType !=='my-account'">
-        <i class="el-icon-arrow-left" @click="back"></i>
-        <span>{{$t('settingAddress.addressBook')}}</span>
-        <i class="el-icon-close" @click="closeSetting"></i>
+    <div class="back-wrap">
+        <kyBack 
+            @pageBack="back" 
+            :name="$t('settingAddress.addressBook')" 
+            :close="true" 
+            @pageClose="closeSetting" 
+        />
     </div>
-    <div class="address-tips" @click="toMyAddress" v-if="listType !=='my-account'">
-        <div class="c-top">{{$t('settingAddress.myWallet')}}</div>
-        <div class="c-bottom">{{$t('settingAddress.autoAdd')}}</div>
-        <div class="close"><i class="el-icon-arrow-right"></i></div>
-    </div>
-    <div class="my-account" v-if="listType ==='my-account'">
-        <div class="back-last-book" @click="backLastBook">
-            <i class="el-icon-arrow-left"></i>
-            <span>{{$t('settingAddress.myWallet')}}</span>
-        </div>
-        <div class="address-item" v-for="(item,index) in accountList" :key="index">
-            <div class="addrname">{{item.accountName}}</div>
-            <div class="addr">{{item.address}}</div>
-        </div>
-    </div>
-    <div class="last-book" v-else>
-        <div class="last-name" v-if="addressRecordLast.length">{{$t('settingAddress.lastRecord')}}</div>
-        <div class="last-list" v-if="addressRecordLast.length">
-            <div class="address-item" v-for="(item,index) in addressRecordLast" :key="index" @click="addressClick(item)">
-                <div class="addr">{{item.address}}</div>
-                <div class="a-right"><i class="el-icon-arrow-right"></i></div>
+    <div class="book-list">
+        <div 
+            class="address-item" 
+            v-for="(item,index) in addressBook" 
+            :key="index" 
+            @click="addressClick(item)"
+        >
+            <div class="addr">
+                <div class="name">{{item.accountName}}</div>
+                <div class="add">{{item.address}}</div>
             </div>
-        </div>
-        <div class="book-name" v-if="addressBook.length">{{$t('settingAddress.addressBook')}}</div>
-        <div class="book-list" v-if="addressBook.length">
-            <div class="address-item" v-for="(item,index) in addressBook" :key="index" @click="addressClick(item)">
-                <div class="addr">
-                    <div class="name">{{item.name}}</div>
-                    <div class="add">{{item.address}}</div>
-                </div>
-                <div class="a-right"><i class="el-icon-arrow-right"></i></div>
-            </div>
+            <div class="a-right"><i class="el-icon-arrow-right"></i></div>
         </div>
     </div>
-    <div class="position" v-if="listType !=='my-account'">
+    <div class="position">
         <div class="add-btn">
-            <el-button type="primary" @click="addAddress">{{$t('settingAddress.add')}}</el-button>
+            <kyButton :type="'primary'" :active="true" @btnClick="addAddress">
+                {{$t('settingAddress.add')}}
+            </kyButton>
         </div>
     </div>
 </div>
 </template>
 
 <script>
+import { mapState } from 'vuex'
+import kyBack from '@/components/back'
+import kyButton from '@/components/button'
 export default {
     data(){
         return{
-            // my-account last-book
-            listType:'last-book',
-            addressRecordLast:[],
-            addressBook:[],
-            accountList:[]
+            search:'',
+            collapse:'1'
         }
     },
+    components:{
+        kyBack,
+        kyButton
+    },
     props:{
-        pageType:String
+        pageType:String,
+        addressRecordLast:Array,
+        addressBook:Array
+    },
+    computed:{
+        ...mapState('app',['accountList'])
     },
     filters:{
         addressFormat(val){
@@ -70,24 +64,12 @@ export default {
             } 
         },
     },
-    async mounted(){
-        let activeAccount = await window.filecoinwalletDb.activeAccount.where({ kunyao:'kunyao'}).toArray ()|| [];
-        let address = activeAccount.length && activeAccount[0].address
-        let addressRecordLast = await window.filecoinwalletDb.addressRecordLast.where({ kunyao:'kunyao'}).toArray () || [];
-         this.addressRecordLast = addressRecordLast.filter(n=>{
-            return n.address === address
-        })
-        let addressBook = await window.filecoinwalletDb.addressBook.where({ kunyao:'kunyao'}).toArray () || [];
-         this.addressBook = addressBook
-        let accountList = await window.filecoinwalletDb.accountList.where({ kunyao:'kunyao'}).toArray () || [];
-        this.accountList = accountList
+    mounted(){
+
     },
     methods:{
-        toMyAddress(){
-            this.listType = 'my-account'
-        },
-        backLastBook(){
-            this.listType = 'last-book'
+        changeSearch(val){
+            this.search = val
         },
         back(){
              window.location.href = './setting.html'
@@ -96,11 +78,11 @@ export default {
             window.location.href = './wallet.html'
         },
         addressClick(detail){
-            console.log(detail,'addressClick')
+            console.log(detail,'detail 123')
             this.$emit('addressDetail',detail)
         },
         addAddress(){
-            this.$emit('update:pageType','add')
+            this.$emit('addAddress')
         }
     }
 }
@@ -108,140 +90,62 @@ export default {
 
 <style  lang="less" scoped>
 .address-list{
-    height: 475px;
-    
-    .back{
-        display: flex;
-        align-items: center;
-        padding:  10px 20px;
-        color: #222;
-        border-bottom: 1px solid #eee;
-        margin-bottom: 20px;
-        justify-content: space-between;
-        i{
-            font-size: 18px;
-            display: flex;
-            align-items: center;
-            padding-right: 5px;
-            cursor: pointer;
-        }
-        .el-icon-arrow-left{
-            justify-content: flex-start;
-        }
-        .el-icon-close{
-            justify-content: flex-end;
-        }
-        span{
-            flex-grow: 1;
-            font-size: 18px;
-            text-align: left;
-        }
+    height: 100%;
+    background: #fff;
+    .back-wrap{
+        padding:  15px 20px;
+        border-bottom: 1px solid #F6F7FF;
     }
-    .address-tips{
+    .search-address{
         padding: 10px 20px;
-        border-bottom: 1px solid #eee;
         position: relative;
-        .c-top{
-            font-size: 18px;
-            font-weight: bolder;
-            color: #222;
-            margin-bottom: 10px;
-        }
-        .c-bottom{
-            font-size: 14px;
-            color: #999;
-        }
-        .close{
+        .search{
             position: absolute;
-            right: 20px;
-            top:50%;
+            right: 30px;
+            top: 50%;
             transform: translateY(-50%);
         }
     }
-    .my-account{
-        .back-last-book{
-            display: flex;
-            align-items: center;
-            padding: 10px 20px;
-            color: #222;
-            border-bottom: 1px solid #eee;
-            margin-bottom: 20px;
-            justify-content: flex-start;
-            i{
-                font-size: 18px;
-                padding-right: 5px;
-            }
-            span{
-                font-size: 18px;
-            }
-        }
-
-        .address-item{
-            background: #fff;
-            border-bottom: 1px solid #eee;
-            padding:10px 20px;
-            .addrname{
-                font-size: 14px;
-                color: #222;
-                margin-bottom: 5px;
-            }
-            .addr{
-                font-size: 12px;
-                color: #999;
-                width: 100%;
-                overflow: hidden;    
-                text-overflow:ellipsis;    
-                whitewhite-space: nowrap;
-            }
-
-        }
-    }
-    .last-book{
-        .last-name,.book-name{
-            height: 40px;
-            line-height: 40px;
-            font-size: 16px;
-            color: #222;
-            padding: 0 20px;
-            font-weight: bolder;
-        }
+    .book-list{
+        height: 480px;
+        overflow-y: auto;
+        padding: 0 20px;
         .address-item{
             background: #fff;
             border-bottom: 1px solid #eee;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 20px;
+            padding: 10px 0;
             .a-right{
                 font-size: 14px;
                 color: #222;
             }
             .addr{
+                font-size: 12px;
+                color: #999;
                 .name{
                     font-size: 14px;
                     color: #222;
                 }
-                font-size: 12px;
-                color: #999;
                 .add{
-
-                width: 100%;
-                overflow: hidden;    
-                text-overflow:ellipsis;    
-                whitewhite-space: nowrap;
+                    width: 100%;
+                    overflow: hidden;    
+                    text-overflow:ellipsis;    
+                    whitewhite-space: nowrap;
                 }
             }
 
         }
     }
     .position{
-        position: fixed;
+        position: absolute;
         bottom: 0;
         left: 0;
         width: 100%;
         .add-btn{
             display: flex;
-            padding:10px 20px;
+            padding:15px 20px;
             /deep/.el-button{
                 flex-grow: 1;
             }

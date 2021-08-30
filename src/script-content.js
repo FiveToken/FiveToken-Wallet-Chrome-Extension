@@ -47,14 +47,25 @@ window.addEventListener("message", function (event) {
 
 function messageListen(){
     chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-        if(request.tag == 'filecoinWalletConnect'){
-            window.postMessage({ tag: "filecoinWalletAddress", data: request.data }, "*");
-            chrome.runtime.sendMessage({
-                method:'closeWindow'
-            }, function () { 
-                return true
-             });
+        switch(request.tag){
+            case 'filecoinWalletConnect':
+                window.postMessage({ tag: "filecoinWalletAddress", data: request.data }, "*");
+                chrome.runtime.sendMessage({
+                    method:'closeWindow'
+                }, function () { 
+                    return true
+                 });
+            break;
+            case 'scriptWeb3Storage':
+                window.postMessage({ tag: "responseWebStorange", data: request.data }, "*");
+                break
+            case 'scriptUpdateWeb3Storage':
+                window.postMessage({ tag: "scriptUpdateWeb3Storage", data: request.data }, "*");
+               
+                break
+                
         }
+        
         sendResponse(request.data)
     });
 }

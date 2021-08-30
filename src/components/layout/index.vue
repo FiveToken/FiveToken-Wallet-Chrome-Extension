@@ -44,7 +44,7 @@ export default {
             this.SET_RPC(rpc)
             this.SET_RPCNAME(rpcName)
             this.SET_NETWORKS(networks)
-            let accountList = await db.getTable('accountList',{ rpc })
+            let accountList = await db.getTable('accountList',{ rpc ,isDelete:0})
             this.SET_ACCOUNTLIST(accountList)
             this.SET_SYMBOL(symbol)
             this.SET_IDS(ids)

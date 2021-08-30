@@ -4,11 +4,11 @@
             {{time}}
         </div>
         <div class="info-wrap">
-            <div class="icon reveiced" v-if="item.type === 'success' && item.to === address">
-                <img class="img" :src="send" />
-            </div>
-            <div class="icon send" v-else-if="item.type === 'success' && item.from === address">
+            <div class="icon send" v-if="item.type === 'success' && item.from === address">
                 <img class="img" :src="rec" />
+            </div>
+            <div class="icon reveiced" v-else-if="item.type === 'success' && item.to === address">
+                <img class="img" :src="send" />
             </div>
             <div class="icon pending" v-if="item.type === 'pending'">
                 <img class="img" :src="pending" />

@@ -76,14 +76,15 @@ import kyBack from '@/components/back'
 import kyAdd from './add.vue'
 import { BigNumber } from "bignumber.js";
 import { Database } from '@/utils/database.js';
+import { GlobalApi } from '@/utils/api'
 export default {
     data(){
         return{
+            mneAccount:[],
+            pkAccount:[],
             loading:require('@/assets/image/loading.png'),
             isFetch:false,
             addAccountVisable:false,
-            mneAccount:[],
-            pkAccount:[],
             addName:'',
             nme:'',
             activeF1:null,
@@ -104,7 +105,7 @@ export default {
             'decimals',
             'deriveIndex',
             'networks'
-        ])
+        ]),
     },
     filters:{
         addressFormat(val){
@@ -132,14 +133,6 @@ export default {
         kyBack,
         kyAdd
     },
-    async mounted(){
-        const db = new Database();
-        this.db = db
-        let walletKey = await db.getTable('walletKey',{ khazix:'khazix' })
-        if(walletKey.length){
-            this.nme = walletKey[0].mnemonicWords
-        }
-    },
     methods:{
         ...mapMutations('app',[
             'SET_PRIVATEKEY',
@@ -148,8 +141,64 @@ export default {
             'SET_ACCOUNTNAME',
             'SET_DERIVEINDEX'
         ]),
+        
+        async layoutMounted(){
+            this.isFetch = true
+            this.mneAccount = this.accountList.filter(n=>{
+                return n.createType === 'mnemonic'
+            })
+            this.pkAccount = this.accountList.filter(n=>{
+                return n.createType === 'privateKey'
+            })
+            let address = this.address
+            let rpc = this.rpc
+            let networkType = this.networkType
+            const db = new Database();
+            this.db = db
+            try{
+                this.accountList.forEach(async (n)=>{
+                   let balance = await this.getBalanceNonce(n.address,rpc,networkType)
+                    if(n.createType === 'mnemonic'){
+                        let index = this.mneAccount.findIndex(m=>{ return n.address === m.address })
+                        console.log(index,'index 1111')
+                        this.$set(this.mneAccount,index,{
+                             ...n,
+                            fil:balance
+                        })
+                    }
+                    if(n.createType === 'privateKey'){
+                        let index = this.pkAccount.findIndex(m=>{ return n.address === m.address })
+                        console.log(index,'index 22222')
+                        this.$set(this.pkAccount,index,{
+                             ...n,
+                            fil:balance
+                        })
+                    }
+                    await this.db.modifyTable(
+                        'accountList',
+                        {
+                            address:n.address,
+                            rpc:rpc
+                        },
+                        {
+                            fil:balance,
+                        }
+                    ).then(res=>{
+                        console.log(balance,'update ohter')
+                    })
+                })
+                let walletKey = await db.getTable('walletKey',{ khazix:'khazix' })
+                if(walletKey.length){
+                    this.nme = walletKey[0].mnemonicWords
+                }
+                this.isFetch = false
+            }catch(err){
+                this.isFetch = false
+                console.log(err,'eeeeeerrrrrrrr')
+            }
+        },
         async initAdd(){
-            let index = this.deriveIndex + 1
+            let index = this.accountList.length + 1
             let kek = getGlobalKek()
             let mnemonic = AESDecrypt(this.nme)
             let ethereumF1 = await getF1ByMne(mnemonic,kek,'ethereum','',index)
@@ -167,15 +216,6 @@ export default {
             this.ethereumF1 = ethereumF1
             this.filecoinF1 = filecoinF1
             this.calibrationF1 = calibrationF1
-        },
-        layoutMounted(){
-            let accountList = this.accountList
-            this.mneAccount = accountList.filter(n=>{
-                return n.createType === 'mnemonic'
-            })
-            this.pkAccount = accountList.filter(n=>{
-                return n.createType === 'privateKey'
-            })
         },
         async confirmAdd(){
             try{
@@ -213,6 +253,7 @@ export default {
                             khazix:'khazix',
                             digest:this.calibrationF1.digest,
                             rpc:n.rpc,
+                            isDelete:0,
                             fil:0
                         })
                     }else if(n.filecoinAddress0 === 'f'){
@@ -225,6 +266,7 @@ export default {
                             khazix:'khazix',
                             digest:this.filecoinF1.digest,
                             rpc:n.rpc,
+                            isDelete:0,
                             fil:0
                         })
                     }else{
@@ -237,6 +279,7 @@ export default {
                             khazix:'khazix',
                             digest:this.ethereumF1.digest,
                             rpc:n.rpc,
+                            isDelete:0,
                             fil:0
                         })
                     }
@@ -269,9 +312,16 @@ export default {
         importByPk(){
             window.location.href = './import-privatekey.html'
         },
+        async getBalanceNonce(address,rpc,networkType){
+            let MyGlobalApi = new GlobalApi()
+            MyGlobalApi.setRpc(rpc)
+            MyGlobalApi.setNetworkType(networkType)
+            let res = await MyGlobalApi.getBalance(address)
+            let { balance,nonce } = res
+            return balance
+        },
         async lockUser(){
             let create_time =  parseInt(new Date().getTime() / 1000)
-            
             await this.db.addTable('lockUser',{
                 address:this.address,
                 privateKey:this.privateKey,
@@ -306,12 +356,15 @@ export default {
             )
             window.location.href = './wallet.html'
         },
-        createWallet(){
-            this.addName = `Account` + (this.accountList.length + 1)
+        async createWallet(){
+            let _accountList_ = await this.db.getTable('accountList',{ rpc :this.rpc })
+            let addName = `Account` + (_accountList_.length + 1)
+            this.addName = addName
             this.addAccountVisable = true
-            setTimeout(()=>{
-                this.initAdd()
-            },0)
+
+            setTimeout(async ()=>{
+                await this.initAdd()
+            },100)
         },
         importWallet(){
             window.location.href = './import-privatekey.html'
@@ -394,7 +447,7 @@ export default {
     .content-account{
         max-height: 390px;
         overflow-y: auto;
-        box-shadow: 0 2px 10px 0 rgb(0 0 0 / 15%);
+        box-shadow: 0 6px 10px 0 rgb(0 0 0 / 15%);
         .mne-account,.pk-account{
             .mne-tit{
                     height: 40px;

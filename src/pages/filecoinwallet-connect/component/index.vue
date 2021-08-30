@@ -36,6 +36,7 @@ import { Database } from '@/utils/database.js';
 export default {
     data(){
       return{
+        rpc:'',
         address:'',
         accountList:[],
         lockUser:[],
@@ -45,7 +46,6 @@ export default {
       }
     },
     computed:{
-      ...mapState('app',['rpc']),
       disabled(){
         return this.address === ''
       }
@@ -69,18 +69,24 @@ export default {
       let db = new Database()
       this.db = db
       let lockUser = await db.getTable('lockUser',{ khazix:'khazix' })
-      let accountList = await db.getTable('accountList',{ rpc:this.rpc })
       this.lockUser = lockUser
-      this.accountList = accountList
-      if(accountList.length){
-        let frist = accountList[0]
-        this.address = frist.address
-        this.connectAccount = {
-          address:frist.address,
-          fil:frist.fil,
-          accountName:frist.accountName
+      let activenNetworks = await db.getTable('activenNetworks',{ khazix:'khazix' })
+      if(activenNetworks.length){
+        let rpc = activenNetworks[0].rpc
+        this.rpc = rpc
+        let accountList = await db.getTable('accountList',{ rpc:rpc,isDelete:0, })
+        this.accountList = accountList
+        if(accountList.length){
+          let frist = accountList[0]
+          this.address = frist.address
+          this.connectAccount = {
+            address:frist.address,
+            fil:frist.fil,
+            accountName:frist.accountName
+          }
         }
       }
+      
       let origin = popupGetVal('origin')
       this.origin = origin
     },

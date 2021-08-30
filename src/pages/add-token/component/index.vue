@@ -7,8 +7,13 @@
       <div class="add-content">
         <div class="input-item">
           <div class="label">{{ $t("addToken.contractAddress") }}</div>
-          <kyInput :value="contract" @changeInput="contractInput"/>
+          <kyInput 
+            :value="contract"
+            @changeInput="changeInput"
+            @blur="contractInput"
+          />
           <div class="error" v-if="isExists">{{ $t("addToken.error") }}</div>
+          <div class="error" v-if="error">{{ $t("addToken.addressError") }}</div>
         </div>
         <div class="info" v-if="contractEffective">
           <div class="logo">
@@ -80,7 +85,8 @@ export default {
       tokenList:[],
       isExists:false,
       logoArr:[],
-      db:null
+      db:null,
+      error:''
     };
   },
   computed:{
@@ -109,10 +115,14 @@ export default {
       })
       this.tokenList = tokenList
     },
+    changeInput(val){
+      this.contract = val
+      this.error = ''
+      this.contractEffective = false
+    },
     contractInput(val){
         let that = this
-        this.contract = val
-        let isExists = this.tokenList.find(item => {return item.contract == this.contract}) != undefined
+        let isExists = this.tokenList.find(item => { return item.contract == this.contract }) != undefined
         this.isExists = isExists
         let provider = ethers.getDefaultProvider(this.rpc);
         let contract = new ethers.Contract(this.contract, ABI, provider);
@@ -131,7 +141,11 @@ export default {
             that.decimals = ''
             that.name = ''
             that.symbol = ''
-            console.log(err,'err contractInput')
+            if(err && err.reason && err.reason.indexOf('resolver or addr is not configured for ENS name') > -1){
+              this.error = this.$t('addToken.addressError')
+            }else{
+              this.error = ''
+            }
         })
         
     },

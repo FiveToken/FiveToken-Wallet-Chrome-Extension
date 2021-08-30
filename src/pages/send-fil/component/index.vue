@@ -11,6 +11,7 @@
                 v-else
                 :price_currency="price_currency"
                 :formData="formData"
+                :mainBalance="mainBalance"
                 @formDataChange="formDataChange"
                 :baseFeeCap="baseFeeCap"
                 :baseLimit="baseLimit"
@@ -50,6 +51,7 @@ export default {
             pkk:'',
             contractSigner:null,
             db:null,
+            mainBalance:0,
             formData:{
                 balance:0,
                 to:'',
@@ -142,10 +144,12 @@ export default {
                     contract.balanceOf(this.address).then(res=>{
                         let balance = res.toString()
                         let num = Number(balance) / Math.pow(10,Number(n.decimals))
+                        let big = new BigNumber(num).toFixed()
+                        let _balance = formatNumber(big,12)
                         tokenList.push(
                             {
                                 ...n,
-                                balance:num,
+                                balance:_balance,
                                 isMain:0,
                                 chainName:this.formData.chainName,
                                 image:'',
@@ -222,6 +226,7 @@ export default {
             let big = new BigNumber(dec).toFixed()
             let num = formatNumber(big,12)
             this.$set(this.formData,'balance',num)
+            this.mainBalance = Number(num)
             this.nonce = nonce
             this.getNextNonce()
         },
@@ -257,10 +262,9 @@ export default {
             
         },
         async next(){
-            let balance = this.formData.balance
+            let balance = Number(this.formData.balance)
             let fil = Number(this.formData.fil)
-            let reg = /^((0)?|[1-9]*) + (.)? + [1-9]*$/
-            let isNumber =  new BigNumber(fil).isPositive()
+            let isNumber = new BigNumber(fil).isPositive()
             if(isNumber){
                 if( fil > balance){
                     this.$message.error(this.$t('sendFil.insufficientBalance'))
@@ -270,15 +274,28 @@ export default {
                     await this.getBaseFeeAndGas(this.address,this.formData.to,this.maxNonce)
                     this.isFetch = false
                     let gas = (this.formData.gasFeeCap * this.formData.gasLimit) / Math.pow(10, 9)
-                    // all banance > gas 
-                    if(this.formData.isAll === 1){
-                        if(balance > gas){
-                            let fil = balance - gas
-                            this.$set(this.formData,'fil',fil)
-                        }else{
-                            this.$message.error(this.$t('sendFil.insufficientBalance'))
+                    if(this.formData.isMain === 1){
+                        if(this.formData.isAll === 1){
+                            if(balance > gas){
+                                let fil = balance - gas
+                                let big = new BigNumber(fil)
+                                let str = big.toFixed()
+                                let num = formatNumber(str,12)
+                                this.$set(this.formData,'fil',num)
+                            }else{
+                                this.$message.error(this.$t('sendFil.insufficientBalance'))
+                            }
+                        }
+                    }else{
+                        if(this.formData.isAll === 1){
+                            if(this.mainBalance > gas){
+                                this.$set(this.formData,'fil',balance)
+                            }else{
+                                this.$message.error(this.$t('sendFil.insufficientBalance'))
+                            }
                         }
                     }
+                    
                     if(this.formData.isMain !== 1){
                         let double = this.formData.gasLimit * 2.5
                         this.$set(this.formData,'gasLimit',double)
@@ -294,18 +311,19 @@ export default {
             
         },
         async sendToken(){
-            this.isFetch = true
             try{
+                this.isFetch = true
                 // let provider = ethers.getDefaultProvider(this.rpc);
                 // let wallet = new ethers.Wallet(this.pkk, provider);
                 // let contractSigner = new ethers.Contract(this.formData.contract, ABI, wallet);
-                let numberOfTokens = ethers.utils.parseUnits(this.formData.fil, this.formData.decimals);
+                let fil = this.formData.fil.toString()
+                let numberOfTokens = ethers.utils.parseUnits(fil, this.formData.decimals);
                 let allGasFee = this.formData.gasFeeCap * this.formData.gasLimit * Math.pow(10, 9)
-                let res = await this.contractSigner.transfer(this.formData.to,numberOfTokens,{
+                    console.log("00000000")
+                this.contractSigner.transfer(this.formData.to,numberOfTokens,{
                     gasPrice: this.formData.gasFeeCap * Math.pow(10, 9),
                     gasLimit: Math.ceil(this.formData.gasLimit),
-                })
-                if(res){
+                }).then(async (res)=>{
                     let create_time =  parseInt(new Date().getTime() / 1000)
                     let _value = this.formData.fil * Math.pow(10, Number(this.formData.decimals))
                     await this.db.addTable('messageList',{
@@ -323,36 +341,61 @@ export default {
                         value:_value,
                         rpc:this.rpc
                     })
-                }
-            }catch(error){
-                if(error.error && error.error.message){
-                    if(error.error.message.indexOf('insufficient funds') > -1){
-                        this.$message({
-                            type:'error',
-                            message:'insufficient funds for gas * price + value',
-                            onClose:()=>{
-                                this.isFetch = false
-                            }
-                        })
-                    }else{
-                        this.$message({
-                            type:'error',
-                            message:error.error && error.error.message,
-                            onClose:()=>{
-                                this.isFetch = false
-                            }
-                        })
+                    await this.db.deleteTable('addressRecordLast',{
+                        address:this.formData.to,
+                        rpc:this.rpc
+                    })
+                    await this.db.addTable('addressRecordLast',{
+                        address:this.formData.to,
+                        create_time,
+                        rpc:this.rpc,
+                        khazix:'khazix',
+                    })
+                    this.isFetch = false
+                    window.location.href = './wallet.html?fromPage=sendFil'
+                }).catch(error=>{
+                    console.log(error,222222)
+                    if(error.error && error.error.message){
+                        if(error.error.message.indexOf('insufficient funds') > -1){
+                            this.$message({
+                                type:'error',
+                                message:'insufficient funds for gas * price + value'
+                            })
+                        }else{
+                            this.$message({
+                                type:'error',
+                                message:error.error && error.error.message,
+                            })
+                        }
                     }
-                }
+                    setTimeout(()=>{
+                        this.isFetch = false
+                    },2000)
+                })
+            }catch(error){
+                console.log(error,33333)
+                this.$message({
+                    type:'error',
+                    message:error && error.message
+                })
+                this.isFetch = false
             }
         },
         async sendFil(){
             let balance = Number(this.formData.balance)
             let gas = (this.formData.gasFeeCap * this.formData.gasLimit) / Math.pow(10, 9)
             let fil = Number(this.formData.fil)
-            if( fil + gas > balance) {
-                this.$message.error(this.$t('sendFil.insufficientBalance'))
-                return
+            console.log(this.formData.isMain,'this.formData.isMain')
+            if(this.formData.isMain === 1){
+                if( fil + gas > balance) {
+                    this.$message.error(this.$t('sendFil.insufficientBalance'))
+                    return
+                }
+            }else{
+                if( gas > this.mainBalance || fil > balance) {
+                    this.$message.error(this.$t('sendFil.insufficientBalance'))
+                    return
+                }
             }
             let create_time =  parseInt(new Date().getTime() / 1000)
             if(this.formData.isMain === 1){
@@ -392,6 +435,20 @@ export default {
                             value:_value,
                             rpc:this.rpc
                         })
+                        await this.db.deleteTable('addressRecordLast',{
+                            address:this.formData.to,
+                            rpc:this.rpc
+                        })
+                        await this.db.addTable('addressRecordLast',{
+                            address:this.formData.to,
+                            create_time,
+                            rpc:this.rpc,
+                            khazix:'khazix',
+                        })
+                        this.isFetch = false
+                        window.location.href = './wallet.html?fromPage=sendFil'
+                    }else{
+                        this.isFetch = false
                     }
                 }catch(err){
                     this.isFetch = false
@@ -400,19 +457,6 @@ export default {
             }else{
                 this.sendToken()
             }
-
-            await this.db.deleteTable('addressRecordLast',{
-                address:this.formData.to,
-                rpc:this.rpc
-            })
-            await this.db.addTable('addressRecordLast',{
-                address:this.formData.to,
-                create_time,
-                rpc:this.rpc,
-                khazix:'khazix',
-            })
-            this.isFetch = false
-            window.location.href = './wallet.html?fromPage=sendFil'
         },
     }
 }

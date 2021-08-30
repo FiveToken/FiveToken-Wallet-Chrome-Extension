@@ -125,6 +125,7 @@ export default {
                                 khazix:'khazix',
                                 digest:filecoinF1.digest,
                                 fil:0,
+                                isDelete:0,
                                 rpc:n.rpc
                             })
                         }else if(n.filecoinAddress0 === 't'){
@@ -137,6 +138,7 @@ export default {
                                 khazix:'khazix',
                                 digest:calibrationF1.digest,
                                 fil:0,
+                                isDelete:0,
                                 rpc:n.rpc
                            })
                         }else{
@@ -149,6 +151,7 @@ export default {
                                 khazix:'khazix',
                                 digest:ethereumF1.digest,
                                 fil:0,
+                                isDelete:0,
                                 rpc:n.rpc
                             })
                         }
@@ -319,7 +322,7 @@ export default {
         .btn-wrap{
             display: flex;
             justify-content: space-between;
-            padding-top: 80px;
+            padding-top: 60px;
             /deep/.button-wrap{
                 width: 155px;
             }

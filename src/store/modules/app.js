@@ -12,7 +12,6 @@ const state = {
   ids:'',
   browser:'',
   networks:[],
-  // proxy  ethereum  filecoin
   networkType:'',
   filecoinAddress0:'',
   currency:'',

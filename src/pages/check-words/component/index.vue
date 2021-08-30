@@ -128,7 +128,6 @@ export default {
                     this.error = false
                     setTimeout(async ()=>{
                         let kek = genKek(this.password)
-                        // let f1 = await getF1ByMne(mne,kek,this.networkType,this.filecoinAddress0,index)
                         let ethereumF1 = await getF1ByMne(mne,kek,'ethereum','',0)
                         let filecoinF1 = await getF1ByMne(mne,kek,'proxy','f',0)
                         let calibrationF1 = await getF1ByMne(mne,kek,'proxy','t',0)
@@ -142,7 +141,6 @@ export default {
                             { rpc:this.rpc },
                             { deriveIndex:1 }
                         )
-                        
                         let _account = []
                         let _networks = []
                         for (let n of this.networks){
@@ -157,6 +155,7 @@ export default {
                                     khazix:'khazix',
                                     digest:filecoinF1.digest,
                                     fil:0,
+                                    isDelete:0,
                                     rpc:n.rpc
                                 })
                             }else if(n.filecoinAddress0 === 't'){
@@ -169,6 +168,7 @@ export default {
                                     khazix:'khazix',
                                     digest:calibrationF1.digest,
                                     fil:0,
+                                    isDelete:0,
                                     rpc:n.rpc
                                 })
                             }else{
@@ -181,6 +181,7 @@ export default {
                                     khazix:'khazix',
                                     digest:ethereumF1.digest,
                                     fil:0,
+                                    isDelete:0,
                                     rpc:n.rpc
                                 })
                             }

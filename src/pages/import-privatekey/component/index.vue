@@ -148,7 +148,8 @@ export default {
                         let obj = null
                         let isFileCoin = isFilecoinChain(this.customNetworkType)
                         let _account = []
-                        let accountName = `Account` + (this.accountList.length + 1)
+                        let _accountList_ = await this.db.getTable('accountList',{ rpc :this.rpc })
+                        let accountName = `Account` + (_accountList_.length + 1)
                         let create_time =  parseInt(new Date().getTime() / 1000)
                         this.networks.forEach(n=>{
                             if(n.rpc === this.net) {
@@ -166,6 +167,7 @@ export default {
                                         khazix:'khazix',
                                         digest,
                                         fil:0,
+                                        isDelete:0,
                                         rpc:n.rpc
                                     })
                                 }else{
@@ -177,6 +179,7 @@ export default {
                                         create_time,
                                         khazix:'khazix',
                                         digest,
+                                        isDelete:0,
                                         fil:0,
                                         rpc:n.rpc
                                     })
@@ -215,7 +218,7 @@ export default {
                             ...obj,
                             khazix:'khazix'
                         })
-                        let accountList = await this.db.getTable('accountList',{ rpc:rpc })
+                        let accountList = await this.db.getTable('accountList',{ rpc:rpc,isDelete:0, })
                         this.SET_RPC(rpc)
                         this.SET_RPCNAME(name)
                         this.SET_BROWSER(browser)

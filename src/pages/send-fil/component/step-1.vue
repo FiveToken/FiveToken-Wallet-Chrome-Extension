@@ -43,7 +43,12 @@
             <div class="input-item">
                 <div class="label">{{$t('sendFil.number')}}</div>
                 <div class="value">
-                    <kyInput :value="formData.fil" type="number" @changeInput="filChange"/>
+                    <kyInput 
+                        :value="formData.fil" 
+                        type="number"
+                        @keydown.native="channelInputLimit"
+                        @changeInput="filChange"
+                    />
                     <div class="all" @click="allFil">{{$t('sendFil.all')}}</div>
                 </div>
                 <div class="available">
@@ -194,14 +199,23 @@ export default {
                 type:'input'
             })
         },
+        channelInputLimit (e) {
+            let key = e.key
+            console.log(key,'8888888')
+            // 不允许输入'e'和'.'
+            if (key === 'e' || key === 'E') {
+                e.returnValue = false
+                return false
+            }
+            return true
+        },
         filChange(val){
-            this.$emit('formDataChange',{key:'fil',value:val})
+            this.$emit('formDataChange',{ key:'fil',value:val })
         },
         allFil(){
             this.$emit('formDataChange',{key:'isAll',value:1})
         },
         next(){
-            console.log(this.formData,9999)
             if(this.active){
                 let volid = isValidAddress(this.formData.to,this.networkType)
                 if(volid){

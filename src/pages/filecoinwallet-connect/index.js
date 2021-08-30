@@ -18,3 +18,5 @@ new Vue({
     return createElement(pageComponent);
   }
 });
+
+// el-input    el-dialog      

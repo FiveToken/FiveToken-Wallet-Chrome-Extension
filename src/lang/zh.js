@@ -126,7 +126,8 @@ const zh = {
     token:'代币',
     tokenSymbol:'代币符号',
     decimalPoint:'小数点',
-    error:'代币已添加'
+    error:'代币已添加',
+    addressError:'合约地址不正确'
   },
   sendFil:{
     send:'发送',
@@ -249,7 +250,8 @@ const zh = {
     title:'欢迎使用 FiveToken',
     subTitle:'Filecoin生态领域的连接器，多链融合，未来存储世界的入口。',
     unlocking:'解锁',
-    label:'密码'
+    label:'密码',
+    passwordError:'密码错误'
   },
   connect:{
     title:'使用 FiveToken 连接',
@@ -259,7 +261,8 @@ const zh = {
   defaultNetworks:[
     {
         name:'Filecoin主网络',
-        rpc:'http://192.168.1.161:8081',
+        // rpc:'http://192.168.1.161:8081',
+        rpc:'https://api.fivetoken.io',
         chainID:'',
         symbol:'FIL',
         ids:'filecoin',
@@ -306,8 +309,9 @@ const zh = {
         deriveIndex:0
     },
     {
-        name:'Filecoin CalIbration测试网',
-        rpc:'http://192.168.1.161:9091',
+        name:'Filecoin Calibration测试网',
+        // rpc:'http://192.168.1.161:9091',
+        rpc:'https://api.calibration.fivetoken.io',
         chainID:'',
         symbol:'FIL',
         ids:'filecoin',

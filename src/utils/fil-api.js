@@ -1,6 +1,6 @@
 import request from '@/utils/request'
 
-const base_api = '/api/test'
+const base_api = '/api/yoju1zfpcidq1arp4fg5ntvd'
 
 const api = {
     // BaseFeeAndGas:'/v1/filscan/BaseFeeAndGas',

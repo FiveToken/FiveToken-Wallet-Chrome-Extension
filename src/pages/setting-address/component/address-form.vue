@@ -145,9 +145,14 @@ export default {
             if(voild){
                 // edit address
                 if(this.detail){
-                    this.db.modifyTable('addressBook',{
-                        address:this.editAddress
-                    }).then(res=>{
+                    this.db.modifyTable(
+                        'addressBook',
+                        { address:this.editAddress },
+                        {
+                            address:this.form.address,
+                            accountName:this.form.accountName,
+                        }
+                    ).then(res=>{
                         this.form = Object.assign({}, this.form, { accountName:this.form.accountName, address:this.form.address})
                         this.$message.success(this.$t('settingAddress.editSuccess'))
                         this.$emit("addEditAddressCb")

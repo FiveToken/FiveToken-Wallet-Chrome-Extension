@@ -81,14 +81,14 @@ const en = {
     ],
     menu:[
       {name:'Modify account name',action:'editName'},
-      {name:'View in blockchain browser',action:'viewInBrowser'},
-      {name:'Back up private key',action:'backupPrivateKey'},
+      {name:'View in browser',action:'viewInBrowser'},
+      {name:'Export private key',action:'backupPrivateKey'},
       {name:'Delete the wallet',action:'deleteWallet'}
     ],
     statusSuccess:'Completed',
     statusError:'Failed',
     statusPending:'Confirming',
-    send:'Sent',
+    send:'Send',
     received:'Received',
     labelSend:'Sending address',
     labelReceived:'Receiving address',
@@ -109,7 +109,7 @@ const en = {
   messageDetail:{
     title:'Detailed messages',
     amount:'Quantity',
-    willgasFee:"Estimated the maximium amount of gas fee",
+    willgasFee:"Max. Estimated gas fee",
     gasFee:'Handling fee',
     from:'Sender',
     to:'Receiver',
@@ -126,10 +126,11 @@ const en = {
     token:'Token',
     tokenSymbol:'Symbol',
     decimalPoint:'Decimal point',
-    error:'Tokens have been added'
+    error:'Tokens have been added',
+    addressError:'The contract address is incorrect'
   },
   sendFil:{
-    send:'Sent',
+    send:'Send',
     token:'Token',
     toAddress:'Receving address',
     number:'Quantity',
@@ -143,9 +144,9 @@ const en = {
     gasLimit:'Gas Limit',
     confirmTransaction:'Confirm transaction',
     sendAmount:'Send amount',
-    networkGas:'The internet gas',
-    maxGas:'Estimated the maximium amount of gas fee',
-    totalTips:'Send the amount + estimated gas fee',
+    networkGas:'GasFeeCap',
+    maxGas:'Max. Estimated gas fee',
+    totalTips:'Amount + gas fee',
     total:'Total amount',
     gasFeeError:'Less than current BaseFee',
     gasLimitError:'Less than the current Gas Limit',
@@ -154,7 +155,9 @@ const en = {
     filBaseFeeTips:"The transaction fee rate is used to pay for the network fee, and the message will be packaged only when the transaction fee>BaseFee. nanoFIL = 10^-9 FIL",
     baseFeeTips:'Gas unit is the number of paid tokens per unit of Gas, Gwei=10^-9.',
     gasLimitTips:'Gas Limit is the maximum amount of gas that will be consumed when sending a message.',
-    vaildNumber:'Please enter a valid number'
+    vaildNumber:'Please enter a valid number',
+    cancel:'Cancel',
+    confirm:'Confirm'
   },
   setting:{
     name:'Setting',
@@ -247,7 +250,8 @@ const en = {
     title:'Welcome to FiveToken',
     subTitle:'Bridge Filecoin ecosystem to Web 3 and metaverse with multi-chain integration and reliable identity management;',
     unlocking:'Unlock',
-    label:'Passwords'
+    label:'Passwords',
+    passwordError:'Password Error'
   },
   connect:{
     title:'Adopt FiveToken to connect to your dApp',
@@ -257,7 +261,8 @@ const en = {
   defaultNetworks:[
     {
         name:'Filcoin Mainnet',
-        rpc:'http://192.168.1.161:8081',
+        // rpc:'http://192.168.1.161:8081',
+        rpc:'https://api.fivetoken.io',
         chainID:'',
         symbol:'FIL',
         ids:'filecoin',
@@ -305,7 +310,8 @@ const en = {
     },
     {
         name:'Filecoin Calibration Testnet',
-        rpc:'http://192.168.1.161:9091',
+        // rpc:'http://192.168.1.161:9091',
+        rpc:'https://api.calibration.fivetoken.io',
         chainID:'',
         symbol:'FIL',
         ids:'filecoin',

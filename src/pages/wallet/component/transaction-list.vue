@@ -230,7 +230,7 @@ export default {
                 reverseOrder,
                 'create_time',
             )
-
+            console.log(mesList,'mesList555')
             let myMesList = mesList.filter(n=>{
                 return n.from === this.address || n.to === this.address
             })
@@ -308,38 +308,11 @@ export default {
             this.type = type
         },
         showDetail(item){
-            let { 
-                from,
-                to,
-                fil,
-                all_gas_fee,
-                create_time,
-                block_time,
-                type,
-                signed_cid,
-                value,
-                allGasFee,
-                token,
-                decimals,
-                height
-            } = item
             let listObj = { 
-                from,
-                to,
-                fil,
-                all_gas_fee,
-                create_time,
-                block_time,
-                type,
-                signed_cid,
-                value,
-                allGasFee,
-                token,
-                decimals,
-                height 
+                ...item
             }
             let listObjStr = JSON.stringify(listObj)
-            window.location.href = `./message-detail.html?signed_cid=${signed_cid}&listObjStr=${listObjStr}`
+            window.location.href = `./message-detail.html?signed_cid=${item.signed_cid}&listObjStr=${listObjStr}`
         },
         addToken(){
             window.location.href = './add-token.html'

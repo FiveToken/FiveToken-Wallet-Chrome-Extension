@@ -17,7 +17,7 @@ export class Database extends Dexie {
     // IndexedDB index.
     this.version(1).stores({
         messageList: 'id++,signed_cid,from,to,nonce,khazix,create_time,block_time,type,value,decimals,token,allGasFee,rpc',
-        accountList: 'id++,address,accountName,createType,privateKey,fil,khazix,create_time,digest,rpc',
+        accountList: 'id++,address,accountName,createType,privateKey,fil,khazix,create_time,digest,isDelete,rpc',
         activeAccount:'id++,rpc,address,accountName,createType,privateKey,create_time,khazix,fil,digest',
         addressBook:'id++,address,accountName,create_time,khazix,rpc',
         addressRecordLast:'id++,address,create_time,khazix,rpc',
@@ -29,7 +29,6 @@ export class Database extends Dexie {
         web3File:'id++,address,rpc,create_time,nickname,describe,cid,khazix'
     });
   }
-
   // retrieves all table from the table object store in a defined
   // order; order can be:
   // - forwardOrder to get the table in forward chronological order
@@ -115,6 +114,30 @@ export class Database extends Dexie {
       return Promise.reject(error)
     }
   }
+
+  // delete matched data
+  // store. Returns a promise that resolves if the deletion is successful.
+  async clearTable() {
+    try{
+      await this.table('messageList').where({khazix:'khazix'}).delete()
+      await this.table('accountList').where({khazix:'khazix'}).delete()
+      await this.table('activeAccount').where({khazix:'khazix'}).delete()
+      await this.table('addressBook').where({khazix:'khazix'}).delete()
+      await this.table('addressRecordLast').where({khazix:'khazix'}).delete()
+
+      await this.table('lockUser').where({khazix:'khazix'}).delete()
+      await this.table('networks').where({khazix:'khazix'}).delete()
+      await this.table('activenNetworks').where({khazix:'khazix'}).delete()
+      await this.table('tokenList').where({khazix:'khazix'}).delete()
+      await this.table('walletKey').where({khazix:'khazix'}).delete()
+      await this.table('web3File').where({khazix:'khazix'}).delete()
+      return Promise.resolve()
+    }catch(error){
+      console.error('clear DB error')
+      return Promise.reject(error)
+    }
+  }
+  
 }
 
 // forwardOrder is passed into getTodos to retrieve todos in chronological

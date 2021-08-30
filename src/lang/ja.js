@@ -125,7 +125,8 @@ const ja = {
     token:'トークン',
     tokenSymbol:'トークンシンボル',
     decimalPoint:'小数点',
-    error:'トークンは追加済み'
+    error:'トークンは追加済み',
+    addressError:'契約アドレスが正しくありません'
   },
   sendFil:{
     cancel:'キャンセル',
@@ -176,7 +177,7 @@ const ja = {
     menu:[
       {name:'インターネット',url:'./setting-networks.html'},
       {name:'アドレスブック',url:'./setting-address.html'},
-      {name:'ニーモニックバックアップ',url:'./setting-backups.html'},
+      {name:'秘密鍵のエクスポート',url:'./setting-backups.html'},
       {name:'について',url:'./setting-about.html'},
    ]
   },
@@ -248,7 +249,8 @@ const ja = {
     title:'FiveTokenをご利用頂きありがとうございます',
     subTitle:'Filecoin生態分野の接続器で、複数チェーンを融合し、未来の保存世界への入口である。',
     unlocking:'アンロック',
-    label:'パスワード'
+    label:'パスワード',
+    passwordError:"パスワードエラー"
   },
   connect:{
     title:'FiveTokenで接続する',
@@ -258,7 +260,8 @@ const ja = {
   defaultNetworks:[
     {
         name:'Filcoin Mainnet',
-        rpc:'http://192.168.1.161:8081',
+        // rpc:'http://192.168.1.161:8081',
+        rpc:'https://api.fivetoken.io',
         chainID:'',
         symbol:'FIL',
         ids:'filecoin',
@@ -306,7 +309,8 @@ const ja = {
     },
     {
         name:'Filecoin Calibration Testnet',
-        rpc:'http://192.168.1.161:9091',
+        // rpc:'http://192.168.1.161:9091',
+        rpc:'https://api.calibration.fivetoken.io',
         chainID:'',
         symbol:'FIL',
         ids:'filecoin',

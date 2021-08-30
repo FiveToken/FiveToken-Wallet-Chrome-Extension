@@ -277,7 +277,7 @@ export default {
                     .menu-item{
                         font-size: 14px;
                         color: #101010;
-                        padding: 0 20px;
+                        padding: 0 10px;
                         height: 50px;
                         line-height: 50px;
                         border-bottom: 1px solid #E6F0F0;

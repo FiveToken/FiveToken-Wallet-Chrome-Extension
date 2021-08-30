@@ -24,7 +24,7 @@ const messages = {
 let language = window.localStorage.getItem('fiveTokenLanguage')
 let currency = window.localStorage.getItem('fiveTokenCurrency')
 if(!language){
-  window.localStorage.setItem('fiveTokenLanguage','zh')
+  window.localStorage.setItem('fiveTokenLanguage','en')
 }
 
 if(!currency){
@@ -32,7 +32,7 @@ if(!currency){
 }
 
 let i18n  = new VueI18n({
-  locale: language || 'zh',
+  locale: language || 'en',
   messages,
   silentTranslationWarn: true
 })

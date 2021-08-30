@@ -103,7 +103,7 @@ export default {
                 khazix:'khazix'
             })
 
-            let accountList = await this.db.getTable('accountList',{ rpc:rpc });
+            let accountList = await this.db.getTable('accountList',{ rpc:rpc,isDelete:0 });
             this.SET_RPC(rpc)
             this.SET_RPCNAME(name)
             this.SET_BROWSER(browser)
@@ -131,8 +131,14 @@ export default {
                             return n.address === currentAddress
                         })
                     }
-                    console.log(same,'same')
-                    await this.changeAccount(same)
+                    if(same){
+                        await this.changeAccount(same)
+                    }else{
+                        let first = accountList[0]
+                        console.log(first,'first')
+                        await this.changeAccount(first)
+                    }
+                    
                 }else{
                     let first = accountList[0]
                     console.log(first,'first')

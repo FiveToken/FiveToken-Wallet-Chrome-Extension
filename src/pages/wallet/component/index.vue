@@ -150,7 +150,8 @@ export default {
             'privateKey',
             'ids',
             'networkType',
-            'currency'
+            'currency',
+            'accountList'
         ]),
     },
     components:{
@@ -176,12 +177,30 @@ export default {
             'SET_ACCOUNTNAME'
         ]),
         async layoutMounted(){
-            this.isLoading = true
-            this.addressName = this.accountName
-            await this.getPrice()
-            await this.getBalanceNonce()
-            this.getQRCode()
-            this.isLoading = false
+            let address = this.address
+            let rpc = this.rpc
+            let networkType = this.networkType
+            try{
+                this.getQRCode()
+                this.isLoading = true
+                this.addressName = this.accountName
+                await this.getPrice()
+                let balance = await this.getBalanceNonce(address,rpc,networkType)
+                this.balance = balance
+                await this.db.modifyTable(
+                    'activeAccount',
+                    {
+                        address:address,
+                        rpc:rpc
+                    },
+                    {
+                        fil:balance,
+                    }
+                )
+                this.isLoading = false
+            }catch(error){
+                this.isLoading = false
+            }
         },
         networkChange(){
             this.closeNetwork()
@@ -200,56 +219,69 @@ export default {
             this.networkVisible = false
         },
         confirmEdit(){
-            let address = this.address
-            let rpc = this.rpc
             let addressName = this.addressName
-            this.SET_ACCOUNTNAME(addressName)
-            this.db.modifyTable(
-                'accountList',
-                {
-                    address:address,
-                    rpc:rpc
-                },
-                {
-                    accountName:addressName
-                }
-            )
-            this.db.this.db.modifyTable(
-                'activeAccount',
-                {
-                    address:address,
-                    rpc:rpc
-                },
-                {
-                    accountName:addressName
-                }
-            )
-            this.editNameVisable = false
+            if(addressName) {
+                let address = this.address
+                let rpc = this.rpc
+                this.SET_ACCOUNTNAME(addressName)
+                this.db.modifyTable(
+                    'accountList',
+                    {
+                        address:address,
+                        rpc:rpc
+                    },
+                    {
+                        accountName:addressName
+                    }
+                )
+                this.db.modifyTable(
+                    'activeAccount',
+                    {
+                        address:address,
+                        rpc:rpc
+                    },
+                    {
+                        accountName:addressName
+                    }
+                )
+                this.editNameVisable = false
+            }
+            
         },
         closeEdit(){
             this.editNameVisable = false
         },
         async confirmDelete(){
-            await this.db.deleteTable('activeAccount',{ khazix:'khazix' })
-            await this.db.deleteTable('accountList',{  
-                address:this.address,
-                rpc:this.rpc 
-            })
-
-            let accountList = await this.db.getTable('accountList',{ rpc:this.rpc });
-            if(accountList.length){
-                let first = accountList.find((n,index)=>{
-                    return index === 0
-                })
-                let{ privateKey,address,digest,accountName } = first
-                this.SET_PRIVATEKEY(privateKey)
-                this.SET_ADDRESS(address)
-                this.SET_DIGEST(digest)
-                this.SET_ACCOUNTNAME(accountName)
-                await this.db.addTable('activeAccount',first)
-                window.location.href = './wallet.html'
-            }else{
+            if(this.accountList.length === 1){
+                await this.db.clearTable()
                 window.location.href = './welcome.html'
+            }else{
+                if(this.accountList.length){
+                    await this.db.deleteTable('activeAccount',{ khazix:'khazix' })
+                    await this.db.modifyTable(
+                        'accountList',
+                        {  
+                            address:this.address,
+                            rpc:this.rpc 
+                        },
+                        {
+                            isDelete:1,
+                        }
+                    )
+                    let _accountList = await this.db.getTable('accountList',{ rpc:this.rpc ,isDelete:0 });
+                    let first = _accountList.find((n,index)=>{
+                        return index === 0
+                    })
+                    let{ privateKey,address,digest,accountName } = first
+                    this.SET_PRIVATEKEY(privateKey)
+                    this.SET_ADDRESS(address)
+                    this.SET_DIGEST(digest)
+                    this.SET_ACCOUNTNAME(accountName)
+                    await this.db.addTable('activeAccount',first)
+                    window.location.href = './wallet.html'
+                }else{
+                    window.location.href = './welcome.html'
+                }
             }
         },
         closeDelete(){
@@ -272,35 +304,14 @@ export default {
         sendFil(){
             window.location.href = './send-fil.html'
         },
-        async getBalanceNonce(){
-            let address = this.address
-            let rpc = this.rpc
+        async getBalanceNonce(address,rpc,networkType){
+            let balance = 0
             let MyGlobalApi = new GlobalApi()
             MyGlobalApi.setRpc(rpc)
-            MyGlobalApi.setNetworkType(this.networkType)
+            MyGlobalApi.setNetworkType(networkType)
             let res = await MyGlobalApi.getBalance(address)
-            let { balance,nonce } = res
-            this.balance = balance
-            this.db.modifyTable(
-                'accountList',
-                {
-                    address:address,
-                    rpc:rpc
-                },
-                {
-                    fil:balance,
-                }
-            )
-            this.db.modifyTable(
-                'activeAccount',
-                {
-                    address:address,
-                    rpc:rpc
-                },
-                {
-                    fil:balance,
-                }
-            )
+            balance = res && res.balance
+            return balance
         },
         openReceive(){
             this.receiveVisible = true

@@ -35,7 +35,7 @@ export default {
       if(lockUser.length){
         this.lock = true
       }
-      let accountList = await db.getTable('accountList',{ rpc:rpc })
+      let accountList = await db.getTable('accountList',{ rpc:rpc,isDelete:0 })
       this.accountList = accountList || []
     },
 }

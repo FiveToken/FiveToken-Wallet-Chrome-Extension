@@ -57,7 +57,7 @@ const plugins = [
   {
     from: path.resolve("src/background.js"),
     to: `${path.resolve("dist")}/background.js`
-  }
+  },
 ]
   
 function resolve(dir) {
@@ -101,7 +101,7 @@ module.exports = {
       new UglifyJsPlugin({
         uglifyOptions: {
           compress: {
-            drop_console: true
+              drop_console: true
           }
         }
       })

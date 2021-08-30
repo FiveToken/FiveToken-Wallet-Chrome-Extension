@@ -78,8 +78,8 @@ export default {
             diff:false,
             form:{
                 accountName:'',
-                password:'Aa123456',
-                confirmPassword:'Aa123456'
+                password:'',
+                confirmPassword:''
             },
             placeholder:'',
             createType:''
@@ -111,8 +111,7 @@ export default {
     },
     methods:{
         async layoutMounted(){
-            let len = this.accountList.length + 1
-            this.$set(this.form,'accountName','Account' + len)
+            this.$set(this.form,'accountName','Account1')
         },
         nameChange(val){
             this.form.accountName = val

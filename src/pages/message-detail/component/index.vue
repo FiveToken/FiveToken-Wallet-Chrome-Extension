@@ -14,7 +14,7 @@
           <div class="label">{{ $t("messageDetail.amount") }}:</div>
           <div class="value">
             {{ address === detail.from ? '-': ''}}
-            {{ detail.value | formatAmount(8,detail.decimals) }} {{ detail.token }}
+            {{ detail.value | formatAmount(18,detail.decimals) }} {{ detail.token }}
           </div>
         </div>
         <div class="info">
@@ -24,7 +24,7 @@
             </div>
             <div class="value">
               <div class="text">
-                {{ detail.allGasFee | formatGas(8,decimals) }} {{ symbol }}
+                {{ detail.allGasFee | formatGas(18,decimals) }} {{ symbol }}
               </div>
             </div>
           </div>

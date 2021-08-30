@@ -125,7 +125,8 @@ const ko = {
     token:'토큰',
     tokenSymbol:'토큰 기호',
     decimalPoint:'소수점',
-    error:'토큰 추가됨'
+    error:'토큰 추가됨',
+    addressError:'잘못된 계약 주소'
   },
   sendFil:{
     send:'발송',
@@ -248,7 +249,8 @@ const ko = {
     title:'FiveToken에 오신 것을 환영합니다.',
     subTitle:'Filecoin 생태분야의 커넥터, 멀티 체인 융합, 미래 저장 세계의 입구입니다.',
     unlocking:'잠금 해제',
-    label:'비밀번호'
+    label:'비밀번호',
+    passwordError:"암호 오류"
   },
   connect:{
     title:'FiveToken으로 연결하기',
@@ -258,7 +260,8 @@ const ko = {
   defaultNetworks:[
     {
         name:'Filcoin Mainnet',
-        rpc:'http://192.168.1.161:8081',
+        // rpc:'http://192.168.1.161:8081',
+        rpc:'https://api.fivetoken.io',
         chainID:'',
         symbol:'FIL',
         ids:'filecoin',
@@ -306,7 +309,8 @@ const ko = {
     },
     {
         name:'Filecoin Calibration Testnet',
-        rpc:'http://192.168.1.161:9091',
+        // rpc:'http://192.168.1.161:9091',
+        rpc:'https://api.calibration.fivetoken.io',
         chainID:'',
         symbol:'FIL',
         ids:'filecoin',

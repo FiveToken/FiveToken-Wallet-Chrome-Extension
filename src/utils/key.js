@@ -4,30 +4,13 @@ import aesjs from 'aes-js'
 const CTRCouterNumber = 6
 
 export function privateKeyEncode(sk,kek){
-  // let salt = genSalt(password)
-  // let kek = genKek(password)
   let pk = AESEncrypt(sk,kek)
   return pk
-
-  // let salt = genSalt(password)
-  // let kek = genKek(password)
-  // let skArr = skToArray(sk)
-  // let xo = xor(kek,skArr)
-  // let encodePrivateKey = CryptoJS.lib.WordArray.create(xo,32).toString(CryptoJS.enc.Base64);
-  // return encodePrivateKey
 }
 
 export function privateKeyDecode(encodePrivateKey, kek){
-  // let salt = genSalt(password)
-  // let kek = genKek(password)
   let pk = AESDecrypt(encodePrivateKey,kek)
   return pk
-
-  // let privateKeyArr = CryptoJS.enc.Base64.parse(encodePrivateKey)
-  // let kek = genKek(password)
-  // let ssk = xor(privateKeyArr.words,kek)
-  // let ppk = CryptoJS.lib.WordArray.create(ssk,32).toString(CryptoJS.enc.Base64)
-  // return ppk
 }
 
 export function genSalt(password)  {

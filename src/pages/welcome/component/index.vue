@@ -12,7 +12,6 @@
           {{$t('welcome.btn1')}}
         </kyButton>
         <kyButton @btnClick="importWallet">{{$t('welcome.btn2')}}</kyButton>
-        
       </div>
     </div>
   </layout>
@@ -21,6 +20,7 @@
 <script>
 import layout from '@/components/layout'
 import kyButton from '@/components/button'
+import { mapMutations } from 'vuex'
 export default {
     data(){
       return{ 

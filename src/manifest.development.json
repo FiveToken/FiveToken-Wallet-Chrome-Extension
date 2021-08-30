@@ -2,7 +2,7 @@
     "manifest_version": 2,
     "name": "FiveToken",
     "description": "chrome FiveToken extension",
-    "version": "1.0.0",
+    "version": "1.2.0",
     "options_page": "pages/filecoinwallet.html",
     "icons":{
 		"16": "assets/image/logo.png",

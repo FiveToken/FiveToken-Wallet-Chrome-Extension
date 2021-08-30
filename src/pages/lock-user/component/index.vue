@@ -53,6 +53,7 @@ export default {
     },
     async mounted(){
       let db = new Database()
+      this.db = db
         let walletKey = await db.getTable('walletKey',{khazix:'khazix'})
         if(walletKey.length){
             this.salt = walletKey[0].salt
@@ -69,8 +70,8 @@ export default {
         if(this.salt){
           let voild = await validatePassword(this.password,this.salt)
           if(voild){
-            window.location.href = './wallet.html'
             await this.db.deleteTable('lockUser',{ khazix:'khazix'})
+            window.location.href = './wallet.html'
           }else{
             this.$message.error(this.$t('lock.passwordError')) 
           }

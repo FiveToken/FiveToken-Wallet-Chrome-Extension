@@ -64,7 +64,8 @@
                                 
                             </div>
                             <kyInput 
-                                :value="formData.gasFeeCap" 
+                                :value="formData.gasFeeCap"
+                                @keydown.native="channelInputLimit"
                                 @changeInput='gasFeeCapChange'
                                 type="number"
                             ></kyInput>
@@ -88,6 +89,7 @@
                             </div>
                             <kyInput 
                                 :value="formData.gasLimit" 
+                                @keydown.native="channelInputLimit"
                                 @changeInput='gasLimitChange'
                                 type="number"
                             ></kyInput>
@@ -224,6 +226,7 @@ export default {
     },
     props:{
         formData:Object,
+        mainBalance:Number,
         price_currency:Number,
         baseLimit:Number,
         baseFeeCap:Number
@@ -240,14 +243,21 @@ export default {
         },
         send(){
             if(this.active){
-                if(this.formData.balance > this.allGasFee){
+                if(this.mainBalance > this.allGasFee){
                     if(this.formData.isAll){
-                        let val = 0
-                        val = this.formData.balance - this.allGasFee
-                        this.$emit('formDataChange',{
-                            key:'fil',
-                            value:val,
-                        })
+                        if(this.formData.isMain === 1){
+                            let val =  this.formData.balance - this.allGasFee
+                            this.$emit('formDataChange',{
+                                key:'fil',
+                                value:val,
+                            })
+                        }else{
+                            let val =  this.formData.balance
+                            this.$emit('formDataChange',{
+                                key:'fil',
+                                value:val,
+                            })
+                        }
                     }
                     this.$emit('sendFil')
                 }else{
@@ -255,14 +265,24 @@ export default {
                 }
             }
         },
+
+        channelInputLimit (e) {
+            let key = e.key
+            // 不允许输入'e'和'.'
+            if (key === 'e' || key === 'E') {
+                e.returnValue = false
+                return false
+            }
+            return true
+        },
         gasFeeCapChange(val){
-            this.$emit('formDataChange',{
+           this.$emit('formDataChange',{
                 key:'gasFeeCap',
                 value:val,
             })
         },
         gasLimitChange(val){
-            this.$emit('formDataChange',{
+           this.$emit('formDataChange',{
                 key:'gasLimit',
                 value:val,
             })
@@ -383,7 +403,7 @@ export default {
                     .gasfee,.gaslimit{
                         flex: 0 0 47%;
                         .label{
-                            font-size: 14px;
+                            font-size: 12px;
                             color: #101010;
                             line-height: 20px;
                             margin-bottom: 3px;

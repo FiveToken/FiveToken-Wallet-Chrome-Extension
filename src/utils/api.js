@@ -36,6 +36,8 @@ class BSCChainAPI{
         }
     }
     async sendTransaction(tx){
+
+        console.log('ETH sendTransaction')
         try{
             let res = await this.walletWithProvider.sendTransaction(tx)
             return res

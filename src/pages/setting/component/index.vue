@@ -67,7 +67,8 @@ export default {
         return{
             createType:'',
             currencyVisible:false,
-            languageVisible:false
+            languageVisible:false,
+            db:null
         }
     },
     computed:{
@@ -105,12 +106,17 @@ export default {
     },
     async mounted(){
         let db = new Database()
+        this.db = db
         let activeAccount = await db.getTable("activeAccount",{ khazix:'khazix'})
         let createType = activeAccount.length && activeAccount[0].createType
         this.createType = createType
     },
     methods:{
-        ...mapMutations('app',['SET_CURRENCY','SET_LANGUAGE']),
+        ...mapMutations('app',[
+            'SET_CURRENCY',
+            'SET_LANGUAGE',
+            'SET_RPCNAME'
+        ]),
         back(){
             window.location.href = './wallet.html'
         },
@@ -123,12 +129,27 @@ export default {
         currencyClose(){
             this.currencyVisible = false
         },
-        languageChange(val){
+        async languageChange(val){
             let lang = val.value
             this.SET_LANGUAGE(lang)
             this.$i18n.locale = lang
             window.localStorage.setItem('fiveTokenLanguage',lang)
             this.languageVisible = false
+            
+            let defaultNetworks = this.$t('defaultNetworks')
+            console.log(defaultNetworks,'defaultNetworks 333')
+            await this.db.deleteTable('networks',{ khazix:'khazix' }).then(res=>{
+                this.db.bulkAddTable('networks',defaultNetworks)
+            })
+            if(defaultNetworks.length){
+                let _first = defaultNetworks[0]
+                let { name } = _first
+                this.SET_RPCNAME(name)
+                await this.db.deleteTable('activenNetworks',{ khazix:'khazix' }).then(res=>{
+                    this.db.addTable('activenNetworks',_first)
+                })
+                
+            }
         },
         languageClose(){
             this.languageVisible = false

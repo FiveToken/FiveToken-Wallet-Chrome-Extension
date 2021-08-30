@@ -99,16 +99,19 @@ export default {
             if(!this.active) return
             try{
                 let mneWords = trimStr(this.form.mnemonicWords)
-                let volid = bip39.validateMnemonic(mneWords)
+                let nospace = mneWords.replace(/\s+/ig," ")
+                console.log(nospace,'nospace')
+                let volid = bip39.validateMnemonic(nospace)
                 if(volid){
                     this.isFetch = true
                     this.error = false
                     setTimeout(async ()=>{
                         let kek = genKek(this.form.password)
                         // let f1 = await getF1ByMne(mneWords,kek,this.networkType,this.filecoinAddress0,index)
-                        let ethereumF1 = await getF1ByMne(mneWords,kek,'ethereum','',0)
-                        let filecoinF1 = await getF1ByMne(mneWords,kek,'proxy','f',0)
-                        let calibrationF1 = await getF1ByMne(mneWords,kek,'proxy','t',0)
+                        let ethereumF1 = await getF1ByMne(nospace,kek,'ethereum','',0)
+                        let filecoinF1 = await getF1ByMne(nospace,kek,'proxy','f',0)
+                        let calibrationF1 = await getF1ByMne(nospace,kek,'proxy','t',0)
+                        console.log(calibrationF1,filecoinF1,'calibrationF1')
                         let { address,privateKey,digest } = filecoinF1
                         let create_time =  parseInt(new Date().getTime() / 1000)
                         let accountName = this.form.accountName
@@ -132,6 +135,7 @@ export default {
                                     khazix:'khazix',
                                     digest:filecoinF1.digest,
                                     fil:0,
+                                    isDelete:0,
                                     rpc:n.rpc
                                 })
                             }else if(n.filecoinAddress0 === 't'){
@@ -144,6 +148,7 @@ export default {
                                     khazix:'khazix',
                                     digest:calibrationF1.digest,
                                     fil:0,
+                                    isDelete:0,
                                     rpc:n.rpc
                                 })
                             }else{
@@ -156,6 +161,7 @@ export default {
                                     khazix:'khazix',
                                     digest:ethereumF1.digest,
                                     fil:0,
+                                    isDelete:0,
                                     rpc:n.rpc
                                 })
                                 

@@ -192,7 +192,7 @@ export default {
                     disabled
                 }).then(async (res)=>{
                     this.$emit('networkChange',obj)
-                    let accountList = await this.db.getTable('accountList',{ rpc:rpc })
+                    let accountList = await this.db.getTable('accountList',{ rpc:rpc ,isDelete:0 })
                     this.SET_RPC(rpc)
                     this.SET_RPCNAME(name)
                     this.SET_BROWSER(browser)
@@ -297,21 +297,27 @@ export default {
                             await this.addUser(networkType,filecoinAddress0,create_time,0)
                             dIndex = 1
                         }
-                        await this.db.modifyTable('activenNetworks',{
-                            name:this.form.name,
-                            rpc:this.form.rpc,
-                            chainID:this.form.chainID,
-                            symbol:this.form.symbol,
-                            browser:this.form.browser,
-                            image:'',
-                            ids:ids,
-                            decimals:18,
-                            networkType:networkType,
-                            filecoinAddress0,
-                            deriveIndex:dIndex,
-                            disabled:false,
-                            khazix:'khazix'
-                        })
+                        await this.db.modifyTable(
+                            'activenNetworks',
+                            {
+                               rpc:this.detail.rpc
+                            },
+                            {
+                                name:this.form.name,
+                                rpc:this.form.rpc,
+                                chainID:this.form.chainID,
+                                symbol:this.form.symbol,
+                                browser:this.form.browser,
+                                image:'',
+                                ids:ids,
+                                decimals:18,
+                                networkType:networkType,
+                                filecoinAddress0,
+                                deriveIndex:dIndex,
+                                disabled:false,
+                                khazix:'khazix'
+                            }
+                        )
                     }
                     
                     await this.db.addTable('networks',{
@@ -352,6 +358,7 @@ export default {
                 create_time,
                 khazix:'khazix',
                 digest,
+                isDelete:0,
                 rpc:this.form.rpc
             })
         },

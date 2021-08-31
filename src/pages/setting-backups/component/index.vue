@@ -155,6 +155,9 @@ export default {
             this.passwordType = eye ? 'text':'password'
         },
         async next(){
+            if(!this.password){
+                return
+            }
             this.passwordError = false
             if(this.salt){
                 let voild = await validatePassword(this.password,this.salt)

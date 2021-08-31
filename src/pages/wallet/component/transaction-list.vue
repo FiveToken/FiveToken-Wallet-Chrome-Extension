@@ -71,7 +71,7 @@ import { getQueryString,formatNumber,minimumPrecision } from '@/utils'
 import transactionItem from './transaction-item.vue'
 import ABI from '@/utils/abi'
 import { ethers } from 'ethers'
-import { GlobalApi } from '@/utils/api'
+import { GlobalApi } from '@/api'
 import { BigNumber } from "bignumber.js";
 import kyCanvas from "@/components/canvas";
 import { Database,reverseOrder } from '@/utils/database.js';
@@ -184,7 +184,7 @@ export default {
             this.type = '2'
         }
         // get assets list
-        this.getTokenList()
+        await this.getTokenList()
         // update activity list
         await this.updateActivityList()
         // get activity list
@@ -193,7 +193,6 @@ export default {
     methods:{
         async updateActivityList(){
             let mesList = await this.db.getTable('messageList',{ rpc:this.rpc })
-
             let myMesList = mesList.filter(n=>{
                 return n.from === this.address || n.to === this.address
             })

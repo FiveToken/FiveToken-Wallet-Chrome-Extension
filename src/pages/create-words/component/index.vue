@@ -50,6 +50,7 @@ export default {
             accountName:'',
             password:'',
             mnemonicArr:[],
+            createType:'',
             db:null
         }
     },
@@ -74,6 +75,8 @@ export default {
         this.mnemonicArr = mnemonicArr
         let accountName = this.getQuery('accountName')
         let password = getQueryString('password')
+        let createType = this.getQuery('createType')
+        this.createType = createType
         this.accountName = decodeURIComponent(accountName)
         this.password = password
 
@@ -195,7 +198,7 @@ export default {
                 
         },
         back(){
-            window.location.href = './create-wallet.html?backPage=wallet'
+            window.location.href = `./create-wallet.html?backPage=wallet&createType=${this.createType}`
         },
         copyWords(){
             this.mask = true
@@ -215,7 +218,7 @@ export default {
         },
         next(){
             let accountName = encodeURIComponent(this.accountName)
-            window.location.href = `./check-words.html?mnemonicWords=${this.mnemonicWords}&accountName=${accountName}&password=${this.password}`
+            window.location.href = `./check-words.html?mnemonicWords=${this.mnemonicWords}&accountName=${accountName}&password=${this.password}&createType=${this.createType}`
         }
     }
 }

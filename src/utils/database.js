@@ -15,6 +15,44 @@ export class Database extends Dexie {
     // string; the ++ for the index on the id field indicates that "id" is an
     // auto-incrementing primary key, while the "done" field is just a regukar
     // IndexedDB index.
+     // messageList:
+    //// signed_cid:message cid
+    //// from:message send address
+    //// to:message reveiced address
+    //// nonce:message nonce
+    //// create_time:message create time
+    //// block_time: message up chain time
+    //// type: message state (success,error,pedding)
+    //// value: message send value
+    //// decimals: the decimals of send token
+    //// token: the symbol of send token
+    //// allGasFee: service charge
+    //// rpc: chain rpc
+    //// khazix: db mark
+    // accountList
+    //// fil:account balance
+    // networks
+    //// rpc: chain rpc
+    //// image: chain image
+    //// create_time : networks create time 
+    //// name : networks name
+    //// chainID : network chainID
+    //// symbol: the symbol of chain
+    //// browser: the browser of chain
+    //// decimals : the decimals of chain
+    //// ids : get token price id (filecoin ,ethereum, binancecoin)
+    //// networkType: chain type (proxy,ethereum)
+    //// filecoinAddress0:filecoin first letter，ethereum ignore
+    //// deriveIndex: HD Wallet index
+    //// disabled: Editable
+    // tokenList
+    //// rpc: chain rpc
+    //// create_time : token create time
+    //// chainName : chain name
+    //// decimals : the decimals of token
+    //// symbol : the symbol of token
+    //// contract : token contract
+    //// address : main token address
     this.version(1).stores({
         messageList: 'id++,signed_cid,from,to,nonce,khazix,create_time,block_time,type,value,decimals,token,allGasFee,rpc',
         accountList: 'id++,address,accountName,createType,privateKey,fil,khazix,create_time,digest,isDelete,rpc',
@@ -119,18 +157,19 @@ export class Database extends Dexie {
   // store. Returns a promise that resolves if the deletion is successful.
   async clearTable() {
     try{
-      await this.table('messageList').where({khazix:'khazix'}).delete()
-      await this.table('accountList').where({khazix:'khazix'}).delete()
-      await this.table('activeAccount').where({khazix:'khazix'}).delete()
-      await this.table('addressBook').where({khazix:'khazix'}).delete()
-      await this.table('addressRecordLast').where({khazix:'khazix'}).delete()
+      await Dexie.delete('database')
+      // await this.table('messageList').where({khazix:'khazix'}).delete()
+      // await this.table('accountList').where({khazix:'khazix'}).delete()
+      // await this.table('activeAccount').where({khazix:'khazix'}).delete()
+      // await this.table('addressBook').where({khazix:'khazix'}).delete()
+      // await this.table('addressRecordLast').where({khazix:'khazix'}).delete()
 
-      await this.table('lockUser').where({khazix:'khazix'}).delete()
-      await this.table('networks').where({khazix:'khazix'}).delete()
-      await this.table('activenNetworks').where({khazix:'khazix'}).delete()
-      await this.table('tokenList').where({khazix:'khazix'}).delete()
-      await this.table('walletKey').where({khazix:'khazix'}).delete()
-      await this.table('web3File').where({khazix:'khazix'}).delete()
+      // await this.table('lockUser').where({khazix:'khazix'}).delete()
+      // await this.table('networks').where({khazix:'khazix'}).delete()
+      // await this.table('activenNetworks').where({khazix:'khazix'}).delete()
+      // await this.table('tokenList').where({khazix:'khazix'}).delete()
+      // await this.table('walletKey').where({khazix:'khazix'}).delete()
+      // await this.table('web3File').where({khazix:'khazix'}).delete()
       return Promise.resolve()
     }catch(error){
       console.error('clear DB error')

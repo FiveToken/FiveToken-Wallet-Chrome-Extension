@@ -125,4 +125,3 @@ window.AppLink.onMessage('filecoinWalletAddress',(data)=>{
     console.log(data)
 })
 ```
-

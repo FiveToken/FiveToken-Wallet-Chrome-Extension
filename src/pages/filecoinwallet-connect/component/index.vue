@@ -50,7 +50,7 @@ export default {
         return this.address === ''
       },
       ...mapState('app',[
-        'networkType'
+        'activenNetworks'
       ])
     },
     components:{
@@ -110,9 +110,9 @@ export default {
       },
       connect(){
         let { address,fil,accountName } = this.connectAccount
-        let obj = { address,rpc:this.rpc,accountName,networkType:this.networkType }
+        let chainID = this.activenNetworks && this.activenNetworks[0].chainID
+        let obj = { address,rpc:this.rpc,accountName,chainID }
         popupToBackground('filecoinWalletConnect', obj)
-        console.log(this.networkType,this.rpc,'rconnectpc')
       }
     }
 }

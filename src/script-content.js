@@ -58,11 +58,6 @@ function messageListen(){
             break;
             case 'scriptWeb3Storage':
                 window.postMessage({ tag: "responseWebStorange", data: request.data }, "*");
-                // chrome.runtime.sendMessage({
-                //     method:'closeWindow'
-                // }, function () { 
-                //     return true
-                // });
                 break
             case 'scriptUpdateWeb3Storage':
                 window.postMessage({ tag: "scriptUpdateWeb3Storage", data: request.data }, "*");

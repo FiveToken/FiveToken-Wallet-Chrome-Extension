@@ -71,6 +71,7 @@ import { ethers } from 'ethers'
 import ABI from '@/utils/abi'
 import { mapState } from 'vuex';
 import { Database } from '@/utils/database.js';
+import { trimStr } from "@/utils"
 export default {
   data() {
     return {
@@ -121,11 +122,15 @@ export default {
       this.contractEffective = false
     },
     contractInput(val){
+        if(!this.contract){
+          return
+        }
+        let _contract = trimStr(this.contract)
         let that = this
-        let isExists = this.tokenList.find(item => { return item.contract == this.contract }) != undefined
+        let isExists = this.tokenList.find(item => { return item.contract === _contract }) != undefined
         this.isExists = isExists
         let provider = ethers.getDefaultProvider(this.rpc);
-        let contract = new ethers.Contract(this.contract, ABI, provider);
+        let contract = new ethers.Contract(_contract, ABI, provider);
         let decimalsPromise = contract.decimals()
         let namePromise = contract.name()
         let symbolPromise = contract.symbol()

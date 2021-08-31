@@ -10,7 +10,7 @@ import {
     MessageDetails,
     BaseFeeAndGas,
     getPricePoints
-} from '@/utils/fil-api'
+} from '@/fil-api'
 import request from '@/utils/request'
 
 

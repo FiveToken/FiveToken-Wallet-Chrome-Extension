@@ -48,7 +48,10 @@ export default {
     computed:{
       disabled(){
         return this.address === ''
-      }
+      },
+      ...mapState('app',[
+        'activenNetworks'
+      ])
     },
     components:{
       welcome,
@@ -92,7 +95,6 @@ export default {
     },
     methods:{
       layoutMounted(){
-        console.log(this.rpc,'rpc')
       },
       createAccount(){
         window.location.href = './welcome.html'
@@ -108,7 +110,8 @@ export default {
       },
       connect(){
         let { address,fil,accountName } = this.connectAccount
-        let obj = { address,rpc:this.rpc,accountName }
+        let chainID = this.activenNetworks && this.activenNetworks[0].chainID
+        let obj = { address,rpc:this.rpc,accountName,chainID }
         popupToBackground('filecoinWalletConnect', obj)
       }
     }

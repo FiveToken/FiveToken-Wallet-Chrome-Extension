@@ -76,7 +76,7 @@ import kyBack from '@/components/back'
 import kyAdd from './add.vue'
 import { BigNumber } from "bignumber.js";
 import { Database } from '@/utils/database.js';
-import { GlobalApi } from '@/utils/api'
+import { GlobalApi } from '@/api'
 export default {
     data(){
         return{

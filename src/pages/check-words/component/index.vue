@@ -76,6 +76,7 @@ export default {
         let mnemonicWords = getQueryString('mnemonicWords').split(' ')
         this.accountName = accountName
         this.password = password
+        this.createType = getQueryString('createType')
         this.mnemonicWords = this.shuffle(mnemonicWords)
         const db = new Database();
         this.db = db
@@ -96,7 +97,7 @@ export default {
         },
         back(){
             let mnemonicWords = getQueryString('mnemonicWords')
-            window.location.href = `./create-words.html?mnemonicWords=${mnemonicWords}&accountName=${this.accountName}&password=${this.password}`
+            window.location.href = `./create-words.html?mnemonicWords=${mnemonicWords}&accountName=${this.accountName}&password=${this.password}&createType=${this.createType}`
             
         },
         totgleWords(words){
@@ -189,7 +190,6 @@ export default {
                                 ...n,
                                 deriveIndex:1
                             })
-                            awai
                         }
                         await this.db.bulkAddTable('accountList',_account)
                         await this.db.bulkPutTable('networks',_networks)
@@ -217,7 +217,6 @@ export default {
                         this.isFetch = false
                         window.location.href = './wallet.html'
                     },0)
-                    
                 }else{
                     this.error = true
                 }

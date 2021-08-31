@@ -86,11 +86,6 @@ export default {
         }
     },
     computed: {
-        ...mapState("app",[
-            'rpc',
-            'deriveIndex',
-            'accountList'
-        ]),
         disabled(){
             let values = Object.values(this.form)
             let bol = values.every(n=>{
@@ -108,10 +103,10 @@ export default {
     mounted(){
         let createType = getQueryString('createType')
         this.createType = createType
+        this.$set(this.form,'accountName','Account1')
     },
     methods:{
         async layoutMounted(){
-            this.$set(this.form,'accountName','Account1')
         },
         nameChange(val){
             this.form.accountName = val
@@ -137,10 +132,10 @@ export default {
                     let accountName = encodeURIComponent(trim)
                     if(this.createType === 'create'){
                         let mnemonicWords = this.genMnemonic()
-                        let url = `./create-words.html?accountName=${accountName}&password=${this.form.password}&mnemonicWords=${mnemonicWords}`
+                        let url = `./create-words.html?accountName=${accountName}&password=${this.form.password}&mnemonicWords=${mnemonicWords}&createType=${this.createType}`
                         window.location.href = url
                     }else{
-                        let url = `./import-words.html?accountName=${accountName}&password=${this.form.password}`
+                        let url = `./import-words.html?accountName=${accountName}&password=${this.form.password}&createType=${this.createType}`
                         window.location.href = url
                     }
                 }

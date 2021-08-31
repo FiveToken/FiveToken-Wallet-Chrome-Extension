@@ -67,6 +67,9 @@ export default {
          this.passwordType = val ? 'text':'password'
       },
       async unlocking(){
+        if(!this.password){
+          return
+        }
         if(this.salt){
           let voild = await validatePassword(this.password,this.salt)
           if(voild){

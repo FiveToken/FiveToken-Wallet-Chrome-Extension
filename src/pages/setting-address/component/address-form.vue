@@ -141,42 +141,46 @@ export default {
             this.$emit("update:pageType",'list')
         },
         async save(){
-            let voild = isValidAddress(this.form.address,this.networkType)
-            if(voild){
+            console.log(this.active,'33333')
+            
+            if( this.active){
                 // edit address
-                if(this.detail){
-                    this.db.modifyTable(
-                        'addressBook',
-                        { address:this.editAddress },
-                        {
-                            address:this.form.address,
-                            accountName:this.form.accountName,
-                        }
-                    ).then(res=>{
-                        this.form = Object.assign({}, this.form, { accountName:this.form.accountName, address:this.form.address})
-                        this.$message.success(this.$t('settingAddress.editSuccess'))
-                        this.$emit("addEditAddressCb")
-                    })
-                }else{
-                    let isExist = this.addressBook.filter(n => {
-                        return n.address === this.form.address
-                    })
-                    if(isExist.length){
-                        this.$message.error(this.$t('settingAddress.addressIsExist')) 
-                    }else{
-                        let create_time =  parseInt(new Date().getTime() / 1000)
-                        await this.db.addTable('addressBook',{
-                            address:this.form.address,
-                            accountName:this.form.accountName,
-                            create_time,
-                            rpc:this.rpc,
-                            khazix:'khazix'
+                let voild = isValidAddress(this.form.address,this.networkType)
+                if(voild){
+                    if(this.detail){
+                        this.db.modifyTable(
+                            'addressBook',
+                            { address:this.editAddress },
+                            {
+                                address:this.form.address,
+                                accountName:this.form.accountName,
+                            }
+                        ).then(res=>{
+                            this.form = Object.assign({}, this.form, { accountName:this.form.accountName, address:this.form.address})
+                            this.$message.success(this.$t('settingAddress.editSuccess'))
+                            this.$emit("addEditAddressCb")
                         })
-                        this.$emit('addEditAddressCb')
+                    }else{
+                        let isExist = this.addressBook.filter(n => {
+                            return n.address === this.form.address
+                        })
+                        if(isExist.length){
+                            this.$message.error(this.$t('settingAddress.addressIsExist')) 
+                        }else{
+                            let create_time =  parseInt(new Date().getTime() / 1000)
+                            await this.db.addTable('addressBook',{
+                                address:this.form.address,
+                                accountName:this.form.accountName,
+                                create_time,
+                                rpc:this.rpc,
+                                khazix:'khazix'
+                            })
+                            this.$emit('addEditAddressCb')
+                        }
                     }
+                }else{
+                    this.editAddressError = '1'
                 }
-            }else{
-                this.editAddressError = '1'
             }
         },
         copyAddress(){

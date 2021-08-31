@@ -31,7 +31,7 @@ import stepOne from './step-1'
 import stepTwo from './step-2'
 import layout from '@/components/layout'
 import { getDecodePrivateKey,formatNumber,getGlobalKek } from '@/utils'
-import { GlobalApi } from '@/utils/api'
+import { GlobalApi } from '@/api'
 import { mapMutations, mapState } from 'vuex'
 import ABI from '@/utils/abi'
 import { ethers } from 'ethers'
@@ -319,7 +319,9 @@ export default {
                 let fil = this.formData.fil.toString()
                 let numberOfTokens = ethers.utils.parseUnits(fil, this.formData.decimals);
                 let allGasFee = this.formData.gasFeeCap * this.formData.gasLimit * Math.pow(10, 9)
-                    console.log("00000000")
+                let _gasBig = new BigNumber(allGasFee)
+                let _gasStr = _gasBig.toFixed()
+                let _AllGas = formatNumber(_gasStr,18)
                 this.contractSigner.transfer(this.formData.to,numberOfTokens,{
                     gasPrice: this.formData.gasFeeCap * Math.pow(10, 9),
                     gasLimit: Math.ceil(this.formData.gasLimit),
@@ -335,7 +337,7 @@ export default {
                         nonce:res.nonce,
                         decimals:this.formData.decimals,
                         token:this.formData.symbol,
-                        allGasFee,
+                        allGasFee:_AllGas,
                         type:'pending',
                         khazix:'khazix',
                         value:_value,
@@ -418,6 +420,9 @@ export default {
                     MyGlobalApi.setNetworkType(this.networkType)
                     let result = await MyGlobalApi.sendTransaction(tx)
                     let allGasFee = this.formData.gasFeeCap * this.formData.gasLimit * Math.pow(10, 9)
+                    let _gasBig = new BigNumber(allGasFee)
+                    let _gasStr = _gasBig.toFixed()
+                    let _AllGas = formatNumber(_gasStr,18)
                     if(result && result.signed_cid){
                         let _value = this.formData.fil*Math.pow(10, Number(this.formData.decimals))
                         await this.db.addTable('messageList',{
@@ -427,7 +432,7 @@ export default {
                             create_time,
                             block_time:0,
                             nonce:result.nonce,
-                            allGasFee,
+                            allGasFee:_AllGas,
                             decimals:this.formData.decimals,
                             token:this.formData.symbol,
                             type:'pending',

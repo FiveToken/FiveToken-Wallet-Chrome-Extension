@@ -108,10 +108,10 @@ describe('network component', () => {
   })
   beforeEach(() => {
     db = new Database()
-    // db.bulkAddTable('networks', networks)
-    // db.addTable('activenNetworks', activenNetworks)
-    // db.addTable('accountList', accountList)
-    // db.addTable('activeAccount', activeAccount)
+    db.bulkAddTable('networks', networks)
+    db.addTable('activenNetworks', activenNetworks)
+    db.addTable('accountList', accountList)
+    db.addTable('activeAccount', activeAccount)
 
     state = {
       address: () => 'f1ntv4qlgoi55wqqxrxxolatfdgn7xvu7vfhrkcfq',
@@ -243,5 +243,6 @@ describe('network component', () => {
       rpc: 'https://api.fivetoken.io'
     }
     await wrapper.vm.changeAccount(acc)
+    expect(store.state.app.address).toBe('f1ntv4qlgoi55wqqxrxxolatfdgn7xvu7vfhrkcfq')
   })
 })

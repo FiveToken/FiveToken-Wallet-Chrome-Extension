@@ -1,9 +1,9 @@
 /* eslint-disable no-undef */
 import { shallowMount, createLocalVue } from '@vue/test-utils'
-import createWords from '@/pages/create-words/component/index.vue'
+import importWords from '@/pages/import-words/component/index.vue'
 import elementUI from 'element-ui'
-import Vuex from 'vuex'
 import { Database } from '@/utils/database.js'
+import Vuex from 'vuex'
 const Dexie = require('dexie')
 Dexie.dependencies.indexedDB = require('fake-indexeddb')
 Dexie.dependencies.IDBKeyRange = require('fake-indexeddb/lib/FDBKeyRange')
@@ -62,7 +62,7 @@ const networks = [
   }
 ]
 
-describe('account index.vue', () => {
+describe('importWords index.vue', () => {
   const assignMock = jest.fn()
   delete window.location
   window.location = { assign: assignMock }
@@ -121,41 +121,47 @@ describe('account index.vue', () => {
 
   Object.defineProperty(window, 'location', {
     value: {
-      ftKek: 'PWYbGFjvrmaeedDQaCrPX27MZ5VWAfTbBr/WHeFEs1k=',
       href: './setting.html',
       search: '?mnemonicWords=robot%20sort%20steak%20cart%20banana%20bracket%20cat%20mass%20room%20success%20tackle%20rival&accountName=Account1&password=Aa123456&createType=create'
     }
   })
 
-  const wrapper = shallowMount(createWords, {
+  const wrapper = shallowMount(importWords, {
     store,
     localVue,
     data () {
       return {
-        password: 'Aa123456',
+        error: false,
         db
       }
     },
     mocks: {
       $t: key => key,
-      $message: jest.fn(),
       $router: {
         go: key => key
       }
+    },
+    stubs: {
+      'el-dialog': true
     }
   })
 
   it('index.vue-test', async () => {
-    wrapper.vm.copyWords()
+    wrapper.vm.layoutMounted()
 
+    await wrapper.vm.importWallet()
+    wrapper.vm.focus()
+    expect(wrapper.vm.error).toBe(false)
+
+    wrapper.vm.mnemonicWordsChange('words')
+    expect(wrapper.vm.form.mnemonicWords).toBe('words')
+
+    const accountName = wrapper.vm.getQuery('accountName')
+    expect(accountName).toBe('Account1')
+
+    await wrapper.vm.back()
     wrapper.vm.back()
-    const href1 = window.location.href
-    expect(href1.indexOf('create-wallet.html')).not.toBe(-1)
-
-    wrapper.vm.next()
-    const href2 = window.location.href
-    expect(href2.indexOf('check-words.html')).not.toBe(-1)
-
-    await wrapper.vm.skip()
+    const back = wrapper.vm.$router.go(-1)
+    expect(back).toBe(-1)
   })
 })

@@ -2,6 +2,7 @@
 import { shallowMount, createLocalVue } from '@vue/test-utils'
 import createWallet from '@/pages/create-wallet/component/index.vue'
 import elementUI from 'element-ui'
+import { Database } from '@/utils/database.js'
 import Vuex from 'vuex'
 const Dexie = require('dexie')
 Dexie.dependencies.indexedDB = require('fake-indexeddb')
@@ -68,6 +69,7 @@ describe('account index.vue', () => {
   afterEach(() => {
     assignMock.mockClear()
   })
+  const db = new Database()
   const store = new Vuex.Store({
     modules: {
       app: {
@@ -119,14 +121,11 @@ describe('account index.vue', () => {
     localVue,
     data () {
       return {
-        db: {
-          addTable: jest.fn(),
-          getTable: jest.fn(),
-          bulkAddTable: jest.fn(),
-          bulkPutTable: jest.fn(),
-          modifyTable: jest.fn(),
-          deleteTable: jest.fn(),
-          clearTable: jest.fn()
+        db,
+        form: {
+          accountName: '',
+          password: '',
+          confirmPassword: ''
         }
       }
     },
@@ -141,10 +140,33 @@ describe('account index.vue', () => {
   it('index.vue-test', async () => {
     wrapper.vm.layoutMounted()
     wrapper.vm.nameChange('Acount2')
+    const accountName = wrapper.vm.form.accountName
+    expect(accountName).toBe('Acount2')
+
     wrapper.vm.passwordChange('Aa123456')
-    wrapper.vm.passwordEye('text')
-    wrapper.vm.confirmEye('text')
+    const password = wrapper.vm.form.password
+    expect(password).toBe('Aa123456')
+
     wrapper.vm.confirmChange('Aa123456')
+    const confirmPassword = wrapper.vm.form.confirmPassword
+    expect(confirmPassword).toBe('Aa123456')
+
+    wrapper.vm.passwordEye('text')
+    const passwordType = wrapper.vm.passwordType
+    expect(passwordType).toBe('text')
+
+    wrapper.vm.confirmEye('text')
+    const confirmType = wrapper.vm.confirmType
+    expect(confirmType).toBe('text')
+
+    wrapper.setData({ createType: 'create' })
     wrapper.vm.create()
+    const href1 = window.location.href
+    expect(href1.indexOf('create-words.html')).not.toBe(-1)
+
+    wrapper.setData({ createType: 'importWords' })
+    wrapper.vm.create()
+    const href2 = window.location.href
+    expect(href2.indexOf('import-words.html')).not.toBe(-1)
   })
 })

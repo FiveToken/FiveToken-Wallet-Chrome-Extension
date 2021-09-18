@@ -1,7 +1,9 @@
 /* eslint-disable no-undef */
 import { shallowMount, createLocalVue } from '@vue/test-utils'
 import importPrivatekey from '@/pages/import-privatekey/component/index.vue'
+import selectNetwork from '@/pages/import-privatekey/component/select-network.vue'
 import elementUI from 'element-ui'
+import { Database } from '@/utils/database.js'
 import Vuex from 'vuex'
 const Dexie = require('dexie')
 Dexie.dependencies.indexedDB = require('fake-indexeddb')
@@ -68,6 +70,7 @@ describe('importPrivatekey index.vue', () => {
   afterEach(() => {
     assignMock.mockClear()
   })
+  const db = new Database()
   const store = new Vuex.Store({
     modules: {
       app: {
@@ -96,11 +99,21 @@ describe('importPrivatekey index.vue', () => {
           networks: networks
         },
         mutations: {
-          SET_PRIVATEKEY: jest.fn(),
-          SET_ADDRESS: jest.fn(),
-          SET_DIGEST: jest.fn(),
-          SET_ACCOUNTNAME: jest.fn(),
-          SET_DERIVEINDEX: jest.fn()
+          SET_PRIVATEKEY: (state, data) => {
+            state.privateKey = data
+          },
+          SET_ADDRESS: (state, data) => {
+            state.address = data
+          },
+          SET_DIGEST: (state, data) => {
+            state.digest = data
+          },
+          SET_ACCOUNTNAME: (state, data) => {
+            state.accountName = data
+          },
+          SET_DERIVEINDEX: (state, data) => {
+            state.deriveIndex = data
+          }
         },
         namespaced: true
       }
@@ -118,24 +131,17 @@ describe('importPrivatekey index.vue', () => {
     localVue,
     data () {
       return {
+        customNetworkType: '',
         isFetch: false,
         networkVisible: true,
         privatekey: '7b2254797065223a22736563703235366b31222c22507269766174654b6579223a224941317956674e6e7a7a6e2f58642b7164556f6e416a4151335450677a59445a78745845616c4e563664413d227d',
-        db: {
-          addTable: jest.fn(),
-          getTable: jest.fn(),
-          bulkAddTable: jest.fn(),
-          bulkPutTable: jest.fn(),
-          modifyTable: jest.fn(),
-          deleteTable: jest.fn(),
-          clearTable: jest.fn()
-        }
+        db
       }
     },
     mocks: {
       $t: key => key,
       $router: {
-        go: jest.fn()
+        go: key => key
       }
     },
     stubs: {
@@ -143,18 +149,53 @@ describe('importPrivatekey index.vue', () => {
     }
   })
 
+  // selectNetwork
+  const selectNetworkCom = shallowMount(selectNetwork, {
+    localVue,
+    mocks: {
+      $t: key => key,
+      $router: {
+        go: key => key
+      }
+    }
+  })
+
   it('index.vue-test', async () => {
     wrapper.vm.layoutMounted()
+    expect(wrapper.vm.customNetworkType).toBe('proxy')
+    expect(wrapper.vm.net).toBe('https://api.fivetoken.io')
+    expect(wrapper.vm.customFilecoinAddress0).toBe('f')
+
     const obj = {
-      networkType: 'proxy',
-      filecoinAddress0: 'f',
-      rpc: 'https://api.fivetoken.io'
+      networkType: 'ethereum',
+      filecoinAddress0: '',
+      rpc: 'https://data-seed-prebsc-1-s1.binance.org:8545'
     }
     await wrapper.vm.confirmNet(obj)
-    await wrapper.vm.privatekeyChange()
+    expect(wrapper.vm.customNetworkType).toBe('ethereum')
+    expect(wrapper.vm.net).toBe('https://data-seed-prebsc-1-s1.binance.org:8545')
+    expect(wrapper.vm.customFilecoinAddress0).toBe('')
+
+    await wrapper.vm.privatekeyChange('privatekey')
+    expect(wrapper.vm.privatekey).toBe('privatekey')
+
     wrapper.vm.selectNet()
+    expect(wrapper.vm.networkVisible).toBe(true)
+
     wrapper.vm.closeNet()
+    expect(wrapper.vm.networkVisible).toBe(false)
+
     await wrapper.vm.importWallet()
     wrapper.vm.back()
+  })
+
+  it('selectNetwork.vue', () => {
+    const obj = {
+      networkType: 'ethereum',
+      filecoinAddress0: '',
+      rpc: 'https://data-seed-prebsc-1-s1.binance.org:8545'
+    }
+    selectNetworkCom.vm.confirmNet(obj)
+    selectNetworkCom.vm.closeNet()
   })
 })

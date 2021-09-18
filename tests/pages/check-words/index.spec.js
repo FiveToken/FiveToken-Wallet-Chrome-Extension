@@ -3,6 +3,7 @@ import { shallowMount, createLocalVue } from '@vue/test-utils'
 import checkWords from '@/pages/check-words/component/index.vue'
 import elementUI from 'element-ui'
 import Vuex from 'vuex'
+import { Database } from '@/utils/database.js'
 const Dexie = require('dexie')
 Dexie.dependencies.indexedDB = require('fake-indexeddb')
 Dexie.dependencies.IDBKeyRange = require('fake-indexeddb/lib/FDBKeyRange')
@@ -68,6 +69,7 @@ describe('account index.vue', () => {
   afterEach(() => {
     assignMock.mockClear()
   })
+  const db = new Database()
   const store = new Vuex.Store({
     modules: {
       app: {
@@ -120,15 +122,7 @@ describe('account index.vue', () => {
     data () {
       return {
         selected: ['robot', 'sort', 'steak', 'cart', 'banana', 'bracket', 'cat', 'mass', 'room', 'success', 'tackle', 'rival'],
-        db: {
-          addTable: jest.fn(),
-          getTable: jest.fn(),
-          bulkAddTable: jest.fn(),
-          bulkPutTable: jest.fn(),
-          modifyTable: jest.fn(),
-          deleteTable: jest.fn(),
-          clearTable: jest.fn()
-        }
+        db
       }
     },
     mocks: {
@@ -141,9 +135,17 @@ describe('account index.vue', () => {
 
   it('index.vue-test', async () => {
     wrapper.vm.back()
-    wrapper.vm.getQuery('accountName')
+    const backHref = window.location.href
+    expect(backHref.indexOf('./create-words.html')).not.toBe(-1)
+    const accountName = wrapper.vm.getQuery('accountName')
+    expect(accountName).toBe('Account1')
     wrapper.vm.totgleWords('robot')
+    const selected = wrapper.vm.selected
+    expect(selected).toEqual(
+      ['sort', 'steak', 'cart', 'banana', 'bracket', 'cat', 'mass', 'room', 'success', 'tackle', 'rival']
+    )
     wrapper.vm.confrim()
-    wrapper.vm.arrayEquals([1, 2, 3], [1, 2, 4])
+    const bol = wrapper.vm.arrayEquals([1, 2, 3], [1, 2, 4])
+    expect(bol).toBe(false)
   })
 })

@@ -10,6 +10,9 @@ $ npm run build
 # Project structure
 [Project structure](https://github.com/FiveToken/FiveToken-Wallet-Chrome-Extension/blob/master/svn.md)
 
+# functional-module
+[functional-module](https://github.com/FiveToken/FiveToken-Wallet-Chrome-Extension/blob/master/functional-module.md)
+
 # The original intention of the projec
 
 FiveToken Mobile Wallet & Chrome Extension (for Web3 ID management)

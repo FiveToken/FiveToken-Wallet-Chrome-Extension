@@ -13,6 +13,10 @@ $ npm run build
 # functional-module
 [functional-module](https://github.com/FiveToken/FiveToken-Wallet-Chrome-Extension/blob/master/functional-module.md)
 
+# Private Key Management Plan
+[Private Key Management Plan](https://github.com/FiveToken/Design-Spec/blob/master/FiveToken-Wallet-Chrome-ExtensionPrivate%20Key%20Management%20Plan.md)
+
+
 # The original intention of the projec
 
 FiveToken Mobile Wallet & Chrome Extension (for Web3 ID management)

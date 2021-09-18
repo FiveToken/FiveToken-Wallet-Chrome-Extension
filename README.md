@@ -7,6 +7,7 @@ $ npm run build-watch
 # build for production
 $ npm run build
 
+# Project structure
 [Project structure](https://github.com/FiveToken/FiveToken-Wallet-Chrome-Extension/blob/master/svn.md)
 
 # The original intention of the projec

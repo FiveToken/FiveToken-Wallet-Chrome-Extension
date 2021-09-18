@@ -15,7 +15,7 @@ import {
 import { BigNumber } from 'bignumber.js'
 import { Wallet } from 'ethers'
 
-export const fiveTokenVersion = '1.2.2'
+export const fiveTokenVersion = '1.2.0'
 
 export const minimumPrecision = 0.00000001
 

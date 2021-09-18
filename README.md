@@ -7,6 +7,10 @@ $ npm run build-watch
 # build for production
 $ npm run build
 
+# The original intention of the projec
+
+FiveToken Mobile Wallet & Chrome Extension (for Web3 ID management)
+Web 3.0 is the decentralized web promising to make the internet free again. FiveToken can liberate individual data to let the users get their individual sovereign back again. We plan to build up the system enabling users connect to the storage networking and interact with any DApps on any blockchains via one and only identity formed on metaverse and will never change and that the user can take everywhere. The identity management system can help users avoid data duplication, data breaches and identity theft. And the DApps can also be lightweight as a result of the shifted function of data storage on FiveToken. Once the system is completed, FiveToken will be capable to launch a comprehensive reputation system to help make the metaverse a safe place. 
 
 # FiveToken Chrome Extension
 FiveToken Chrome Extension, to provide professional transaction service for Filecoin storage providers and to bridge Filecoin ecosystem to Web 3 metaverse with reliable ID management via website service.
@@ -29,6 +33,18 @@ FiveToken targets to solve the problems via developing cross-chain payment proto
 - Reputation system:
   1. To support Filecoin network to more decentralized DApps and help its application in the real world;
   2. To enhance the management (eps. self management) of decentralized individual identity. It can help utilize the reputation system in the real world to the decentralized network;
+
+
+# Multi-chain version roadmap
+
+•BSC, ETH and related DApps;（completed）
+•Users can select chains independently（completed）
+•Polkadot and related Dapps;
+•Cross-chain payment protocol
+•NFT management, storage and encryption 
+•Protocol of ID verification and real-data storage (read-write) 
+•Decentralized verification of real IDs 
+•Reputation system based on real IDs
 
 # Dependencies
 Node.js version 12+
@@ -73,19 +89,3 @@ Chrome (last 2 versions)
 
 # License
 [MIT](https://github.com/FiveToken/FiveToken-Wallet-Chrome-Extension/blob/master/LICENSE)
-
-
-
-FiveToken Mobile Wallet & Chrome Extension (for Web3 ID management)
-Web 3.0 is the decentralized web promising to make the internet free again. FiveToken can liberate individual data to let the users get their individual sovereign back again. We plan to build up the system enabling users connect to the storage networking and interact with any DApps on any blockchains via one and only identity formed on metaverse and will never change and that the user can take everywhere. The identity management system can help users avoid data duplication, data breaches and identity theft. And the DApps can also be lightweight as a result of the shifted function of data storage on FiveToken. Once the system is completed, FiveToken will be capable to launch a comprehensive reputation system to help make the metaverse a safe place. 
-
-Multi-chain version roadmap
-
-•BSC, ETH and related DApps;（completed）
-•Users can select chains independently（completed）
-•Polkadot and related Dapps;
-•Cross-chain payment protocol
-•NFT management, storage and encryption 
-•Protocol of ID verification and real-data storage (read-write) 
-•Decentralized verification of real IDs 
-•Reputation system based on real IDs

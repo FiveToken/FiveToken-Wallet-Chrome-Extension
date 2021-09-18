@@ -1,19 +1,19 @@
 import axios from 'axios'
 const headers = {
-    'Content-Type':'application/json'
+  'Content-Type': 'application/json'
 }
 const request = axios.create({
-  //baseURL: '', // url = base api url + request url
+  // baseURL: '', // url = base api url + request url
   withCredentials: false, // send cookies when cross-domain requests
   timeout: 60000 // request timeout
 })
 request.interceptors.request.use(
   config => {
     config.headers = headers
-    const { data, url } = config
+    const { data } = config
     if (typeof data === 'undefined') {
       config.data = {}
-    } 
+    }
     return config
   },
   error => {

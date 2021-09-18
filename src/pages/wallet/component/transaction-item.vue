@@ -1,4 +1,4 @@
-<template>               
+<template>
     <div class="transaction-item-components" >
         <div class="block-time">
             {{time}}
@@ -23,11 +23,11 @@
                 <div class="status">
                     {{ item.type | formatStatusName(that) }}
                 </div>
-                
+
             </div>
             <div class="fil-address">
                 <div class="fil">
-                    {{ item.value | formatBalance(8,item.decimals) }} 
+                    {{ item.value | formatBalance(8,item.decimals) }}
                     {{ item.token }}
                 </div>
                 <div class="address">
@@ -40,96 +40,94 @@
 </template>
 <script>
 import { mapState } from 'vuex'
-import transactionItem from './transaction-item.vue'
-import { formatNumber,formatDate,minimumPrecision } from '@/utils'
-import { BigNumber } from "bignumber.js";
+import { formatNumber, formatDate, minimumPrecision } from '@/utils'
+import { BigNumber } from 'bignumber.js'
 export default {
-    data(){
-        return{
-            that:this,
-            rec:require('@/assets/image/rec.png'),
-            send:require('@/assets/image/send.png'),
-            pending:require('@/assets/image/pending.png'),
-            error:require('@/assets/image/fail.png'),
-        }
-    },
-    filters:{
-        addressFormat(address,from,to){
-            if(address === from){
-                if(to.length > 12){
-                    return to.substr(0,6) + '...' + to.substr(to.length-6,6)
-                }else{
-                    return to
-                } 
-            }else{
-                if(from.length > 12){
-                    return from.substr(0,6) + '...' + from.substr(from.length-6,6)
-                }else{
-                    return from
-                } 
-            }
-            
-        },
-        formatBalance(val,n,decimals){
-            let dec = val / Math.pow(10,Number(decimals))
-            let big = new BigNumber(dec).toFixed()
-            let num = formatNumber(big,n)
-            if( dec !== 0 && dec < minimumPrecision){
-                let min = new BigNumber(minimumPrecision).toFixed()
-                return "<" + min
-            }else{
-                let num = formatNumber(big,n)
-                return num 
-            }
-        },
-        formatStatusName(type,that){
-            let name = ''
-            switch(type){
-                case 'success':
-                    name = that.$t('wallet.statusSuccess')
-                    break;
-                case 'error':
-                    name = that.$t('wallet.statusError')
-                    break;
-                case 'pending':
-                    name = that.$t('wallet.statusPending')
-                    break;
-            }
-            return name
-        }
-    },
-    props:{
-        item:Object
-    },
-    computed:{
-        ...mapState('app',['address']),
-        time(){
-            let t = ''
-            if(this.item){
-                if(this.item.type === 'pending'){
-                    t = formatDate(this.item.create_time,true) 
-                }else{
-                    t = this.item.block_time
-                }
-            }
-            return t
-        }
-    },
-    methods:{
-        skipToToken(item){
-            this.$emit('tokenShow',item)
-        },
-        refreshList(){
-            
-        },
-        selectType(type){
-            this.type = type
-        },
-        showDetail(signed_cid,obj){
-            console.log(signed_cid,obj,'signed_cid,obj')
-            this.$emit('openDetail',signed_cid,obj)
-        },
+  data () {
+    return {
+      that: this,
+      rec: require('@/assets/image/rec.png'),
+      send: require('@/assets/image/send.png'),
+      pending: require('@/assets/image/pending.png'),
+      error: require('@/assets/image/fail.png')
     }
+  },
+  filters: {
+    addressFormat (address, from, to) {
+      if (address === from) {
+        if (to.length > 12) {
+          return to.substr(0, 6) + '...' + to.substr(to.length - 6, 6)
+        } else {
+          return to
+        }
+      } else {
+        if (from.length > 12) {
+          return from.substr(0, 6) + '...' + from.substr(from.length - 6, 6)
+        } else {
+          return from
+        }
+      }
+    },
+    formatBalance (val, n, decimals) {
+      const dec = val / Math.pow(10, Number(decimals))
+      const big = new BigNumber(dec).toFixed()
+      if (dec !== 0 && dec < minimumPrecision) {
+        const min = new BigNumber(minimumPrecision).toFixed()
+        return '<' + min
+      } else {
+        const num = formatNumber(big, n)
+        return num
+      }
+    },
+    formatStatusName (type, that) {
+      let name = ''
+      switch (type) {
+        case 'success':
+          name = that.$t('wallet.statusSuccess')
+          break
+        case 'error':
+          name = that.$t('wallet.statusError')
+          break
+        case 'pending':
+          name = that.$t('wallet.statusPending')
+          break
+      }
+      return name
+    }
+  },
+  props: {
+    item: Object
+  },
+  computed: {
+    ...mapState('app', ['address']),
+    time () {
+      let t = ''
+      if (this.item) {
+        if (this.item.type === 'pending') {
+          t = formatDate(this.item.create_time, true)
+        } else {
+          t = this.item.block_time
+        }
+      }
+      return t
+    }
+  },
+  methods: {
+    skipToToken (item) {
+      this.$emit('tokenShow', item)
+    },
+    refreshList () {
+
+    },
+    selectType (type) {
+      this.type = type
+    },
+    // eslint-disable-next-line camelcase
+    showDetail (signed_cid, obj) {
+      console.log(signed_cid, obj, 'signed_cid,obj')
+      this.$emit('openDetail', signed_cid, obj)
+    }
+  }
 }
 </script>
 

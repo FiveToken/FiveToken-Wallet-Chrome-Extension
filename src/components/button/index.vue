@@ -1,7 +1,7 @@
 <template>
     <div class="button-wrap">
-        <div class="button" 
-            :class="[type === 'primary'?'primary':'default',active ? 'active':'']" 
+        <div class="button"
+            :class="[type === 'primary'?'primary':'default',active ? 'active':'']"
             @click="btnClick"
         >
            <slot/>
@@ -11,20 +11,20 @@
 <script>
 
 export default {
-    data(){
-        return{  }
-    },
-    props:{
-        text: String,
-        type: String, // default "primary" 
-        active:Boolean,
-        loading:Boolean
-    },
-    methods:{
-        btnClick(){
-            this.$emit("btnClick")
-        }
+  data () {
+    return { }
+  },
+  props: {
+    text: String,
+    type: String, // default "primary"
+    active: Boolean,
+    loading: Boolean
+  },
+  methods: {
+    btnClick () {
+      this.$emit('btnClick')
     }
+  }
 }
 </script>
 

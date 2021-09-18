@@ -2,8 +2,8 @@
     "manifest_version": 2,
     "name": "FiveToken",
     "description": "chrome FiveToken extension",
-    "version": "1.2.0",
-    "options_page": "pages/filecoinwallet.html",
+    "version": "1.2.2",
+    "options_page": "pages/fiveToken.html",
     "icons":{
 		"16": "assets/image/logo.png",
 		"48": "assets/image/logo.png",
@@ -11,8 +11,8 @@
 	},
     "browser_action": {
         "default_icon": "assets/image/logo.png",
-		"default_title": "filecoinwallet",
-        "default_popup": "pages/filecoinwallet.html"
+		"default_title": "fiveToken",
+        "default_popup": "pages/fiveToken.html"
     },
     "permissions":[
 		"http://*/*",
@@ -20,7 +20,7 @@
     ],
     "background":
 	{
-		"scripts": ["background.js","hot-reload.js"]
+		"scripts": ["js/background.js","hot-reload.js"]
 	},
     "content_scripts": [
         {
@@ -28,7 +28,7 @@
                 "<all_urls>"
             ],
             "js": [
-                "script-content.js"
+                "js/content-script.js"
             ],
             "run_at": "document_start",
             "all_frames": true

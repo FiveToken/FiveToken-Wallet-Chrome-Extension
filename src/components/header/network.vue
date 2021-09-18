@@ -25,152 +25,149 @@
 </template>
 
 <script>
-import { mapState ,mapMutations, mapGetters} from 'vuex'
-import { Database } from '@/utils/database.js';
-import { isFilecoinChain } from '@/utils';
+import { mapState, mapMutations } from 'vuex'
+import { Database } from '@/utils/database.js'
+import { isFilecoinChain } from '@/utils'
 export default {
-    data(){
-        return{
-            db:null
-        }
-    },
-    computed:{
-        ...mapState('app',[
-            'networks',
-            'activenNetworks',
-            'rpc',
-            'rpcName',
-            'accountList',
-            'activeAccount',
-            'address',
-            'privateKey',
-            'digest',
-            'networkType'
-        ]),
-    },
-    filter:{
-        imageFormat(val){
-            let src = require(`@/assets/image/${val}`)
-            return src
-        }
-    },
-    mounted(){
-        const db = new Database();
-        this.db = db
-    },
-    methods:{
-        ...mapMutations('app',[
-            'SET_ACTIVENETWORKS',
-            'SET_RPC',
-            'SET_RPCNAME',
-            'SET_ACCOUNTLIST',
-            'SET_SYMBOL',
-            'SET_PRIVATEKEY',
-            'SET_ADDRESS',
-            'SET_DIGEST',
-            'SET_ACCOUNTNAME',
-            'SET_IDS',
-            'SET_BROWSER',
-            'SET_NETWORKTYPE',
-            'SET_FILECOINADDRESS0',
-            'SET_DECIMALS',
-            'SET_OWENCHAIN',
-            'SET_RPCIMAGE',
-            'SET_DERIVEINDEX'
-        ]),
-        async confirmNetwork(obj){
-            let currentIsFileCoin = isFilecoinChain(this.networkType)
-            let nextIsFileCoin = isFilecoinChain(obj.networkType)
-            let currentAddress = this.address
-
-            await this.db.deleteTable('activenNetworks',{ khazix:'khazix' })
-            let { 
-                name,
-                rpc,
-                chainID,
-                ids,
-                symbol,
-                browser,
-                networkType,
-                filecoinAddress0,
-                decimals,
-                image,
-                disabled,
-                deriveIndex 
-            } = obj
-            await this.db.addTable('activenNetworks',{
-                ...obj,
-                khazix:'khazix'
-            })
-
-            let accountList = await this.db.getTable('accountList',{ rpc:rpc,isDelete:0 });
-            this.SET_RPC(rpc)
-            this.SET_RPCNAME(name)
-            this.SET_BROWSER(browser)
-            this.SET_ACCOUNTLIST(accountList)
-            this.SET_SYMBOL(symbol)
-            this.SET_IDS(ids)
-            this.SET_NETWORKTYPE(networkType)
-            this.SET_FILECOINADDRESS0(filecoinAddress0)
-            this.SET_ACTIVENETWORKS([obj])
-            this.SET_DECIMALS(decimals)
-            this.SET_OWENCHAIN(disabled)
-            this.SET_RPCIMAGE(image)
-            this.SET_DERIVEINDEX(deriveIndex)
-            if(accountList.length){
-                // createType mnemonic
-                if(currentIsFileCoin === nextIsFileCoin){
-                    let same = null
-                    if(currentIsFileCoin){
-                        let _add = currentAddress.substring(1,currentAddress.length)
-                        same = accountList.find(n=>{
-                            return n.address.indexOf(_add) > -1
-                        })
-                    }else{
-                        same = accountList.find(n=>{
-                            return n.address === currentAddress
-                        })
-                    }
-                    if(same){
-                        await this.changeAccount(same)
-                    }else{
-                        let first = accountList[0]
-                        console.log(first,'first')
-                        await this.changeAccount(first)
-                    }
-                    
-                }else{
-                    let first = accountList[0]
-                    console.log(first,'first')
-                    await this.changeAccount(first)
-                }
-            }else{
-                window.location.href = './welcome.html'
-            }
-        },
-        async changeAccount(item){
-            let { address,accountName,privateKey,create_time,digest,createType} = item
-            this.settingVisible = false
-            this.SET_ADDRESS(address)
-            this.SET_ACCOUNTNAME(accountName)
-            this.SET_PRIVATEKEY(privateKey)
-            this.SET_DIGEST(digest)
-            this.$emit('networkChange')
-            await this.db.deleteTable('activeAccount',{ khazix:'khazix' })
-            await this.db.addTable('activeAccount',{ 
-                ...item,
-                fil:0,
-                khazix:'khazix',
-             })
-            
-        },
-        closeNetwork(){
-            this.$emit('closeNetwork')
-        },
-        skipToNetwork(){
-            window.location.href = './setting-networks.html'
-        }
+  data () {
+    return {
+      db: null
     }
+  },
+  computed: {
+    ...mapState('app', [
+      'networks',
+      'activenNetworks',
+      'rpc',
+      'rpcName',
+      'accountList',
+      'activeAccount',
+      'address',
+      'privateKey',
+      'digest',
+      'networkType'
+    ])
+  },
+  filter: {
+    imageFormat (val) {
+      const src = require(`@/assets/image/${val}`)
+      return src
+    }
+  },
+  mounted () {
+    const db = new Database()
+    this.db = db
+  },
+  methods: {
+    ...mapMutations('app', [
+      'SET_ACTIVENETWORKS',
+      'SET_RPC',
+      'SET_RPCNAME',
+      'SET_ACCOUNTLIST',
+      'SET_SYMBOL',
+      'SET_PRIVATEKEY',
+      'SET_ADDRESS',
+      'SET_DIGEST',
+      'SET_ACCOUNTNAME',
+      'SET_IDS',
+      'SET_BROWSER',
+      'SET_NETWORKTYPE',
+      'SET_FILECOINADDRESS0',
+      'SET_DECIMALS',
+      'SET_OWENCHAIN',
+      'SET_RPCIMAGE',
+      'SET_DERIVEINDEX'
+    ]),
+    async confirmNetwork (obj) {
+      const currentIsFileCoin = isFilecoinChain(this.networkType)
+      const nextIsFileCoin = isFilecoinChain(obj.networkType)
+      const currentAddress = this.address
+
+      await this.db.deleteTable('activenNetworks', { khazix: 'khazix' })
+      const {
+        name,
+        rpc,
+        ids,
+        symbol,
+        browser,
+        networkType,
+        filecoinAddress0,
+        decimals,
+        image,
+        disabled,
+        deriveIndex
+      } = obj
+      await this.db.addTable('activenNetworks', {
+        ...obj,
+        khazix: 'khazix'
+      })
+
+      const accountList = await this.db.getTable('accountList', { rpc: rpc, isDelete: 0 })
+      this.SET_RPC(rpc)
+      this.SET_RPCNAME(name)
+      this.SET_BROWSER(browser)
+      this.SET_ACCOUNTLIST(accountList)
+      this.SET_SYMBOL(symbol)
+      this.SET_IDS(ids)
+      this.SET_NETWORKTYPE(networkType)
+      this.SET_FILECOINADDRESS0(filecoinAddress0)
+      this.SET_ACTIVENETWORKS([obj])
+      this.SET_DECIMALS(decimals)
+      this.SET_OWENCHAIN(disabled)
+      this.SET_RPCIMAGE(image)
+      this.SET_DERIVEINDEX(deriveIndex)
+      if (accountList.length) {
+        // createType mnemonic
+        if (currentIsFileCoin === nextIsFileCoin) {
+          let same = null
+          if (currentIsFileCoin) {
+            const _add = currentAddress.substring(1, currentAddress.length)
+            same = accountList.find(n => {
+              return n.address.indexOf(_add) > -1
+            })
+          } else {
+            same = accountList.find(n => {
+              return n.address === currentAddress
+            })
+          }
+          if (same) {
+            await this.changeAccount(same)
+          } else {
+            const first = accountList[0]
+            console.log(first, 'first')
+            await this.changeAccount(first)
+          }
+        } else {
+          const first = accountList[0]
+          console.log(first, 'first')
+          await this.changeAccount(first)
+        }
+      } else {
+        window.location.href = './welcome.html'
+      }
+    },
+    async changeAccount (item) {
+      const { address, accountName, privateKey, digest } = item
+      this.settingVisible = false
+      this.SET_ADDRESS(address)
+      this.SET_ACCOUNTNAME(accountName)
+      this.SET_PRIVATEKEY(privateKey)
+      this.SET_DIGEST(digest)
+      this.$emit('networkChange')
+      await this.db.deleteTable('activeAccount', { khazix: 'khazix' })
+      await this.db.addTable('activeAccount', {
+        ...item,
+        fil: 0,
+        khazix: 'khazix'
+      })
+    },
+    closeNetwork () {
+      this.$emit('closeNetwork')
+    },
+    skipToNetwork () {
+      window.location.href = './setting-networks.html'
+    }
+  }
 }
 </script>
 
@@ -232,7 +229,7 @@ export default {
                 justify-content: center;
                 .img{
                    width: 26px;
-                    height: 26px; 
+                    height: 26px;
                 }
             }
             &:nth-child(even){

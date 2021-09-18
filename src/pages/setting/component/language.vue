@@ -17,25 +17,25 @@
 <script>
 import { mapState } from 'vuex'
 export default {
-    data(){
-        return{ }
+  data () {
+    return { }
+  },
+  computed: {
+    ...mapState('app', [
+      'language'
+    ])
+  },
+  mounted () {
+    // const language = window.localStorage.getItem('fiveTokenLanguage')
+  },
+  methods: {
+    confirm (val) {
+      this.$emit('confirm', val)
     },
-    computed:{
-        ...mapState('app',[
-            'language'
-        ]),
-    },
-    mounted(){
-        let language = window.localStorage.getItem('fiveTokenLanguage')
-    },
-    methods:{
-        confirm(val){
-            this.$emit('confirm',val)
-        },
-        close(){
-            this.$emit('close')
-        }
+    close () {
+      this.$emit('close')
     }
+  }
 }
 </script>
 

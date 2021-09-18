@@ -22,38 +22,39 @@
 import layout from '@/components/layout'
 import kyBack from '@/components/back'
 import { fiveTokenVersion } from '@/utils'
+import { openUrl } from '@/pages/popup/index.js'
 export default {
-    data(){
-        return{
-            logo:require('@/assets/image/logo.png'),
-            version:''
-        }
-    },
-    components:{
-        layout,
-        kyBack
-    },
-    mounted(){
-        this.version = fiveTokenVersion
-    },
-    methods:{
-        back(){
-             window.location.href = './setting.html'
-        },
-        closeSetting(){
-            window.location.href = './wallet.html'
-        },
-        toService(){
-            let lang = this.$i18n.locale
-            lang = lang === 'zh' ? 'cn' : lang
-            openUrl(`https://fivetoken.io/service?lang=${lang}`)
-        },
-        toPrivacy(){
-            let lang = this.$i18n.locale
-            lang = lang === 'zh' ? 'cn' : lang
-            openUrl(`https://fivetoken.io/private?lang=${lang}`)
-        }
+  data () {
+    return {
+      logo: require('@/assets/image/logo.png'),
+      version: ''
     }
+  },
+  components: {
+    layout,
+    kyBack
+  },
+  mounted () {
+    this.version = fiveTokenVersion
+  },
+  methods: {
+    back () {
+      window.location.href = './setting.html'
+    },
+    closeSetting () {
+      window.location.href = './wallet.html'
+    },
+    toService () {
+      let lang = this.$i18n.locale
+      lang = lang === 'zh' ? 'cn' : lang
+      openUrl(`https://fivetoken.io/service?lang=${lang}`)
+    },
+    toPrivacy () {
+      let lang = this.$i18n.locale
+      lang = lang === 'zh' ? 'cn' : lang
+      openUrl(`https://fivetoken.io/private?lang=${lang}`)
+    }
+  }
 }
 </script>
 
@@ -103,7 +104,7 @@ export default {
             font-size: 18px;
             color: #222;
             margin-bottom: 5px;
-            line-height: 20px; 
+            line-height: 20px;
         }
         .privacy-policy{
             font-size: 14px;

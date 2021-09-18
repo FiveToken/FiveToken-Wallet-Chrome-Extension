@@ -12,21 +12,21 @@
 <script>
 
 export default {
-    data(){
-        return{ }
+  data () {
+    return { }
+  },
+  props: {
+    name: String,
+    close: Boolean
+  },
+  methods: {
+    back () {
+      this.$emit('pageBack')
     },
-    props:{
-        name:String,
-        close:Boolean
-    },
-    methods:{
-        back(){
-            this.$emit('pageBack')
-        },
-        pageClose(){
-            this.$emit('pageClose')
-        }
+    pageClose () {
+      this.$emit('pageClose')
     }
+  }
 }
 </script>
 

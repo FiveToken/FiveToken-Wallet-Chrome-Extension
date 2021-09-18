@@ -1,8 +1,8 @@
 <template>
     <layout @layoutMounted="layoutMounted">
         <div class="wallet-page" >
-            <bHeader 
-                @openNetwork="openNetwork" 
+            <bHeader
+                @openNetwork="openNetwork"
             />
             <div class="content">
                 <kyTop
@@ -18,9 +18,9 @@
                     :price_currency="price_currency"
                     :balance="balance"
                     @tokenShow="tokenShow"
+                    ref="kyList"
                 />
             </div>
-
 
             <el-dialog
                 :visible.sync="networkVisible"
@@ -30,7 +30,7 @@
                 :modal="false"
                 :top="'0'"
             >
-                <kyNetwork 
+                <kyNetwork
                     @closeNetwork="closeNetwork"
                     @networkChange="networkChange"
                 />
@@ -48,7 +48,7 @@
                     @closeEdit="closeEdit"
                 />
             </el-dialog>
-            
+
             <el-dialog
                 :visible.sync="deleteUserVisible"
                 width="300px"
@@ -114,243 +114,247 @@ import kyToken from './token.vue'
 import kyNetwork from '@/components/header/network.vue'
 import { GlobalApi } from '@/api'
 import QRCode from 'qrcode'
-import { mapGetters, mapMutations, mapState } from 'vuex'
-import { formatDate } from '@/utils'
-import { Database,reverseOrder } from '@/utils/database.js';
+import { mapMutations, mapState } from 'vuex'
+import { Database, reverseOrder } from '@/utils/database.js'
 export default {
-    data(){
-        return{
-            mask:false,
-            loading:require('@/assets/image/loading.png'),
-            isLoading:false,
-            addressName:'',
-            editNameVisable:false,
-            deleteUserVisible:false,
-            receiveVisible:false,
-            tokenVisible:false,
-            balance:0,
-            price_currency:0,
-            QRUrl:'',
-            signed_cid:'',
-            tokenName:'',
-            tokenDecimals:0,
-            tokenList:[],
-            tokenBalance:0,
-            tokenIsMain:0,
-            networkVisible:false,
-            db:null
-        }
-    },
-    computed:{
-        ...mapState('app',[
-            'rpc',
-            'symbol',
-            'accountName',
-            'address',
-            'privateKey',
-            'ids',
-            'networkType',
-            'currency',
-            'accountList'
-        ]),
-    },
-    components:{
-        layout,
-        bHeader,
-        editName,
-        deleteUser,
-        receive,
-        kyTop,
-        kyList,
-        kyToken,
-        kyNetwork
-    },
-    mounted(){
-        const db = new Database();
-        this.db = db
-    },
-    methods:{
-        ...mapMutations('app',[
-            'SET_PRIVATEKEY',
-            'SET_ADDRESS',
-            'SET_DIGEST',
-            'SET_ACCOUNTNAME'
-        ]),
-        async layoutMounted(){
-            let address = this.address
-            let rpc = this.rpc
-            let networkType = this.networkType
-            try{
-                this.getQRCode()
-                this.isLoading = true
-                this.addressName = this.accountName
-                await this.getPrice()
-                let balance = await this.getBalanceNonce(address,rpc,networkType)
-                this.balance = balance
-                await this.db.modifyTable(
-                    'activeAccount',
-                    {
-                        address:address,
-                        rpc:rpc
-                    },
-                    {
-                        fil:balance,
-                    }
-                )
-                this.isLoading = false
-            }catch(error){
-                this.isLoading = false
-            }
-        },
-        networkChange(){
-            this.closeNetwork()
-            this.layoutMounted()
-        },
-        openNetwork(){
-            this.mask = true
-            this.networkVisible = true
-        },
-        closeNetwork(){
-            this.mask = false
-            this.networkVisible = false
-        },
-        maskClick(){
-             this.mask = false
-            this.networkVisible = false
-        },
-        confirmEdit(){
-            let addressName = this.addressName
-            if(addressName) {
-                let address = this.address
-                let rpc = this.rpc
-                this.SET_ACCOUNTNAME(addressName)
-                this.db.modifyTable(
-                    'accountList',
-                    {
-                        address:address,
-                        rpc:rpc
-                    },
-                    {
-                        accountName:addressName
-                    }
-                )
-                this.db.modifyTable(
-                    'activeAccount',
-                    {
-                        address:address,
-                        rpc:rpc
-                    },
-                    {
-                        accountName:addressName
-                    }
-                )
-                this.editNameVisable = false
-            }
-            
-        },
-        closeEdit(){
-            this.editNameVisable = false
-        },
-        async confirmDelete(){
-            if(this.accountList.length === 1){
-                await this.db.clearTable()
-                window.location.href = './welcome.html'
-            }else{
-                if(this.accountList.length){
-                    await this.db.deleteTable('activeAccount',{ khazix:'khazix' })
-                    await this.db.modifyTable(
-                        'accountList',
-                        {  
-                            address:this.address,
-                            rpc:this.rpc 
-                        },
-                        {
-                            isDelete:1,
-                        }
-                    )
-                    let _accountList = await this.db.getTable('accountList',{ rpc:this.rpc ,isDelete:0 });
-                    let first = _accountList.find((n,index)=>{
-                        return index === 0
-                    })
-                    let{ privateKey,address,digest,accountName } = first
-                    this.SET_PRIVATEKEY(privateKey)
-                    this.SET_ADDRESS(address)
-                    this.SET_DIGEST(digest)
-                    this.SET_ACCOUNTNAME(accountName)
-                    await this.db.addTable('activeAccount',first)
-                    window.location.href = './wallet.html'
-                }else{
-                    window.location.href = './welcome.html'
-                }
-            }
-        },
-        closeDelete(){
-            this.deleteUserVisible = false
-        },
-        async getPrice(){
-            if(this.ids){
-                let MyGlobalApi = new GlobalApi()
-                MyGlobalApi.setRpc(this.rpc)
-                MyGlobalApi.setNetworkType(this.networkType)
-                let res = await MyGlobalApi.getPrice(this.ids)
-                let { usd,cny } = res
-                if(this.currency === 'cny'){
-                    this.price_currency = cny
-                }else{
-                    this.price_currency = usd
-                }
-            }  
-        },
-        sendFil(){
-            window.location.href = './send-fil.html'
-        },
-        async getBalanceNonce(address,rpc,networkType){
-            let balance = 0
-            let MyGlobalApi = new GlobalApi()
-            MyGlobalApi.setRpc(rpc)
-            MyGlobalApi.setNetworkType(networkType)
-            let res = await MyGlobalApi.getBalance(address)
-            balance = res && res.balance
-            return balance
-        },
-        openReceive(){
-            this.receiveVisible = true
-        },
-        closeReceive(){
-            this.receiveVisible = false
-        },
-        getQRCode(){
-             QRCode.toDataURL(this.address).then(QRUrl => {
-                this.QRUrl = QRUrl
-            }).catch(err => {
-                console.error(err)
-            })
-        },
-        async tokenShow(obj){
-            let {symbol,decimals,balance,isMain} = obj
-            this.tokenName = symbol
-            this.tokenDecimals = Number(decimals)
-            this.tokenBalance = balance
-            this.tokenIsMain = isMain
-            
-            let mesList = await this.db.getTable(
-                'messageList',
-                { rpc:this.rpc },
-                reverseOrder,
-                'create_time',
-            )
-            let tokenList = mesList.filter(n=>{
-                return (n.from === this.address) && (n.token === symbol) || (n.to === this.address) && (n.token === symbol)
-            })
-            console.log(tokenList,' tokenList 2222')
-            this.tokenList = tokenList.map(n=>{
-                return {
-                    ...n,
-                }
-            })
-            this.tokenVisible = true
-        },
+  data () {
+    return {
+      mask: false,
+      loading: require('@/assets/image/loading.png'),
+      isLoading: false,
+      addressName: '',
+      editNameVisable: false,
+      deleteUserVisible: false,
+      receiveVisible: false,
+      tokenVisible: false,
+      balance: 0,
+      price_currency: 0,
+      QRUrl: '',
+      signed_cid: '',
+      tokenName: '',
+      tokenDecimals: 0,
+      tokenList: [],
+      tokenBalance: 0,
+      tokenIsMain: 0,
+      networkVisible: false,
+      db: null
     }
+  },
+  computed: {
+    ...mapState('app', [
+      'rpc',
+      'symbol',
+      'accountName',
+      'address',
+      'privateKey',
+      'ids',
+      'networkType',
+      'currency',
+      'accountList'
+    ])
+  },
+  components: {
+    layout,
+    bHeader,
+    editName,
+    deleteUser,
+    receive,
+    kyTop,
+    kyList,
+    kyToken,
+    kyNetwork
+  },
+  mounted () {
+    const db = new Database()
+    this.db = db
+  },
+  methods: {
+    ...mapMutations('app', [
+      'SET_PRIVATEKEY',
+      'SET_ADDRESS',
+      'SET_DIGEST',
+      'SET_ACCOUNTNAME'
+    ]),
+    async layoutMounted () {
+      const address = this.address
+      const rpc = this.rpc
+      const networkType = this.networkType
+      try {
+        this.getQRCode()
+        this.isLoading = true
+        this.addressName = this.accountName
+        await this.getPrice()
+        const balance = await this.getBalanceNonce(address, rpc, networkType)
+        this.balance = balance
+        await this.db.modifyTable(
+          'activeAccount',
+          {
+            address: address,
+            rpc: rpc
+          },
+          {
+            fil: balance
+          }
+        )
+        this.isLoading = false
+        await this.$refs.kyList.getTokenList()
+        await this.$refs.kyList.updateActivityList()
+        await this.$refs.kyList.getActivityList()
+      } catch (error) {
+        this.isLoading = false
+      }
+    },
+    networkChange () {
+      this.closeNetwork()
+      this.layoutMounted()
+    },
+    openNetwork () {
+      this.mask = true
+      this.networkVisible = true
+    },
+    closeNetwork () {
+      this.mask = false
+      this.networkVisible = false
+    },
+    maskClick () {
+      this.mask = false
+      this.networkVisible = false
+    },
+    // edit current address
+    confirmEdit () {
+      const addressName = this.addressName
+      if (addressName) {
+        const address = this.address
+        const rpc = this.rpc
+        this.SET_ACCOUNTNAME(addressName)
+        this.db.modifyTable(
+          'accountList',
+          {
+            address: address,
+            rpc: rpc
+          },
+          {
+            accountName: addressName
+          }
+        )
+        this.db.modifyTable(
+          'activeAccount',
+          {
+            address: address,
+            rpc: rpc
+          },
+          {
+            accountName: addressName
+          }
+        )
+        this.editNameVisable = false
+      }
+    },
+    closeEdit () {
+      this.editNameVisable = false
+    },
+    // delete current address
+    async confirmDelete () {
+      if (this.accountList.length === 1) {
+        await this.db.clearTable()
+        window.location.href = './welcome.html'
+      } else {
+        if (this.accountList.length) {
+          await this.db.deleteTable('activeAccount', { khazix: 'khazix' })
+          await this.db.modifyTable(
+            'accountList',
+            {
+              address: this.address,
+              rpc: this.rpc
+            },
+            {
+              isDelete: 1
+            }
+          )
+          const _accountList = await this.db.getTable('accountList', { rpc: this.rpc, isDelete: 0 })
+          const first = _accountList.find((n, index) => {
+            return index === 0
+          })
+          const { privateKey, address, digest, accountName } = first
+          this.SET_PRIVATEKEY(privateKey)
+          this.SET_ADDRESS(address)
+          this.SET_DIGEST(digest)
+          this.SET_ACCOUNTNAME(accountName)
+          await this.db.addTable('activeAccount', first)
+          window.location.href = './wallet.html'
+        } else {
+          window.location.href = './welcome.html'
+        }
+      }
+    },
+    closeDelete () {
+      this.deleteUserVisible = false
+    },
+    // get exchange rate
+    async getPrice () {
+      if (this.ids) {
+        const MyGlobalApi = new GlobalApi()
+        MyGlobalApi.setRpc(this.rpc)
+        MyGlobalApi.setNetworkType(this.networkType)
+        const res = await MyGlobalApi.getPrice(this.ids)
+        const { usd, cny } = res
+        if (this.currency === 'cny') {
+          this.price_currency = cny
+        } else {
+          this.price_currency = usd
+        }
+      }
+    },
+    sendFil () {
+      window.location.href = './send-fil.html'
+    },
+    // get current account balance
+    async getBalanceNonce (address, rpc, networkType) {
+      let balance = 0
+      const MyGlobalApi = new GlobalApi()
+      MyGlobalApi.setRpc(rpc)
+      MyGlobalApi.setNetworkType(networkType)
+      const res = await MyGlobalApi.getBalance(address)
+      balance = res && res.balance
+      return balance
+    },
+    openReceive () {
+      this.receiveVisible = true
+    },
+    closeReceive () {
+      this.receiveVisible = false
+    },
+    // Get address QR code
+    getQRCode () {
+      QRCode.toDataURL(this.address).then(QRUrl => {
+        this.QRUrl = QRUrl
+      })
+    },
+    // asset details
+    async tokenShow (obj) {
+      const { symbol, decimals, balance, isMain } = obj
+      this.tokenName = symbol
+      this.tokenDecimals = Number(decimals)
+      this.tokenBalance = balance
+      this.tokenIsMain = isMain
+      const mesList = await this.db.getTable(
+        'messageList',
+        { rpc: this.rpc },
+        reverseOrder,
+        'create_time'
+      )
+      const tokenList = mesList.filter(n => {
+        return ((n.from === this.address) && (n.token === symbol)) || ((n.to === this.address) && (n.token === symbol))
+      })
+      console.log(tokenList, ' tokenList 2222')
+      this.tokenList = tokenList.map(n => {
+        return {
+          ...n
+        }
+      })
+      this.tokenVisible = true
+    }
+  }
 }
 </script>
 <style lang="less" scoped>

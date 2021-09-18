@@ -20,21 +20,21 @@
 
 <script>
 export default {
-    data(){
-        return{ }
+  data () {
+    return { }
+  },
+  props: {
+    networks: Array,
+    net: String
+  },
+  methods: {
+    confirmNet (val) {
+      this.$emit('confirmNet', val)
     },
-    props:{
-        networks:Array,
-        net:String
-    },
-    methods:{
-        confirmNet(val){
-            this.$emit('confirmNet',val)
-        },
-        closeNet(){
-            this.$emit('closeNet')
-        }
+    closeNet () {
+      this.$emit('closeNet')
     }
+  }
 }
 </script>
 
@@ -96,7 +96,7 @@ export default {
                 height: 26px;
                 .img{
                    width: 26px;
-                    height: 26px; 
+                    height: 26px;
                 }
             }
             &:nth-child(even){
@@ -118,7 +118,7 @@ export default {
                 font-size: 18px;
                 color: #fff;
                 border-radius: 13px;
-                
+
             }
             .name{
                 padding-left: 10px;

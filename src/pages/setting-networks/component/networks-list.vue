@@ -25,35 +25,35 @@ import kyBack from '@/components/back'
 import kyButton from '@/components/button'
 import { mapState } from 'vuex'
 export default {
-    data(){
-        return{
-            
-        }
-    },
-    computed:{
-        ...mapState('app',['rpc'])
-    },
-    components:{
-        kyBack,
-        kyButton
-    },
-    props:{
-        networks:Array
-    },
-    methods:{
-        back(){
-            window.location.href = './setting.html'
-        },
-        closeSetting(){
-            window.location.href = './wallet.html'
-        },
-        networksItem(obj){
-            this.$emit('networksItemClick',obj)
-        },
-        addNetwork(){
-            this.$emit('addNetwork')
-        }
+  data () {
+    return {
+
     }
+  },
+  computed: {
+    ...mapState('app', ['rpc'])
+  },
+  components: {
+    kyBack,
+    kyButton
+  },
+  props: {
+    networks: Array
+  },
+  methods: {
+    back () {
+      window.location.href = './setting.html'
+    },
+    closeSetting () {
+      window.location.href = './wallet.html'
+    },
+    networksItem (obj) {
+      this.$emit('networksItemClick', obj)
+    },
+    addNetwork () {
+      this.$emit('addNetwork')
+    }
+  }
 }
 </script>
 

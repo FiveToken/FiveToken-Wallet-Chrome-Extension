@@ -8,9 +8,9 @@
       <div class="sub-title">{{$t('lock.subTitle')}}</div>
       <div class="input-item">
         <div class="label">{{$t('lock.label')}}</div>
-        <kyInput 
-          :value="password" 
-          :type="passwordType" 
+        <kyInput
+          :value="password"
+          :type="passwordType"
           @changeInput="passwordChange"
           @changeEye="changeEye"
           :suffix="suffix"
@@ -29,58 +29,58 @@ import { validatePassword } from '@/utils'
 import layout from '@/components/layout'
 import kyInput from '@/components/input'
 import kyButton from '@/components/button'
-import { Database } from '@/utils/database.js';
+import { Database } from '@/utils/database.js'
 export default {
-    data(){
-      return{ 
-        logo:require('@/assets/image/logo.png'),
-        suffix:true,
-        password:'',
-        passwordType:'password',
-        salt:null,
-        db:null
+  data () {
+    return {
+      logo: require('@/assets/image/logo.png'),
+      suffix: true,
+      password: '',
+      passwordType: 'password',
+      salt: null,
+      db: null
+    }
+  },
+  computed: {
+    active () {
+      return this.password !== ''
+    }
+  },
+  components: {
+    layout,
+    kyInput,
+    kyButton
+  },
+  async mounted () {
+    const db = new Database()
+    this.db = db
+    const walletKey = await db.getTable('walletKey', { khazix: 'khazix' })
+    if (walletKey.length) {
+      this.salt = walletKey[0].salt
+    }
+  },
+  methods: {
+    passwordChange (val) {
+      this.password = val
+    },
+    changeEye (val) {
+      this.passwordType = val ? 'text' : 'password'
+    },
+    async unlocking () {
+      if (!this.password) {
+        return
       }
-    },
-    computed:{
-      active(){
-        return this.password !== ''
-      }
-    },
-    components:{
-      layout,
-      kyInput,
-      kyButton
-    },
-    async mounted(){
-      let db = new Database()
-      this.db = db
-        let walletKey = await db.getTable('walletKey',{khazix:'khazix'})
-        if(walletKey.length){
-            this.salt = walletKey[0].salt
-        }
-    },
-    methods:{
-      passwordChange(val){
-        this.password = val
-      },
-      changeEye(val){
-         this.passwordType = val ? 'text':'password'
-      },
-      async unlocking(){
-        if(!this.password){
-          return
-        }
-        if(this.salt){
-          let voild = await validatePassword(this.password,this.salt)
-          if(voild){
-            await this.db.deleteTable('lockUser',{ khazix:'khazix'})
-            window.location.href = './wallet.html'
-          }else{
-            this.$message.error(this.$t('lock.passwordError')) 
-          }
+      if (this.salt) {
+        const voild = await validatePassword(this.password, this.salt)
+        if (voild) {
+          await this.db.deleteTable('lockUser', { khazix: 'khazix' })
+          window.location.href = './wallet.html'
+        } else {
+          this.$message.error(this.$t('lock.passwordError'))
         }
       }
     }
+  }
 }
 </script>
 <style lang="less" scoped>
@@ -121,7 +121,7 @@ export default {
   }
   .btn-wrap{
     display: flex;
-    
+
   }
 }
 </style>

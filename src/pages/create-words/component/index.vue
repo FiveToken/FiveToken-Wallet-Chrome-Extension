@@ -35,192 +35,190 @@ import layout from '@/components/layout'
 import kyButton from '@/components/button'
 import kyBack from '@/components/back'
 import { mapMutations, mapState } from 'vuex'
-import { getQueryString,getF1ByMne,setGlabolKek } from '@/utils'
-import { genSalt,genKek,AESEncrypt } from '@/utils/key'
-import { Database } from '@/utils/database.js';
+import { getQueryString, getF1ByMne, setGlabolKek } from '@/utils'
+import { genSalt, genKek, AESEncrypt } from '@/utils/key'
+import { Database } from '@/utils/database.js'
 export default {
-    data(){
-        return{
-            mask:false,
-            active:true,
-            loading:require('@/assets/image/loading.png'),
-            isFetch:false,
-            show:false,
-            mnemonicWords:'',
-            accountName:'',
-            password:'',
-            mnemonicArr:[],
-            createType:'',
-            db:null
-        }
-    },
-    components:{
-        layout,
-        kyBack,
-        kyButton
-    },
-    computed:{
-        ...mapState('app',[
-            'rpc',
-            'networks',
-            'networkType',
-            'filecoinAddress0',
-            'deriveIndex'
-        ])
-    },
-    async mounted(){
-        let mnemonicWords = getQueryString('mnemonicWords')
-        this.mnemonicWords = mnemonicWords
-        let mnemonicArr = mnemonicWords.split(' ')
-        this.mnemonicArr = mnemonicArr
-        let accountName = this.getQuery('accountName')
-        let password = getQueryString('password')
-        let createType = this.getQuery('createType')
-        this.createType = createType
-        this.accountName = decodeURIComponent(accountName)
-        this.password = password
-
-        const db = new Database();
-        this.db = db
-    },
-    methods:{
-        ...mapMutations('app',[
-            'SET_DERIVEINDEX'
-        ]),
-        getQuery(name) { 
-            var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i"); 
-            var r = window.location.search.substr(1).match(reg);
-            var context = ""; 
-            if (r != null) 
-                context = r[2]; 
-            reg = null; 
-            r = null; 
-            return context == null || context == "" || context == "undefined" ? "" : context; 
-        },
-        async skip(){
-            this.isFetch = true
-            try{
-                setTimeout(async()=>{
-                    let kek = genKek(this.password)
-                    // let f1 = await getF1ByMne(this.mnemonicWords,kek,this.networkType,this.filecoinAddress0,index)
-                    let ethereumF1 = await getF1ByMne(this.mnemonicWords,kek,'ethereum','',0)
-                    let filecoinF1 = await getF1ByMne(this.mnemonicWords,kek,'proxy','f',0)
-                    let calibrationF1 = await getF1ByMne(this.mnemonicWords,kek,'proxy','t',0)
-                    let { address,privateKey,digest } = filecoinF1
-                    let accountName = this.accountName
-                    this.SET_DERIVEINDEX(1)
-                    await this.db.modifyTable(
-                        'activenNetworks',
-                        { rpc:this.rpc },
-                        { deriveIndex:1 }
-                    )
-                    let create_time =  parseInt(new Date().getTime() / 1000)
-                    let _account = []
-                    let _networks = []
-                    for (let n of this.networks) {
-                        if(n.filecoinAddress0 === 'f'){
-                            _account.push({
-                                accountName,
-                                address:filecoinF1.address,
-                                createType:'mnemonic',
-                                privateKey:filecoinF1.privateKey,
-                                create_time,
-                                khazix:'khazix',
-                                digest:filecoinF1.digest,
-                                fil:0,
-                                isDelete:0,
-                                rpc:n.rpc
-                            })
-                        }else if(n.filecoinAddress0 === 't'){
-                           _account.push({
-                               accountName,
-                                address:calibrationF1.address,
-                                createType:'mnemonic',
-                                privateKey:calibrationF1.privateKey,
-                                create_time,
-                                khazix:'khazix',
-                                digest:calibrationF1.digest,
-                                fil:0,
-                                isDelete:0,
-                                rpc:n.rpc
-                           })
-                        }else{
-                            _account.push({
-                                accountName,
-                                address:ethereumF1.address,
-                                createType:'mnemonic',
-                                privateKey:ethereumF1.privateKey,
-                                create_time,
-                                khazix:'khazix',
-                                digest:ethereumF1.digest,
-                                fil:0,
-                                isDelete:0,
-                                rpc:n.rpc
-                            })
-                        }
-                        _networks.push({
-                            ...n,
-                            deriveIndex:1
-                        })
-                        
-                    }
-                    await this.db.bulkAddTable('accountList',_account)
-                    await this.db.bulkPutTable('networks',_networks)
-                    await this.db.addTable('activeAccount',{
-                        address,
-                        accountName,
-                        privateKey,
-                        create_time,
-                        khazix:'khazix',
-                        rpc:this.rpc,
-                        fil:0,
-                        createType:'mnemonic',
-                        digest
-                    })
-
-                    let salt = genSalt(this.password)
-                    setGlabolKek(kek)
-                    let mnemonic = AESEncrypt(this.mnemonicWords,kek)
-
-                    await this.db.addTable('walletKey',{
-                        mnemonicWords:mnemonic,
-                        salt,
-                        rpc:this.rpc,
-                        khazix:'khazix'
-                    })
-                    
-                    this.isFetch = false
-                    window.location.href = './wallet.html'
-                },0)
-            }catch(error){
-                console.log(error,'error')
-            }
-                
-        },
-        back(){
-            window.location.href = `./create-wallet.html?backPage=wallet&createType=${this.createType}`
-        },
-        copyWords(){
-            this.mask = true
-            let that = this
-            const clipboard = new ClipboardJS('.copy-words')
-            clipboard.on('success', function(e) {
-                that.$message({
-                    message: that.$t('creatWords.copySuccess'),
-                    type: 'success',
-                    duration:1500,
-                    onClose:()=>{
-                        that.mask = false
-                    }
-                });
-            })
-            clipboard.on('error', function(e) {})
-        },
-        next(){
-            let accountName = encodeURIComponent(this.accountName)
-            window.location.href = `./check-words.html?mnemonicWords=${this.mnemonicWords}&accountName=${accountName}&password=${this.password}&createType=${this.createType}`
-        }
+  data () {
+    return {
+      mask: false,
+      active: true,
+      loading: require('@/assets/image/loading.png'),
+      isFetch: false,
+      show: false,
+      mnemonicWords: '',
+      accountName: '',
+      password: '',
+      mnemonicArr: [],
+      createType: '',
+      db: null
     }
+  },
+  components: {
+    layout,
+    kyBack,
+    kyButton
+  },
+  computed: {
+    ...mapState('app', [
+      'rpc',
+      'networks',
+      'networkType',
+      'filecoinAddress0',
+      'deriveIndex'
+    ])
+  },
+  async mounted () {
+    const mnemonicWords = getQueryString('mnemonicWords')
+    this.mnemonicWords = mnemonicWords
+    const mnemonicArr = mnemonicWords.split(' ')
+    this.mnemonicArr = mnemonicArr
+    const accountName = this.getQuery('accountName')
+    const password = getQueryString('password')
+    const createType = this.getQuery('createType')
+    this.createType = createType
+    this.accountName = decodeURIComponent(accountName)
+    this.password = password
+
+    const db = new Database()
+    this.db = db
+  },
+  methods: {
+    ...mapMutations('app', [
+      'SET_DERIVEINDEX'
+    ]),
+    getQuery (name) {
+      let reg = new RegExp('(^|&)' + name + '=([^&]*)(&|$)', 'i')
+      let r = window.location.search.substr(1).match(reg)
+      let context = ''
+      if (r != null) { context = r[2] }
+      reg = null
+      r = null
+      return context == null || context === '' || context === 'undefined' ? '' : context
+    },
+    async skip () {
+      this.isFetch = true
+      try {
+        setTimeout(async () => {
+          const kek = genKek(this.password)
+          // let f1 = await getF1ByMne(this.mnemonicWords,kek,this.networkType,this.filecoinAddress0,index)
+          const ethereumF1 = await getF1ByMne(this.mnemonicWords, kek, 'ethereum', '', 0)
+          const filecoinF1 = await getF1ByMne(this.mnemonicWords, kek, 'proxy', 'f', 0)
+          const calibrationF1 = await getF1ByMne(this.mnemonicWords, kek, 'proxy', 't', 0)
+          const { address, privateKey, digest } = filecoinF1
+          const accountName = this.accountName
+          this.SET_DERIVEINDEX(1)
+          await this.db.modifyTable(
+            'activenNetworks',
+            { rpc: this.rpc },
+            { deriveIndex: 1 }
+          )
+          // eslint-disable-next-line camelcase
+          const create_time = parseInt(new Date().getTime() / 1000)
+          const _account = []
+          const _networks = []
+          for (const n of this.networks) {
+            if (n.filecoinAddress0 === 'f') {
+              _account.push({
+                accountName,
+                address: filecoinF1.address,
+                createType: 'mnemonic',
+                privateKey: filecoinF1.privateKey,
+                create_time,
+                khazix: 'khazix',
+                digest: filecoinF1.digest,
+                fil: 0,
+                isDelete: 0,
+                rpc: n.rpc
+              })
+            } else if (n.filecoinAddress0 === 't') {
+              _account.push({
+                accountName,
+                address: calibrationF1.address,
+                createType: 'mnemonic',
+                privateKey: calibrationF1.privateKey,
+                create_time,
+                khazix: 'khazix',
+                digest: calibrationF1.digest,
+                fil: 0,
+                isDelete: 0,
+                rpc: n.rpc
+              })
+            } else {
+              _account.push({
+                accountName,
+                address: ethereumF1.address,
+                createType: 'mnemonic',
+                privateKey: ethereumF1.privateKey,
+                create_time,
+                khazix: 'khazix',
+                digest: ethereumF1.digest,
+                fil: 0,
+                isDelete: 0,
+                rpc: n.rpc
+              })
+            }
+            _networks.push({
+              ...n,
+              deriveIndex: 1
+            })
+          }
+          await this.db.bulkAddTable('accountList', _account)
+          await this.db.bulkPutTable('networks', _networks)
+          await this.db.addTable('activeAccount', {
+            address,
+            accountName,
+            privateKey,
+            create_time,
+            khazix: 'khazix',
+            rpc: this.rpc,
+            fil: 0,
+            createType: 'mnemonic',
+            digest
+          })
+
+          const salt = genSalt(this.password)
+          setGlabolKek(kek)
+          const mnemonic = AESEncrypt(this.mnemonicWords, kek)
+
+          await this.db.addTable('walletKey', {
+            mnemonicWords: mnemonic,
+            salt,
+            rpc: this.rpc,
+            khazix: 'khazix'
+          })
+
+          this.isFetch = false
+          window.location.href = './wallet.html'
+        }, 0)
+      } catch (error) {
+        console.log(error, 'error')
+      }
+    },
+    back () {
+      window.location.href = `./create-wallet.html?backPage=wallet&createType=${this.createType}`
+    },
+    copyWords () {
+      this.mask = true
+      const that = this
+      const clipboard = new ClipboardJS('.copy-words')
+      clipboard.on('success', function (e) {
+        that.$message({
+          message: that.$t('creatWords.copySuccess'),
+          type: 'success',
+          duration: 1500,
+          onClose: () => {
+            that.mask = false
+          }
+        })
+      })
+      clipboard.on('error', function (e) {})
+    },
+    next () {
+      const accountName = encodeURIComponent(this.accountName)
+      window.location.href = `./check-words.html?mnemonicWords=${this.mnemonicWords}&accountName=${accountName}&password=${this.password}&createType=${this.createType}`
+    }
+  }
 }
 </script>
 

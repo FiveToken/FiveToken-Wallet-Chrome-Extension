@@ -53,321 +53,323 @@ import kyInput from '@/components/input'
 import kyButton from '@/components/button'
 import deleteNetwork from './delete-network.vue'
 import { GlobalApi } from '@/api'
-import { getF1ByMne,getGlobalKek } from '@/utils'
+import { getF1ByMne, getGlobalKek } from '@/utils'
 import { AESDecrypt } from '@/utils/key'
-import { mapState ,mapMutations} from 'vuex'
-import { Database,reverseOrder } from '@/utils/database.js';
+import { mapState, mapMutations } from 'vuex'
+import { Database } from '@/utils/database.js'
 export default {
-    data(){
-        return{
-            deleteNetworkVisible:false,
-            form:{
-                name:'',
-                rpc:'',
-                chainID:'',
-                symbol:'',
-                browser:'',
-                disabled:false
-            },
-            loading:require('@/assets/image/loading.png'),
-            isFetch:false,
-            kek:'',
-            mnemonicWords:'',
-            db:null
-        }
-    },
-    props:{
-        detail:Object,
-        pageType:String,
-        deletaRpc:String
-    },
-    computed:{
-        ...mapState('app',[
-            'rpc',
-            'networkType',
-            'filecoinAddress0'
-        ]),
-        pageName(){
-            let str = ''
-            if(this.form.disabled){
-                str = this.$t('settingNetworks.viewNetwork')
-            }else{
-                if(this.detail){
-                    str = this.$t('settingNetworks.editNewwork')
-                }else{
-                    str = this.$t('settingNetworks.addNetwork')
-                }
-            }
-            return str
-        },
-        active(){
-            return this.form.name !== '' && this.form.rpc !== '' && this.form.chainID !== '' && this.form.symbol !== '' && !this.form.disabled
-        }
-    },
-    watch:{
-        detail:{
-            handler(newval,old){
-                if(newval){
-                    this.form = Object.assign({}, this.form, { ...newval })
-                    this.$set(this.form,'disabled',newval.disabled)
-                }
-                console.log(newval,this,'newval')
-            },
-            deep:true,
-            immediate:true
-        }
-    },
-    components:{
-        kyBack,
-        kyInput,
-        kyButton,
-        deleteNetwork
-    },
-    async mounted(){
-        let kek = getGlobalKek()
-        this.kek = kek
-        let db = new Database()
-        this.db = db
-        let walletKey = await db.getTable('walletKey',{khazix:'khazix'})
-        if(walletKey.length){
-            let nme = walletKey[0].mnemonicWords
-            let mnemonicWords = AESDecrypt(nme,kek)
-            this.mnemonicWords = mnemonicWords
-        }
-    },
-    methods:{
-        ...mapMutations('app',[
-            'SET_ACTIVENETWORKS',
-            'SET_RPC',
-            'SET_RPCNAME',
-            'SET_ACCOUNTLIST',
-            'SET_SYMBOL',
-            'SET_PRIVATEKEY',
-            'SET_ADDRESS',
-            'SET_DIGEST',
-            'SET_ACCOUNTNAME',
-            'SET_IDS',
-            'SET_BROWSER',
-            'SET_NETWORKTYPE',
-            'SET_FILECOINADDRESS0',
-            'SET_DECIMALS',
-            'SET_OWENCHAIN',
-            'SET_RPCIMAGE',
-            'SET_DERIVEINDEX'
-        ]),
-        async confirmDelete(){
-            let that = this
-            await this.db.deleteTable('networks',{ rpc:this.deletaRpc }).then(res =>{
-                this.db.deleteTable('accountList',{ rpc:this.deletaRpc})
-                that.deleteNetworkVisible = false
-                that.$emit("deleteNetworkCb")
-                that.$message({
-                    type:'success',
-                    message:that.$t('settingNetworks.deleteSuccess'),
-                    duration:1000,
-                    onClose:()=>{
-                       
-                    }
-                })
-            })
-            if(this.rpc === this.deletaRpc){
-                await this.db.deleteTable('activenNetworks',{ khazix:'khazix' })
-                
-                let networks = await this.db.getTable('networks',{ rpc:rpc })
-                let obj = networks.length && networks[0]
-                let {name,rpc,chainID,symbol,browser,ids,networkType,filecoinAddress0,decimals,image,disabled,deriveIndex } = obj
-                await this.db.addTable('activenNetworks',{
-                    name,
-                    rpc,
-                    chainID,
-                    ids,
-                    symbol,
-                    browser,
-                    networkType,
-                    filecoinAddress0,
-                    decimals,
-                    image,
-                    deriveIndex,
-                    khazix:'khazix',
-                    disabled
-                }).then(async (res)=>{
-                    this.$emit('networkChange',obj)
-                    let accountList = await this.db.getTable('accountList',{ rpc:rpc ,isDelete:0 })
-                    this.SET_RPC(rpc)
-                    this.SET_RPCNAME(name)
-                    this.SET_BROWSER(browser)
-                    this.SET_ACCOUNTLIST(accountList)
-                    this.SET_SYMBOL(symbol)
-                    this.SET_IDS(ids)
-                    this.SET_NETWORKTYPE(networkType)
-                    this.SET_FILECOINADDRESS0(filecoinAddress0)
-                    this.SET_ACTIVENETWORKS([obj])
-                    this.SET_DECIMALS(decimals)
-                    this.SET_OWENCHAIN(disabled)
-                    this.SET_RPCIMAGE(image)
-                    this.SET_DERIVEINDEX(deriveIndex)
-                    if(accountList.length){
-                        let first = accountList[0]
-                        await this.changeAccount(first)
-                    }else{
-                        window.location.href = './welcome.html'
-                    }
-                })
-            }
-        },
-        closeDelete(){
-            this.deleteNetworkVisible = false
-        },
-        deleteNetwork(){
-            this.deleteNetworkVisible = true
-        },
-        back(){
-            this.$emit("update:pageType",'list')
-        },
-        async save(){
-            if(!this.detail){
-               let networks = await this.db.getTable('networks',{ khazix:'khazix'})
-                let isExist = networks.find(n=>{
-                    return n.rpc === this.form.rpc
-                })
-                if(isExist){
-                    this.$message.error(this.$t('settingNetworks.isExistError'))
-                    return
-                }
-            }
-            if(this.active){
-                this.isFetch = true
-                let MyGlobalApi = new GlobalApi()
-                MyGlobalApi.setRpc(this.form.rpc)
-                MyGlobalApi.setNetworkType(this.networkType)
-                let create_time =  parseInt(new Date().getTime() / 1000)
-                let ethRec = await MyGlobalApi.getBlockNumber(this.form.rpc)
-                // let filRec = await MyGlobalApi.getFIleCoinChainHead(this.form.rpc)
-                // if(filRec && filRec.networkType === 'filecoin'){
-                    // this.isFetch = false
-                    // let { networkType,filecoinAddress0 } = filRec
-                    // let _index = 1
-                    // if(this.detail){
-                    //     _index = this.detail.deriveIndex
-                    //        await this.db.deleteTable('networks',{rpc:this.deletaRpc})
-                    // }else{
-                    //     await this.addUser(networkType,filecoinAddress0,create_time,0)
-                    //     _index = 1
-                    // }
-                    // await this.db.addTable('networks',{
-                    //     name:this.form.name,
-                    //     rpc:this.form.rpc,
-                    //     chainID:this.form.chainID,
-                    //     symbol:this.form.symbol,
-                    //     browser:this.form.browser,
-                    //     disabled:false,
-                    //     create_time,
-                    //     ids:'filecoin',
-                    //     networkType,
-                    //     filecoinAddress0,
-                    //     decimals:18,
-                    //     image:'',
-                    //     deriveIndex:_index,
-                    //     khazix:'khazix'
-                    // })
-                // } 
-                if(ethRec && ethRec.networkType === 'ethereum'){
-                    let ids = '' 
-                    if(this.form.symbol.toUpperCase() === 'ETH'){
-                        ids = 'ethereum'
-                    }
-                    if(this.form.symbol.toUpperCase() === 'BNB'){
-                        ids = 'binancecoin'
-                    }
-                    let { networkType,filecoinAddress0 } = ethRec
-                    let _index = 1
-                    if(this.detail){
-                        _index = this.detail.deriveIndex
-                        await this.db.deleteTable('networks',{  rpc:this.deletaRpc })
-                    }else{
-                        await this.addUser(networkType,filecoinAddress0,create_time,0)
-                        _index = 1
-                    }
-                    if(this.rpc === this.deletaRpc){
-                        console.log(this.rpc === this.deletaRpc,'this.rpc === this.deletaRpc')
-                        let dIndex =  0
-                        if(this.form.rpc === this.deletaRpc){
-                            dIndex = this.detail.deriveIndex
-                        }else{
-                            await this.addUser(networkType,filecoinAddress0,create_time,0)
-                            dIndex = 1
-                        }
-                        await this.db.modifyTable(
-                            'activenNetworks',
-                            {
-                               rpc:this.detail.rpc
-                            },
-                            {
-                                name:this.form.name,
-                                rpc:this.form.rpc,
-                                chainID:this.form.chainID,
-                                symbol:this.form.symbol,
-                                browser:this.form.browser,
-                                image:'',
-                                ids:ids,
-                                decimals:18,
-                                networkType:networkType,
-                                filecoinAddress0,
-                                deriveIndex:dIndex,
-                                disabled:false,
-                                khazix:'khazix'
-                            }
-                        )
-                    }
-                    
-                    await this.db.addTable('networks',{
-                        name:this.form.name,
-                        rpc:this.form.rpc,
-                        chainID:this.form.chainID,
-                        symbol:this.form.symbol,
-                        browser:this.form.browser,
-                        disabled:false,
-                        create_time,
-                        networkType,
-                        filecoinAddress0,
-                        decimals:18,
-                        image:'',
-                        ids,
-                        deriveIndex:_index,
-                        khazix:'khazix'
-                    })
-                }else{
-                    this.isFetch = false
-                    this.$message.error(this.$t('settingNetworks.addError'))
-                    return
-                }
-                this.isFetch = false
-                this.$emit('addNetworkCb')
-            }
-        },
-        async addUser(networkType,filecoinAddress0,create_time,index){
-            let accountName = `Account` + 1
-            let f1 = await getF1ByMne(this.mnemonicWords,this.kek,networkType,filecoinAddress0,index)
-            let { address,privateKey,digest } = f1
-            await this.db.addTable('accountList',{
-                address,
-                accountName,
-                createType:'mnemonic',
-                privateKey,
-                fil:0,
-                create_time,
-                khazix:'khazix',
-                digest,
-                isDelete:0,
-                rpc:this.form.rpc
-            })
-        },
-        changeForm(args,key){
-            if(args){
-                this.$set(this.form,key,args[0])
-            }
-        }
+  data () {
+    return {
+      deleteNetworkVisible: false,
+      form: {
+        name: '',
+        rpc: '',
+        chainID: '',
+        symbol: '',
+        browser: '',
+        disabled: false
+      },
+      loading: require('@/assets/image/loading.png'),
+      isFetch: false,
+      kek: '',
+      mnemonicWords: '',
+      db: null
     }
+  },
+  props: {
+    detail: Object,
+    pageType: String,
+    deletaRpc: String
+  },
+  computed: {
+    ...mapState('app', [
+      'rpc',
+      'networkType',
+      'filecoinAddress0'
+    ]),
+    pageName () {
+      let str = ''
+      if (this.form.disabled) {
+        str = this.$t('settingNetworks.viewNetwork')
+      } else {
+        if (this.detail) {
+          str = this.$t('settingNetworks.editNewwork')
+        } else {
+          str = this.$t('settingNetworks.addNetwork')
+        }
+      }
+      return str
+    },
+    active () {
+      return this.form.name !== '' && this.form.rpc !== '' && this.form.chainID !== '' && this.form.symbol !== '' && !this.form.disabled
+    }
+  },
+  watch: {
+    detail: {
+      handler (newval, old) {
+        if (newval) {
+          this.form = Object.assign({}, this.form, { ...newval })
+          this.$set(this.form, 'disabled', newval.disabled)
+        }
+        console.log(newval, this, 'newval')
+      },
+      deep: true,
+      immediate: true
+    }
+  },
+  components: {
+    kyBack,
+    kyInput,
+    kyButton,
+    deleteNetwork
+  },
+  async mounted () {
+    const kek = getGlobalKek()
+    this.kek = kek
+    const db = new Database()
+    this.db = db
+    const walletKey = await db.getTable('walletKey', { khazix: 'khazix' })
+    if (walletKey.length) {
+      const nme = walletKey[0].mnemonicWords
+      const mnemonicWords = AESDecrypt(nme, kek)
+      this.mnemonicWords = mnemonicWords
+    }
+  },
+  methods: {
+    ...mapMutations('app', [
+      'SET_ACTIVENETWORKS',
+      'SET_RPC',
+      'SET_RPCNAME',
+      'SET_ACCOUNTLIST',
+      'SET_SYMBOL',
+      'SET_PRIVATEKEY',
+      'SET_ADDRESS',
+      'SET_DIGEST',
+      'SET_ACCOUNTNAME',
+      'SET_IDS',
+      'SET_BROWSER',
+      'SET_NETWORKTYPE',
+      'SET_FILECOINADDRESS0',
+      'SET_DECIMALS',
+      'SET_OWENCHAIN',
+      'SET_RPCIMAGE',
+      'SET_DERIVEINDEX'
+    ]),
+    async confirmDelete () {
+      const that = this
+      await this.db.deleteTable('networks', { rpc: this.deletaRpc }).then(res => {
+        this.db.deleteTable('accountList', { rpc: this.deletaRpc })
+        that.deleteNetworkVisible = false
+        that.$emit('deleteNetworkCb')
+        that.$message({
+          type: 'success',
+          message: that.$t('settingNetworks.deleteSuccess'),
+          duration: 1000,
+          onClose: () => {
+
+          }
+        })
+      })
+      if (this.rpc === this.deletaRpc) {
+        await this.db.deleteTable('activenNetworks', { khazix: 'khazix' })
+
+        const networks = await this.db.getTable('networks', { rpc: this.rpc })
+        const obj = networks.length && networks[0]
+        const { name, rpc, chainID, symbol, browser, ids, networkType, filecoinAddress0, decimals, image, disabled, deriveIndex } = obj
+        await this.db.addTable('activenNetworks', {
+          name,
+          rpc,
+          chainID,
+          ids,
+          symbol,
+          browser,
+          networkType,
+          filecoinAddress0,
+          decimals,
+          image,
+          deriveIndex,
+          khazix: 'khazix',
+          disabled
+        }).then(async (res) => {
+          this.$emit('networkChange', obj)
+          const accountList = await this.db.getTable('accountList', { rpc: rpc, isDelete: 0 })
+          this.SET_RPC(rpc)
+          this.SET_RPCNAME(name)
+          this.SET_BROWSER(browser)
+          this.SET_ACCOUNTLIST(accountList)
+          this.SET_SYMBOL(symbol)
+          this.SET_IDS(ids)
+          this.SET_NETWORKTYPE(networkType)
+          this.SET_FILECOINADDRESS0(filecoinAddress0)
+          this.SET_ACTIVENETWORKS([obj])
+          this.SET_DECIMALS(decimals)
+          this.SET_OWENCHAIN(disabled)
+          this.SET_RPCIMAGE(image)
+          this.SET_DERIVEINDEX(deriveIndex)
+          if (accountList.length) {
+            const first = accountList[0]
+            await this.changeAccount(first)
+          } else {
+            window.location.href = './welcome.html'
+          }
+        })
+      }
+    },
+    closeDelete () {
+      this.deleteNetworkVisible = false
+    },
+    deleteNetwork () {
+      this.deleteNetworkVisible = true
+    },
+    back () {
+      this.$emit('update:pageType', 'list')
+    },
+    async save () {
+      if (!this.detail) {
+        const networks = await this.db.getTable('networks', { khazix: 'khazix' })
+        const isExist = networks.find(n => {
+          return n.rpc === this.form.rpc
+        })
+        if (isExist) {
+          this.$message.error(this.$t('settingNetworks.isExistError'))
+          return
+        }
+      }
+      if (this.active) {
+        this.isFetch = true
+        const MyGlobalApi = new GlobalApi()
+        MyGlobalApi.setRpc(this.form.rpc)
+        MyGlobalApi.setNetworkType(this.networkType)
+        // eslint-disable-next-line camelcase
+        const create_time = parseInt(new Date().getTime() / 1000)
+        const ethRec = await MyGlobalApi.getBlockNumber(this.form.rpc)
+        // let filRec = await MyGlobalApi.getFIleCoinChainHead(this.form.rpc)
+        // if(filRec && filRec.networkType === 'filecoin'){
+        // this.isFetch = false
+        // let { networkType,filecoinAddress0 } = filRec
+        // let _index = 1
+        // if(this.detail){
+        //     _index = this.detail.deriveIndex
+        //        await this.db.deleteTable('networks',{rpc:this.deletaRpc})
+        // }else{
+        //     await this.addUser(networkType,filecoinAddress0,create_time,0)
+        //     _index = 1
+        // }
+        // await this.db.addTable('networks',{
+        //     name:this.form.name,
+        //     rpc:this.form.rpc,
+        //     chainID:this.form.chainID,
+        //     symbol:this.form.symbol,
+        //     browser:this.form.browser,
+        //     disabled:false,
+        //     create_time,
+        //     ids:'filecoin',
+        //     networkType,
+        //     filecoinAddress0,
+        //     decimals:18,
+        //     image:'',
+        //     deriveIndex:_index,
+        //     khazix:'khazix'
+        // })
+        // }
+        if (ethRec && ethRec.networkType === 'ethereum') {
+          let ids = ''
+          if (this.form.symbol.toUpperCase() === 'ETH') {
+            ids = 'ethereum'
+          }
+          if (this.form.symbol.toUpperCase() === 'BNB') {
+            ids = 'binancecoin'
+          }
+          const { networkType, filecoinAddress0 } = ethRec
+          let _index = 1
+          if (this.detail) {
+            _index = this.detail.deriveIndex
+            await this.db.deleteTable('networks', { rpc: this.deletaRpc })
+          } else {
+            await this.addUser(networkType, filecoinAddress0, create_time, 0)
+            _index = 1
+          }
+          if (this.rpc === this.deletaRpc) {
+            console.log(this.rpc === this.deletaRpc, 'this.rpc === this.deletaRpc')
+            let dIndex = 0
+            if (this.form.rpc === this.deletaRpc) {
+              dIndex = this.detail.deriveIndex
+            } else {
+              await this.addUser(networkType, filecoinAddress0, create_time, 0)
+              dIndex = 1
+            }
+            await this.db.modifyTable(
+              'activenNetworks',
+              {
+                rpc: this.detail.rpc
+              },
+              {
+                name: this.form.name,
+                rpc: this.form.rpc,
+                chainID: this.form.chainID,
+                symbol: this.form.symbol,
+                browser: this.form.browser,
+                image: '',
+                ids: ids,
+                decimals: 18,
+                networkType: networkType,
+                filecoinAddress0,
+                deriveIndex: dIndex,
+                disabled: false,
+                khazix: 'khazix'
+              }
+            )
+          }
+
+          await this.db.addTable('networks', {
+            name: this.form.name,
+            rpc: this.form.rpc,
+            chainID: this.form.chainID,
+            symbol: this.form.symbol,
+            browser: this.form.browser,
+            disabled: false,
+            create_time,
+            networkType,
+            filecoinAddress0,
+            decimals: 18,
+            image: '',
+            ids,
+            deriveIndex: _index,
+            khazix: 'khazix'
+          })
+        } else {
+          this.isFetch = false
+          this.$message.error(this.$t('settingNetworks.addError'))
+          return
+        }
+        this.isFetch = false
+        this.$emit('addNetworkCb')
+      }
+    },
+    // eslint-disable-next-line camelcase
+    async addUser (networkType, filecoinAddress0, create_time, index) {
+      const accountName = 'Account' + 1
+      const f1 = await getF1ByMne(this.mnemonicWords, this.kek, networkType, filecoinAddress0, index)
+      const { address, privateKey, digest } = f1
+      await this.db.addTable('accountList', {
+        address,
+        accountName,
+        createType: 'mnemonic',
+        privateKey,
+        fil: 0,
+        create_time,
+        khazix: 'khazix',
+        digest,
+        isDelete: 0,
+        rpc: this.form.rpc
+      })
+    },
+    changeForm (args, key) {
+      if (args) {
+        this.$set(this.form, key, args[0])
+      }
+    }
+  }
 }
 </script>
 

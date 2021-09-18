@@ -1,8 +1,8 @@
 <template>
     <div class="input-component" :class="{'error-input':error}">
-        <el-input 
-            v-model="currentValue" 
-            v-bind="$attrs" 
+        <el-input
+            v-model="currentValue"
+            v-bind="$attrs"
             v-on="$listeners"
         >
             <i v-if="suffix" slot="suffix" class="el-icon-view" :class="{eye:!eye}" @click="toggleEyes"></i>
@@ -12,36 +12,33 @@
 <script>
 
 export default {
-    data(){
-        return{
-            eye:false
-        }
-    },
-    props:{
-        value: [String, Number],
-        error:Boolean,
-        suffix:Boolean
-    },
-    computed: {
-        currentValue: {
-            get() {
-                return this.value
-            },
-            set(newV) {
-                this.$emit('changeInput', newV)
-            },
-        },
-    },
-    
-    methods:{
-        toggleEyes(){
-            this.eye = !this.eye
-            this.$emit('changeEye',this.eye)
-        },
-        enterSubmit(){
-            console.log(23333)
-        }
+  data () {
+    return {
+      eye: false
     }
+  },
+  props: {
+    value: [String, Number],
+    error: Boolean,
+    suffix: Boolean
+  },
+  computed: {
+    currentValue: {
+      get () {
+        return this.value
+      },
+      set (newV) {
+        this.$emit('changeInput', newV)
+      }
+    }
+  },
+
+  methods: {
+    toggleEyes () {
+      this.eye = !this.eye
+      this.$emit('changeEye', this.eye)
+    }
+  }
 }
 </script>
 

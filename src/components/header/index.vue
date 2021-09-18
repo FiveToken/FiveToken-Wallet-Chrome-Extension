@@ -8,7 +8,7 @@
         <div class="networks-select">
             <div class="networks-name" @click="openNetwork">
                 <div class="text">{{rpcName}}</div>
-                <i 
+                <i
                     class="icon el-icon-arrow-down"
                 ></i>
             </div>
@@ -26,31 +26,31 @@
 <script>
 import { mapState } from 'vuex'
 export default {
-    name:'ky-header',
-    data(){
-        return{
-            logo:require('@/assets/image/logo.png'),
-            settingVisible:false,
-            net:'',
-        }
-    },
-    computed:{
-        ...mapState('app',[
-            'rpcName',
-        ]),
-    },
-    methods:{
-        
-        openNetwork(){
-            this.$emit('openNetwork')
-        },
-        toWallet(){
-            window.location.href = './wallet.html'
-        },
-        toAccount(){
-           window.location.href = './account.html' 
-        }
+  name: 'ky-header',
+  data () {
+    return {
+      logo: require('@/assets/image/logo.png'),
+      settingVisible: false,
+      net: ''
     }
+  },
+  computed: {
+    ...mapState('app', [
+      'rpcName'
+    ])
+  },
+  methods: {
+
+    openNetwork () {
+      this.$emit('openNetwork')
+    },
+    toWallet () {
+      window.location.href = './wallet.html'
+    },
+    toAccount () {
+      window.location.href = './account.html'
+    }
+  }
 }
 </script>
 <style lang="less" scoped>
@@ -126,7 +126,7 @@ export default {
                     color: #666;
                 }
             }
-           
+
         }
     }
 }

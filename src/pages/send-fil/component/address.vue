@@ -58,49 +58,49 @@ import kyBack from '@/components/back'
 import kyInput from '@/components/input'
 import { mapState } from 'vuex'
 export default {
-    data(){
-        return{
-            search:'',
-            searchList:[],
-            collapse:['1','3']
-        }
-    },
-    computed:{
-        ...mapState('app',[
-            'rpc',
-        ]),
-        ...mapState('send-fil',[
-            'addressRecordLast',
-            'addressBook',
-            'accountList'
-        ])
-    },
-    components:{
-        kyBack,
-        kyInput
-    },
-    methods:{
-        changeSearch(val){
-            this.search = val
-            let totalList = [
-                ...this.addressRecordLast,
-                ...this.addressBook,
-                ...this.accountList
-            ]
-            this.searchList = totalList.filter(n=>{
-                return n.address.indexOf(val) > -1 || n.accountName && n.accountName.indexOf(val) > -1
-            })
-        },
-        addressClick(item,type){
-            this.$emit('selectAddress',{item,type})
-        },
-        back(){
-            this.$emit('colseAddress') 
-        },
-        searchClear(){
-            this.search = ''
-        }
+  data () {
+    return {
+      search: '',
+      searchList: [],
+      collapse: ['1', '3']
     }
+  },
+  computed: {
+    ...mapState('app', [
+      'rpc'
+    ]),
+    ...mapState('send-fil', [
+      'addressRecordLast',
+      'addressBook',
+      'accountList'
+    ])
+  },
+  components: {
+    kyBack,
+    kyInput
+  },
+  methods: {
+    changeSearch (val) {
+      this.search = val
+      const totalList = [
+        ...this.addressRecordLast,
+        ...this.addressBook,
+        ...this.accountList
+      ]
+      this.searchList = totalList.filter(n => {
+        return n.address.indexOf(val) > -1 || (n.accountName && n.accountName.indexOf(val) > -1)
+      })
+    },
+    addressClick (item, type) {
+      this.$emit('selectAddress', { item, type })
+    },
+    back () {
+      this.$emit('colseAddress')
+    },
+    searchClear () {
+      this.search = ''
+    }
+  }
 }
 </script>
 

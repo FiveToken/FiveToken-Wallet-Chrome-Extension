@@ -20,20 +20,20 @@
 <script>
 import kyButton from '@/components/button'
 export default {
-    data(){
-        return { }
+  data () {
+    return { }
+  },
+  components: {
+    kyButton
+  },
+  methods: {
+    confirmDelete (val) {
+      this.$emit('confirmDelete')
     },
-    components:{
-        kyButton
-    },
-    methods:{
-        confirmDelete(val){
-            this.$emit('confirmDelete')
-        },
-        closeDelete(){
-            this.$emit('closeDelete')
-        }
+    closeDelete () {
+      this.$emit('closeDelete')
     }
+  }
 }
 </script>
 

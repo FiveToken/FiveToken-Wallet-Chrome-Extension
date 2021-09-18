@@ -61,115 +61,119 @@
   </layout>
 </template>
 <script>
-import layout from "@/components/layout";
-import kyBack from "@/components/back";
-import { getQueryString,formatNumber, formatDate, isFilecoinChain } from "@/utils";
-import { mapState } from "vuex";
-import { BigNumber } from "bignumber.js";
+import layout from '@/components/layout'
+import kyBack from '@/components/back'
+import { getQueryString, formatNumber, formatDate, isFilecoinChain } from '@/utils'
+import { mapState } from 'vuex'
+import { BigNumber } from 'bignumber.js'
+import { openUrl } from '@/pages/popup/index.js'
 export default {
-  data() {
+  data () {
     return {
-      detail: null,
-    };
+      detail: null
+    }
   },
   filters: {
-    formatAmount(val, n,decimals) {
-      let dec = val / Math.pow(10,Number(decimals))
-      let big = new BigNumber(dec).toFixed()
-      let num = formatNumber(big,n)
+    formatAmount (val, n, decimals) {
+      const dec = val / Math.pow(10, Number(decimals))
+      const big = new BigNumber(dec).toFixed()
+      const num = formatNumber(big, n)
       return num
     },
-    formatGas(val, n,decimals) {
-      console.log(decimals,'decimals 77777')
-      let dec = val / Math.pow(10,Number(decimals))
-      let big = new BigNumber(dec).toFixed()
-      let num = formatNumber(big,n)
+    formatGas (val, n, decimals) {
+      console.log(decimals, 'decimals 77777')
+      const dec = val / Math.pow(10, Number(decimals))
+      const big = new BigNumber(dec).toFixed()
+      const num = formatNumber(big, n)
       return num
-    },
+    }
   },
   computed: {
-    ...mapState('app',['address','networkType','browser','symbol','decimals']),
-    time() {
-      let str = "";
-      if (this.detail && this.detail.type === "pending") {
-        str = formatDate(this.detail.create_time,true);
+    ...mapState('app', ['address', 'networkType', 'browser', 'symbol', 'decimals']),
+    time () {
+      let str = ''
+      if (this.detail && this.detail.type === 'pending') {
+        str = formatDate(this.detail.create_time, true)
       } else {
-        str = this.detail.block_time;
+        str = this.detail.block_time
       }
-      return str;
+      return str
     },
-    statusName() {
-      let name = "";
+    statusName () {
+      let name = ''
       if (this.detail) {
-        switch (this.detail.type){
-          case "success":
-            name = this.$t("messageDetail.success");
-            break;
-          case "error":
-            name = this.$t("messageDetail.error");
-            break;
-          case "pending":
-            name = this.$t("messageDetail.pending");
-            break;
+        switch (this.detail.type) {
+          case 'success':
+            name = this.$t('messageDetail.success')
+            break
+          case 'error':
+            name = this.$t('messageDetail.error')
+            break
+          case 'pending':
+            name = this.$t('messageDetail.pending')
+            break
         }
       }
-      return name;
+      return name
     },
-    iconName(){
-      let name = {};
+    iconName () {
+      let name = {}
       if (this.detail) {
-        switch (this.detail.type){
-          case "success":
+        switch (this.detail.type) {
+          case 'success':
             name = {
-              'el-icon-circle-check':true
+              'el-icon-circle-check': true
             }
-            break;
-          case "error":
+            break
+          case 'error':
             name = {
-              'el-icon-circle-close':true
-            };
-            break;
-          case "pending":
+              'el-icon-circle-close': true
+            }
+            break
+          case 'pending':
             name = {
-              'el-icon-time':true
-            };
-            break;
+              'el-icon-time': true
+            }
+            break
         }
       }
-      return name;
+      return name
     }
   },
   components: {
     layout,
-    kyBack,
+    kyBack
   },
-  mounted() {
-    let listObjStr = getQueryString("listObjStr");
-    let detailObj = JSON.parse(listObjStr);
-    this.detail = Object.assign({}, this.detail, detailObj);
-    console.log(detailObj, "listObjStr 123");
+  mounted () {
+    const listObjStr = getQueryString('listObjStr')
+    const detailObj = JSON.parse(listObjStr)
+    this.detail = Object.assign({}, this.detail, detailObj)
+    console.log(detailObj, 'listObjStr 123')
   },
   methods: {
-    back() {
-      window.location.href = './wallet.html?fromPage=messageDetail';
+    back () {
+      window.location.href = './wallet.html?fromPage=messageDetail'
     },
-    viewInBroswer() {
+    viewInBroswer () {
       if (this.browser) {
-        let signed_cid = this.detail.signed_cid;
-        let url = "";
+        // eslint-disable-next-line camelcase
+        const signed_cid = this.detail.signed_cid
+        let url = ''
         if (isFilecoinChain(this.networkType)) {
-          url = this.browser + `/tipset/message-detail?cid=${signed_cid}`;
-          openUrl(url);
+          // eslint-disable-next-line camelcase
+          url = this.browser + `/tipset/message-detail?cid=${signed_cid}`
+          openUrl(url)
         } else {
-          url = this.browser + `/tx/${signed_cid}`;
-          openUrl(url);
+          // eslint-disable-next-line camelcase
+          url = this.browser + `/tx/${signed_cid}`
+          openUrl(url)
         }
-      }else{
-        this.$message.error(this.$t("messageDetail.noBrowser"));
+      } else {
+        this.$message.error(this.$t('messageDetail.noBrowser'))
       }
-    },
-  },
-};
+    }
+  }
+}
 </script>
 <style lang="less" scoped>
 .message-detail-page {

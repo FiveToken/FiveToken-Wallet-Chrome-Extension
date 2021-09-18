@@ -62,47 +62,47 @@
 import kyBack from '@/components/back'
 import kyInput from '@/components/input'
 import { mapState } from 'vuex'
-import kyCanvas from "@/components/canvas";
+import kyCanvas from '@/components/canvas'
 export default {
-    data(){
-        return{
-            search:'',
-            searchList:[],
-            img:require('@/assets/image/fil-w.png'),
-        }
-    },
-    computed:{
-        ...mapState('app',[
-            'rpc',
-        ]),
-        ...mapState('send-fil',['tokenList'])
-    },
-    components:{
-        kyBack,
-        kyInput,
-        kyCanvas
-    },
-    mounted(){},
-    methods:{
-        changeSearch(val){
-            this.search = val
-            let totalList = [
-                ...this.tokenList
-            ]
-            this.searchList = totalList.filter(n=>{
-                return n.chainName.indexOf(val) > -1 || n.symbol.indexOf(val) > -1
-            })
-        },
-        back(){
-           this.$emit('colseToken') 
-        },
-        selectToken(item){
-            this.$emit('selectToken',item)
-        },
-        searchClear(){
-            this.search = ''
-        }
+  data () {
+    return {
+      search: '',
+      searchList: [],
+      img: require('@/assets/image/fil-w.png')
     }
+  },
+  computed: {
+    ...mapState('app', [
+      'rpc'
+    ]),
+    ...mapState('send-fil', ['tokenList'])
+  },
+  components: {
+    kyBack,
+    kyInput,
+    kyCanvas
+  },
+  mounted () {},
+  methods: {
+    changeSearch (val) {
+      this.search = val
+      const totalList = [
+        ...this.tokenList
+      ]
+      this.searchList = totalList.filter(n => {
+        return n.chainName.indexOf(val) > -1 || n.symbol.indexOf(val) > -1
+      })
+    },
+    back () {
+      this.$emit('colseToken')
+    },
+    selectToken (item) {
+      this.$emit('selectToken', item)
+    },
+    searchClear () {
+      this.search = ''
+    }
+  }
 }
 </script>
 
@@ -166,7 +166,7 @@ export default {
                     height: 30px;
                     .img{
                         width: 30px;
-                        height: 30px; 
+                        height: 30px;
                     }
                 }
                 &:nth-child(even){

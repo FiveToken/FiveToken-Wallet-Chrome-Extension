@@ -1,18 +1,18 @@
 <template>
 <div class="address-list">
     <div class="back-wrap">
-        <kyBack 
-            @pageBack="back" 
-            :name="$t('settingAddress.addressBook')" 
-            :close="true" 
-            @pageClose="closeSetting" 
+        <kyBack
+            @pageBack="back"
+            :name="$t('settingAddress.addressBook')"
+            :close="true"
+            @pageClose="closeSetting"
         />
     </div>
     <div class="book-list">
-        <div 
-            class="address-item" 
-            v-for="(item,index) in addressBook" 
-            :key="index" 
+        <div
+            class="address-item"
+            v-for="(item,index) in addressBook"
+            :key="index"
             @click="addressClick(item)"
         >
             <div class="addr">
@@ -37,54 +37,54 @@ import { mapState } from 'vuex'
 import kyBack from '@/components/back'
 import kyButton from '@/components/button'
 export default {
-    data(){
-        return{
-            search:'',
-            collapse:'1'
-        }
-    },
-    components:{
-        kyBack,
-        kyButton
-    },
-    props:{
-        pageType:String,
-        addressRecordLast:Array,
-        addressBook:Array
-    },
-    computed:{
-        ...mapState('app',['accountList'])
-    },
-    filters:{
-        addressFormat(val){
-            if(val.length>12){
-                return val.substr(0,6) + '...' + val.substr(val.length-6,6)
-            }else{
-                return val
-            } 
-        },
-    },
-    mounted(){
-
-    },
-    methods:{
-        changeSearch(val){
-            this.search = val
-        },
-        back(){
-             window.location.href = './setting.html'
-        },
-        closeSetting(){
-            window.location.href = './wallet.html'
-        },
-        addressClick(detail){
-            console.log(detail,'detail 123')
-            this.$emit('addressDetail',detail)
-        },
-        addAddress(){
-            this.$emit('addAddress')
-        }
+  data () {
+    return {
+      search: '',
+      collapse: '1'
     }
+  },
+  components: {
+    kyBack,
+    kyButton
+  },
+  props: {
+    pageType: String,
+    addressRecordLast: Array,
+    addressBook: Array
+  },
+  computed: {
+    ...mapState('app', ['accountList'])
+  },
+  filters: {
+    addressFormat (val) {
+      if (val.length > 12) {
+        return val.substr(0, 6) + '...' + val.substr(val.length - 6, 6)
+      } else {
+        return val
+      }
+    }
+  },
+  mounted () {
+
+  },
+  methods: {
+    changeSearch (val) {
+      this.search = val
+    },
+    back () {
+      window.location.href = './setting.html'
+    },
+    closeSetting () {
+      window.location.href = './wallet.html'
+    },
+    addressClick (detail) {
+      console.log(detail, 'detail 123')
+      this.$emit('addressDetail', detail)
+    },
+    addAddress () {
+      this.$emit('addAddress')
+    }
+  }
 }
 </script>
 
@@ -130,8 +130,8 @@ export default {
                 }
                 .add{
                     width: 100%;
-                    overflow: hidden;    
-                    text-overflow:ellipsis;    
+                    overflow: hidden;
+                    text-overflow:ellipsis;
                     whitewhite-space: nowrap;
                 }
             }

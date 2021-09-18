@@ -76,52 +76,16 @@ Chrome (last 2 versions)
 
 
 
+FiveToken Mobile Wallet & Chrome Extension (for Web3 ID management)
+Web 3.0 is the decentralized web promising to make the internet free again. FiveToken can liberate individual data to let the users get their individual sovereign back again. We plan to build up the system enabling users connect to the storage networking and interact with any DApps on any blockchains via one and only identity formed on metaverse and will never change and that the user can take everywhere. The identity management system can help users avoid data duplication, data breaches and identity theft. And the DApps can also be lightweight as a result of the shifted function of data storage on FiveToken. Once the system is completed, FiveToken will be capable to launch a comprehensive reputation system to help make the metaverse a safe place. 
 
-# FiveToken API
-Welcome to use the developer documentation for FiveToken. This document is intended for browsers with the Chrome FiveToken Extension plug-in installed.
-The whole Window.dapplink API is injected into the websites that the users visit. The API allows websites to request the user's plug-in wallet account, read numbers from the blockchain that the user is connected to, sign messages and trade from the user.
+Multi-chain version roadmap
 
-### DAppLink.version
-Plug-in Version Number
-
-### DAppLink.isConnected()
-Returning true indicates that the API has been injected into the current site. If the injection fails, the page must be reloaded before the connection can be re-established.
-
-### DAppLink.request(args)
-Example:
-```js
-args :{
-  method: string;
-  params: object;
-}
-DAppLink.request({
-    // open chrome plugins
-    method: "openFilecoinWallet",
-    params:{
-        // window width
-        width:window.outerWidth,
-        // origin
-        origin:'https://filscan.io'
-    }
-})
-```
-
-### DAppLink.onMessage(tag,callback)
-tag
-
-|  filecoinWalletAddress   | scriptUpdateWeb3Storage  | scriptWeb3Storage |
-|  ----  | ----  | ----  | 
-| Listen to the result of connection address and return to the connection address  | Listen to the result of data storage and return to CID | Listen to the result of accessing address information and return to the storage information of the address |
-
-data
-
-Return data
-
-Example:
-``` js
-// tag: string;
-// callback:Funtion;
-window.AppLink.onMessage('filecoinWalletAddress',(data)=>{
-    console.log(data)
-})
-```
+•BSC, ETH and related DApps;（completed）
+•Users can select chains independently（completed）
+•Polkadot and related Dapps;
+•Cross-chain payment protocol
+•NFT management, storage and encryption 
+•Protocol of ID verification and real-data storage (read-write) 
+•Decentralized verification of real IDs 
+•Reputation system based on real IDs

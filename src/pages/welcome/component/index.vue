@@ -20,27 +20,26 @@
 <script>
 import layout from '@/components/layout'
 import kyButton from '@/components/button'
-import { mapMutations } from 'vuex'
 export default {
-    data(){
-      return{ 
-        logo:require('@/assets/image/logo.png'),
-        active:true,
-        bls:null
-      }
-    },
-    components:{
-      layout,
-      kyButton
-    },
-    methods: {
-      createWallet(){
-        window.location.href = './create-wallet.html?createType=create'
-      },
-      importWallet(){
-        window.location.href = './create-wallet.html?createType=importWords'
-      }
+  data () {
+    return {
+      logo: require('@/assets/image/logo.png'),
+      active: true,
+      bls: null
     }
+  },
+  components: {
+    layout,
+    kyButton
+  },
+  methods: {
+    createWallet () {
+      window.location.href = './create-wallet.html?createType=create'
+    },
+    importWallet () {
+      window.location.href = './create-wallet.html?createType=importWords'
+    }
+  }
 }
 </script>
 <style lang="less" scoped>
@@ -51,22 +50,21 @@ export default {
   background: #fff;
   padding: 50px 20px 0;
   box-sizing: border-box;
-
-    .help{
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        padding: 20px 20px 10px;
-        .text{
-            color: #222;
-            font-size: 14px;
-            margin-right: 8px;
-        }
-        .link{
-            font-size: 14px;
-            color:#5CC1CB;
-        }
+  .help{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px 20px 10px 20px;
+    .text{
+      color: #222;
+      font-size: 14px;
+      margin-right: 8px;
     }
+    .link{
+      font-size: 14px;
+      color:#5CC1CB;
+    }
+  }
   .logo-wrap{
     width: 64px;
     height: 63px;

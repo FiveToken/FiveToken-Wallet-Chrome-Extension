@@ -7,7 +7,7 @@
       <div class="add-content">
         <div class="input-item">
           <div class="label">{{ $t("addToken.contractAddress") }}</div>
-          <kyInput 
+          <kyInput
             :value="contract"
             @changeInput="changeInput"
             @blur="contractInput"
@@ -62,41 +62,41 @@
   </layout>
 </template>
 <script>
-import layout from "@/components/layout";
-import kyBack from "@/components/back";
-import kyInput from "@/components/input";
-import kyButton from "@/components/button";
-import kyCanvas from "@/components/canvas";
+import layout from '@/components/layout'
+import kyBack from '@/components/back'
+import kyInput from '@/components/input'
+import kyButton from '@/components/button'
+import kyCanvas from '@/components/canvas'
 import { ethers } from 'ethers'
 import ABI from '@/utils/abi'
-import { mapState } from 'vuex';
-import { Database } from '@/utils/database.js';
-import { trimStr } from "@/utils"
+import { mapState } from 'vuex'
+import { Database } from '@/utils/database.js'
+import { trimStr } from '@/utils'
 export default {
-  data() {
+  data () {
     return {
-      contract: "",
-      loading: require("@/assets/image/loading.png"),
+      contract: '',
+      loading: require('@/assets/image/loading.png'),
       isFetch: false,
-      provider:null,
-      contractEffective:false,
-      decimals:'',
-      symbol:'',
-      name:'',
-      tokenList:[],
-      isExists:false,
-      logoArr:[],
-      db:null,
-      error:''
-    };
+      provider: null,
+      contractEffective: false,
+      decimals: '',
+      symbol: '',
+      name: '',
+      tokenList: [],
+      isExists: false,
+      logoArr: [],
+      db: null,
+      error: ''
+    }
   },
-  computed:{
-      ...mapState('app',['rpc','address']),
-      active(){
-          let v = false
-          v = this.contract !== '' && this.contractEffective && !this.isExists
-          return v
-      }
+  computed: {
+    ...mapState('app', ['rpc', 'address']),
+    active () {
+      let v = false
+      v = this.contract !== '' && this.contractEffective && !this.isExists
+      return v
+    }
   },
   components: {
     layout,
@@ -105,75 +105,76 @@ export default {
     kyButton,
     kyCanvas
   },
-  mounted() {},
+  mounted () {},
   methods: {
-    async layoutMounted() {
-      let db = new Database()
+    async layoutMounted () {
+      const db = new Database()
       this.db = db
-      let tokenList = await db.getTable('tokenList',{
-        rpc:this.rpc,
-        address:this.address
+      const tokenList = await db.getTable('tokenList', {
+        rpc: this.rpc,
+        address: this.address
       })
       this.tokenList = tokenList
     },
-    changeInput(val){
+    changeInput (val) {
       this.contract = val
       this.error = ''
       this.contractEffective = false
     },
-    contractInput(val){
-        if(!this.contract){
-          return
-        }
-        let _contract = trimStr(this.contract)
-        let that = this
-        let isExists = this.tokenList.find(item => { return item.contract === _contract }) != undefined
+    contractInput (val) {
+      console.log(val, '0x740542fb3a6ca5ab1dcd067a7e08af9ab9c16886')
+      if (this.contract) {
+        const _contract = trimStr(this.contract)
+        const that = this
+        const isExists = this.tokenList.find(item => { return item.contract === _contract }) !== undefined
         this.isExists = isExists
-        let provider = ethers.getDefaultProvider(this.rpc);
-        let contract = new ethers.Contract(_contract, ABI, provider);
-        let decimalsPromise = contract.decimals()
-        let namePromise = contract.name()
-        let symbolPromise = contract.symbol()
+        const provider = ethers.getDefaultProvider(this.rpc)
+        const contract = new ethers.Contract(_contract, ABI, provider)
+        const decimalsPromise = contract.decimals()
+        const namePromise = contract.name()
+        const symbolPromise = contract.symbol()
         Promise.all([decimalsPromise, namePromise, symbolPromise]).then((values) => {
-            if(values.length === 3){
-                that.contractEffective = true
-                that.decimals = values[0].toString()
-                that.name = values[1]
-                that.symbol = values[2]
-            }
-        }).catch(err=>{
-            that.contractEffective = false
-            that.decimals = ''
-            that.name = ''
-            that.symbol = ''
-            if(err && err.reason && err.reason.indexOf('resolver or addr is not configured for ENS name') > -1){
-              this.error = this.$t('addToken.addressError')
-            }else{
-              this.error = ''
-            }
+          if (values.length === 3) {
+            that.contractEffective = true
+            that.decimals = values[0].toString()
+            that.name = values[1]
+            that.symbol = values[2]
+          }
+        }).catch(err => {
+          that.contractEffective = false
+          that.decimals = ''
+          that.name = ''
+          that.symbol = ''
+          if (err && err.reason && err.reason.indexOf('resolver or addr is not configured for ENS name') > -1) {
+            this.error = this.$t('addToken.addressError')
+          } else {
+            this.error = ''
+          }
         })
-        
+      }
     },
-    back() {
-      this.$router.go(-1);
+    back () {
+      this.$router.go(-1)
     },
-    async addContract() {
-        // rpc,name,decimals,symbol,khazix
-        if(this.contractEffective && !this.isExists){
-          await this.db.addTable('tokenList',{
-            chainName:this.name,
-            decimals:this.decimals,
-            rpc:this.rpc,
-            symbol:this.symbol,
-            contract:this.contract,
-            address:this.address,
-            khazix:'khazix',
-          })
+    async addContract () {
+      // rpc,name,decimals,symbol,khazix
+      const _contract = trimStr(this.contract)
+      if (this.contractEffective && !this.isExists) {
+        await this.db.addTable('tokenList', {
+          chainName: this.name,
+          decimals: this.decimals,
+          rpc: this.rpc,
+          symbol: this.symbol,
+          contract: _contract,
+          address: this.address,
+          khazix: 'khazix'
+        }).then(res => {
           window.location.href = './wallet.html'
-        }
-    },
-  },
-};
+        })
+      }
+    }
+  }
+}
 </script>
 
 <style  lang="less" scoped>

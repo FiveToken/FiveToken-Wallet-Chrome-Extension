@@ -4,9 +4,6 @@
             <kyBack :name="$t('sendFil.confirmTransaction')" @pageBack="back" />
          </div>
          <div class="send-info">
-            <!-- <div class="logo">
-                <img :src="logo" alt="" class="img">
-            </div> -->
             <div class="main-logo" v-if="formData.isMain">
                 <div class="logo" v-if="activenNetworks.length">
                     <div class="img-wrap" v-if="owenChain">
@@ -20,7 +17,7 @@
                     <kyCanvas :contract="formData.contract" />
                 </div>
             </div>
-            
+
             <div class="amount">
                 {{ formData.fil | formatFil}} {{formData.symbol}}
             </div>
@@ -42,7 +39,7 @@
                             <div class="amount">
                                 <div class="token">{{ allGasFee | formatGas(8)}} {{symbol}}</div>
                                 <div class="usd">
-                                    {{ currency === 'cny' ? "¥" : "$"}} 
+                                    {{ currency === 'cny' ? "¥" : "$"}}
                                     {{ allGasFee | formatUSD(8,price_currency)}}
                                 </div>
                             </div>
@@ -61,9 +58,9 @@
                                         <i slot="reference" class="el-icon-question"></i>
                                     </el-popover>
                                 </div>
-                                
+
                             </div>
-                            <kyInput 
+                            <kyInput
                                 :value="formData.gasFeeCap"
                                 @keydown.native="channelInputLimit"
                                 @changeInput='gasFeeCapChange'
@@ -87,8 +84,8 @@
                                     </el-popover>
                                 </div>
                             </div>
-                            <kyInput 
-                                :value="formData.gasLimit" 
+                            <kyInput
+                                :value="formData.gasLimit"
                                 @keydown.native="channelInputLimit"
                                 @changeInput='gasLimitChange'
                                 type="number"
@@ -108,7 +105,7 @@
                 <div class="value">{{ total }} {{symbol}}</div>
             </div>
         </div>
-       
+
         <div class="position">
             <div class="btn-wrap">
                 <kyButton @btnClick="back">{{$t('sendFil.cancel')}}</kyButton>
@@ -124,170 +121,174 @@ import { mapState } from 'vuex'
 import kyBack from '@/components/back'
 import kyInput from '@/components/input'
 import kyButton from '@/components/button'
-import {isFilecoinChain,formatNumber } from '@/utils'
-import { BigNumber } from "bignumber.js";
-import kyCanvas from "@/components/canvas";
+import { isFilecoinChain, formatNumber, bigNumbers } from '@/utils'
+import { BigNumber } from 'bignumber.js'
+import kyCanvas from '@/components/canvas'
 export default {
-    data(){
-        return{
-            logo:require('@/assets/image/fil-w.png'),
-        }
-    },
-    filters:{
-        formatFil(val){
-            let big = new BigNumber(val)
-            let str = big.toFixed()
-            let num = formatNumber(str,12)
-            return num
-        },
-        formatGas(val,n){
-            let big = new BigNumber(val)
-            let str = big.toFixed()
-            let num = formatNumber(str,n)
-            return num
-        },
-        formatUSD(val,n,price_currency){
-            let usd = val * price_currency
-            let big = new BigNumber(usd)
-            let str = big.toFixed()
-            let num = formatNumber(str,n)
-            return num
-        },
-        addressFormat(val){
-            if(val.length>16){
-                return val.substr(0,8) + '...' + val.substr(val.length-8,8)
-            }else{
-                return val
-            } 
-        },
-    },
-    computed:{
-        ...mapState('app',[
-            'rpc',
-            'symbol',
-            'address',
-            'networkType',
-            'currency',
-            'activenNetworks'
-        ]),
-        allGasFee(){
-            let gas = this.formData.gasFeeCap * this.formData.gasLimit / Math.pow(10,Number(9))
-            return gas || 0
-        },
-        gasUnit(){
-            let unit = ''
-            if(isFilecoinChain(this.networkType)){
-                unit = 'nanoFIL'
-            }else{
-                unit = 'GWEI'
-            }
-            return unit
-        },
-        total(){
-            let total = 0
-            total = Number(this.formData.fil) + this.allGasFee
-            let big = new BigNumber(total).toFixed()
-            let str = formatNumber(big,12)
-            return str
-        },
-        active(){
-            return this.formData.gasFeeCap !== "" && this.formData.gasLimit !== ""
-        },
-        baseFeeTips(){
-             let str = ''
-            if(isFilecoinChain(this.networkType)){
-                str = this.$t('sendFil.filBaseFeeTips')
-            }else{
-                str = this.$t('sendFil.baseFeeTips')
-            }
-            return str + this.symbol
-        },
-        owenChain(){
-            let volid = false
-            if(this.activenNetworks.length){
-                 volid = this.activenNetworks[0].disabled
-            }
-            return volid
-        },
-        chainImg(){
-            let src = ''
-            if(this.activenNetworks.length){
-                 src = this.activenNetworks[0].image
-            }
-            return src
-        },
-        chainName(){
-            let name = ''
-            if(this.activenNetworks.length){
-                 name = this.activenNetworks[0].name
-            }
-            return name
-        }
-    },
-    props:{
-        formData:Object,
-        mainBalance:Number,
-        price_currency:Number,
-        baseLimit:Number,
-        baseFeeCap:Number
-    },
-    components:{
-        kyBack,
-        kyInput,
-        kyButton,
-        kyCanvas
-    },
-    methods:{
-        back(){
-            this.$emit('previousStep')
-        },
-        send(){
-            if(this.active){
-                if(this.mainBalance > this.allGasFee){
-                    if(this.formData.isAll){
-                        if(this.formData.isMain === 1){
-                            let val =  this.formData.balance - this.allGasFee
-                            this.$emit('formDataChange',{
-                                key:'fil',
-                                value:val,
-                            })
-                        }else{
-                            let val =  this.formData.balance
-                            this.$emit('formDataChange',{
-                                key:'fil',
-                                value:val,
-                            })
-                        }
-                    }
-                    this.$emit('sendFil')
-                }else{
-                    this.$message.error(this.$t('sendFil.insufficientBalance'))
-                }
-            }
-        },
-
-        channelInputLimit (e) {
-            let key = e.key
-            // 不允许输入'e'和'.'
-            if (key === 'e' || key === 'E') {
-                e.returnValue = false
-                return false
-            }
-            return true
-        },
-        gasFeeCapChange(val){
-           this.$emit('formDataChange',{
-                key:'gasFeeCap',
-                value:val,
-            })
-        },
-        gasLimitChange(val){
-           this.$emit('formDataChange',{
-                key:'gasLimit',
-                value:val,
-            })
-        },
+  data () {
+    return {
+      logo: require('@/assets/image/fil-w.png')
     }
+  },
+  filters: {
+    formatFil (val) {
+      const big = new BigNumber(val)
+      const str = big.toFixed()
+      const num = formatNumber(str, 12)
+      return num
+    },
+    formatGas (val, n) {
+      const big = new BigNumber(val)
+      const str = big.toFixed()
+      const num = formatNumber(str, n)
+      return num
+    },
+    // eslint-disable-next-line camelcase
+    formatUSD (val, n, price_currency) {
+      // eslint-disable-next-line camelcase
+      const usd = val * price_currency
+      const big = new BigNumber(usd)
+      const str = big.toFixed()
+      const num = formatNumber(str, n)
+      return num
+    },
+    addressFormat (val) {
+      if (val.length > 16) {
+        return val.substr(0, 8) + '...' + val.substr(val.length - 8, 8)
+      } else {
+        return val
+      }
+    }
+  },
+  computed: {
+    ...mapState('app', [
+      'rpc',
+      'symbol',
+      'address',
+      'networkType',
+      'currency',
+      'activenNetworks'
+    ]),
+    allGasFee () {
+      const gasTimes = bigNumbers(this.formData.gasFeeCap).multipliedBy(this.formData.gasLimit)
+      const gas = gasTimes.dividedBy(Math.pow(10, 9)).toString()
+      return gas
+    },
+    gasUnit () {
+      let unit = ''
+      if (isFilecoinChain(this.networkType)) {
+        unit = 'nanoFIL'
+      } else {
+        unit = 'GWEI'
+      }
+      return unit
+    },
+    total () {
+      const fil = bigNumbers(this.formData.fil)
+      const total = fil.plus(this.allGasFee).toString()
+      const big = bigNumbers(total)
+      const str = big.toFixed()
+      const t = formatNumber(str, 12)
+      return t
+    },
+    active () {
+      return this.formData.gasFeeCap !== '' && this.formData.gasLimit !== ''
+    },
+    baseFeeTips () {
+      let str = ''
+      if (isFilecoinChain(this.networkType)) {
+        str = this.$t('sendFil.filBaseFeeTips')
+      } else {
+        str = this.$t('sendFil.baseFeeTips')
+      }
+      return str + this.symbol
+    },
+    owenChain () {
+      let volid = false
+      if (this.activenNetworks.length) {
+        volid = this.activenNetworks[0].disabled
+      }
+      return volid
+    },
+    chainImg () {
+      let src = ''
+      if (this.activenNetworks.length) {
+        src = this.activenNetworks[0].image
+      }
+      return src
+    },
+    chainName () {
+      let name = ''
+      if (this.activenNetworks.length) {
+        name = this.activenNetworks[0].name
+      }
+      return name
+    }
+  },
+  props: {
+    formData: Object,
+    mainBalance: Number,
+    price_currency: Number,
+    baseLimit: Number,
+    baseFeeCap: Number
+  },
+  components: {
+    kyBack,
+    kyInput,
+    kyButton,
+    kyCanvas
+  },
+  methods: {
+    back () {
+      this.$emit('previousStep')
+    },
+    send () {
+      if (this.active) {
+        if (bigNumbers(this.mainBalance).isGreaterThan(this.allGasFee)) {
+          if (this.formData.isAll) {
+            if (this.formData.isMain === 1) {
+              const balance = bigNumbers(this.formData.balance)
+              const val = balance.minus(this.allGasFee).toNumber()
+              this.$emit('formDataChange', {
+                key: 'fil',
+                value: val
+              })
+            } else {
+              const val = this.formData.balance
+              this.$emit('formDataChange', {
+                key: 'fil',
+                value: val
+              })
+            }
+          }
+          this.$emit('sendSubmit')
+        } else {
+          this.$message.error(this.$t('sendFil.insufficientBalance'))
+        }
+      }
+    },
+    // input Limit
+    channelInputLimit (e) {
+      const key = e.key
+      if (key === 'e' || key === 'E') {
+        e.returnValue = false
+        return false
+      }
+      return true
+    },
+    gasFeeCapChange (val) {
+      this.$emit('formDataChange', {
+        key: 'gasFeeCap',
+        value: val
+      })
+    },
+    gasLimitChange (val) {
+      this.$emit('formDataChange', {
+        key: 'gasLimit',
+        value: val
+      })
+    }
+  }
 }
 </script>
 

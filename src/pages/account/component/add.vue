@@ -24,34 +24,33 @@
 <script>
 import kyInput from '@/components/input'
 import kyButton from '@/components/button'
-import { mapState } from 'vuex'
 export default {
-    data(){
-        return{ }
-    },
-    props:{
-        addName:String
-    },
-    computed:{
-        active(){
-            return this.addName !== ''
-        }
-    },
-    components:{
-        kyInput,
-        kyButton
-    },
-    methods:{
-        changeInput(val){
-            this.$emit("update:addName",val)
-        },
-        confirmAdd(){
-            this.$emit('confirmAdd')
-        },
-        closeAdd(){
-            this.$emit('closeAdd')
-        }
+  data () {
+    return { }
+  },
+  props: {
+    addName: String
+  },
+  computed: {
+    active () {
+      return this.addName !== ''
     }
+  },
+  components: {
+    kyInput,
+    kyButton
+  },
+  methods: {
+    changeInput (val) {
+      this.$emit('update:addName', val)
+    },
+    confirmAdd () {
+      this.$emit('confirmAdd')
+    },
+    closeAdd () {
+      this.$emit('closeAdd')
+    }
+  }
 }
 </script>
 

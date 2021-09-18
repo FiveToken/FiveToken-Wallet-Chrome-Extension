@@ -1,10 +1,11 @@
-const CopyWebpackPlugin = require("copy-webpack-plugin");
-const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
-const path = require("path");
-const pagesObj = {};
+/* eslint-disable no-unused-vars */
+const CopyWebpackPlugin = require('copy-webpack-plugin')
+const UglifyJsPlugin = require('uglifyjs-webpack-plugin')
+const path = require('path')
+const pagesObj = {}
 
 const chromeName = [
-  'filecoinwallet',
+  'fiveToken',
   'welcome',
   'create-wallet',
   'create-words',
@@ -16,57 +17,47 @@ const chromeName = [
   'setting-backups',
   'setting-about',
   'lock-user',
-  'filecoinwallet-connect',
+  'fiveToken-connect',
   'setting-networks',
   'import-words',
   'import-privatekey',
   'account',
   'message-detail',
   'add-token',
-  // 'get-web3',
-  // 'update-web3'
-];
+  'content-script',
+  'background',
+  'popup'
+]
 
 chromeName.forEach(name => {
   pagesObj[name] = {
     entry: `src/pages/${name}/index.js`,
-    template: "public/index.html",
+    template: 'public/index.html',
     filename: `pages/${name}.html`
-  };
-});
+  }
+})
 
 const plugins = [
   {
-    from: path.resolve("src/popup.js"),
-    to: `${path.resolve("dist")}/popup.js`
+    from: path.resolve('src/manifest.production.json'),
+    to: `${path.resolve('dist')}/manifest.json`
   },
   {
-    from: path.resolve("src/script-content.js"),
-    to: `${path.resolve("dist")}/script-content.js`
-  },
-  {
-    from: path.resolve("src/manifest.production.json"),
-    to: `${path.resolve("dist")}/manifest.json`
-  },
-  {
-    from: path.resolve("src/assets/image"),
-    to: `${path.resolve("dist")}/assets/image`
-  },
-  {
-    from: path.resolve("src/background.js"),
-    to: `${path.resolve("dist")}/background.js`
-  },
+    from: path.resolve('src/assets/image'),
+    to: `${path.resolve('dist')}/assets/image`
+  }
 ]
-  
-function resolve(dir) {
+
+function resolve (dir) {
   return path.join(__dirname, dir)
 }
 
 module.exports = {
   pages: pagesObj,
-  productionSourceMap: true,
+  // productionSourceMap: true,
+  filenameHashing: false,
   chainWebpack: config => {
-    config.resolve.alias.set('@', resolve('src')),
+    config.resolve.alias.set('@', resolve('src'))
     config.optimization.minimize(true)
     config.optimization.splitChunks({
       chunks: 'async',
@@ -77,32 +68,32 @@ module.exports = {
       maxInitialRequests: 4,
       automaticNameDelimiter: '~',
       cacheGroups: {
-          vendors: {
-              name: `chunk-vendors`,
-              test: /[\\/]node_modules[\\/]/,
-              priority: -10,
-              chunks: 'initial'
-          },
-          common: {
-              name: `chunk-common`,
-              minChunks: 2,
-              priority: -20,
-              chunks: 'initial',
-              reuseExistingChunk: true
-          }
+        vendors: {
+          name: 'chunk-vendors',
+          test: /[\\/]node_modules[\\/]/,
+          priority: -10,
+          chunks: 'initial'
+        },
+        common: {
+          name: 'chunk-common',
+          minChunks: 2,
+          priority: -20,
+          chunks: 'initial',
+          reuseExistingChunk: true
+        }
       }
     })
   },
   configureWebpack: {
     plugins: [
-      CopyWebpackPlugin(plugins),
       new UglifyJsPlugin({
         uglifyOptions: {
           compress: {
-              drop_console: true
+            drop_console: true
           }
         }
-      })
+      }),
+      CopyWebpackPlugin(plugins)
     ]
-  },
-};
+  }
+}

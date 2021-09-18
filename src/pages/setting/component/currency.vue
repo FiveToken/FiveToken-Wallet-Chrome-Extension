@@ -17,22 +17,22 @@
 <script>
 import { mapState } from 'vuex'
 export default {
-    data(){
-        return{ }
+  data () {
+    return { }
+  },
+  computed: {
+    ...mapState('app', [
+      'currency'
+    ])
+  },
+  methods: {
+    confirm (val) {
+      this.$emit('confirm', val)
     },
-    computed:{
-        ...mapState('app',[
-            'currency'
-        ]),
-    },
-    methods:{
-        confirm(val){
-            this.$emit('confirm',val)
-        },
-        close(){
-            this.$emit('close')
-        }
+    close () {
+      this.$emit('close')
     }
+  }
 }
 </script>
 

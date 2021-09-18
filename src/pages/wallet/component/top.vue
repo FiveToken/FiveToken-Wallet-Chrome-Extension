@@ -7,8 +7,8 @@
                 <div  class="address">
                     {{ address | addressFormat }}
                 </div>
-                <div class="copy-icon copy-address-box1" 
-                    @click="copyAddress1" 
+                <div class="copy-icon copy-address-box1"
+                    @click="copyAddress1"
                     :data-clipboard-text="address"
                 >
                     <i class="el-icon-document-copy"></i>
@@ -17,15 +17,15 @@
                     <i class="el-icon-more"></i>
                 </div>
                 <div class="wallet-menu" :class="{active:walletMenuVisable}">
-                    <div 
-                        class="menu-item" 
-                        v-for="(item,index) in $t('wallet.menu')" 
-                        :key="index" 
+                    <div
+                        class="menu-item"
+                        v-for="(item,index) in $t('wallet.menu')"
+                        :key="index"
                         @click="menuClick(item)"
                     >{{item.name}}</div>
                 </div>
             </div>
-            
+
         </div>
     </div>
     <div class="middle">
@@ -50,138 +50,138 @@
 
 <script>
 import ClipboardJS from 'clipboard'
-import { isFilecoinChain,formatNumber } from '@/utils'
-import { mapGetters, mapMutations, mapState } from 'vuex'
-import { BigNumber } from "bignumber.js";
+import { isFilecoinChain, formatNumber } from '@/utils'
+import { mapMutations, mapState } from 'vuex'
+import { BigNumber } from 'bignumber.js'
+import { openUrl } from '@/pages/popup/index.js'
 export default {
-    data(){
-        return{
-            that: this,
-            addressName:'',
-            walletMenuVisable:false,
-            logo:require('@/assets/image/logo.png'),
-            rec:require('@/assets/image/rec.png'),
-            send:require('@/assets/image/send.png'),
-        }
-    },
-    props:{
-        balance:Number,
-        mask:Boolean
-    },
-    filters:{
-        addressFormat(val){
-            if(val.length>16){
-                return val.substr(0,8) + '...' + val.substr(val.length-8,8)
-            }else{
-                return val
-            } 
-        },
-        formatBalance(val,n,that){
-            if(that.decimals){
-                let dec = val / Math.pow(10,Number(that.decimals))
-                let big = new BigNumber(dec).toFixed();
-                let num = formatNumber(big,n)
-                return num
-            }else{
-                return 0
-            }
-        },
-        nameFormat(val){
-            if(val.length >8){
-                return val.substring(0,8) + '...'
-            }else{
-                return val
-            }
-        }
-    },
-    computed:{
-        ...mapState('app',[
-            'rpc',
-            'address',
-            'symbol',
-            'accountName',
-            'browser',
-            'networkType',
-            'decimals'
-        ]),
-    },
-    mounted(){
-        this.handle()
-    },
-    methods:{
-        ...mapMutations('app',[
-            'SET_ACCOUNTNAME'
-        ]),
-        walletMenu(){
-            this.walletMenuVisable = !this.walletMenuVisable
-        },
-        handle(){
-            let that = this
-            document.addEventListener('click',function(e){
-                if(e.target.parentNode && e.target.parentNode.className !== 'more-icon'){
-                   that.walletMenuVisable = false;
-                }
-            })
-        },
-        menuClick(item){
-            let action = item.action
-            switch (action){
-                case "editName":
-                    this.walletMenuVisable = false
-                    this.$emit("update:editNameVisable",true)
-                    break
-                case "viewInBrowser":
-                    this.walletMenuVisable = false
-                    this.viewInBrowser()
-                    break
-                case "backupPrivateKey":
-                    this.walletMenuVisable = false
-                    window.location.href = "./setting-backups.html?backups=privateKey"
-                    break
-                case "deleteWallet":
-                    this.walletMenuVisable = false
-                    this.$emit("update:deleteUserVisible",true)
-                    break
-            }
-        },
-        viewInBrowser(){
-            if(this.browser){
-                let url = ''
-                if(isFilecoinChain(this.networkType)){
-                    url = this.browser + `/tipset/address-detail?address=${this.address}`
-                    openUrl(url)
-                }else{
-                    url = this.browser + `/address/${this.address}`
-                    openUrl(url)
-                }
-            }else{
-                this.$message.error(this.$t('wallet.noBrowser'))
-            }
-            
-        },
-        sendFil(){
-            window.location.href = './send-fil.html'
-        },
-        openReceive(){
-            this.$emit("update:receiveVisible",true)
-        },
-        copyAddress1(){
-            let that = this
-            this.$emit('update:mask',true)
-            const clipboard = new ClipboardJS('.copy-address-box1')
-            clipboard.on('success', function(e) {
-                that.$message({
-                    type:'success',
-                    message:that.$t('wallet.copySuccess'),
-                    duration:1000,
-                    onClose:()=>{
-                        that.$emit('update:mask',false)
-                    }
-                })
-            })
-            clipboard.on('error', function(e) {})
-        },
+  data () {
+    return {
+      that: this,
+      addressName: '',
+      walletMenuVisable: false,
+      logo: require('@/assets/image/logo.png'),
+      rec: require('@/assets/image/rec.png'),
+      send: require('@/assets/image/send.png')
     }
+  },
+  props: {
+    balance: Number,
+    mask: Boolean
+  },
+  filters: {
+    addressFormat (val) {
+      if (val.length > 16) {
+        return val.substr(0, 8) + '...' + val.substr(val.length - 8, 8)
+      } else {
+        return val
+      }
+    },
+    formatBalance (val, n, that) {
+      if (that.decimals) {
+        const dec = val / Math.pow(10, Number(that.decimals))
+        const big = new BigNumber(dec).toFixed()
+        const num = formatNumber(big, n)
+        return num
+      } else {
+        return 0
+      }
+    },
+    nameFormat (val) {
+      if (val.length > 8) {
+        return val.substring(0, 8) + '...'
+      } else {
+        return val
+      }
+    }
+  },
+  computed: {
+    ...mapState('app', [
+      'rpc',
+      'address',
+      'symbol',
+      'accountName',
+      'browser',
+      'networkType',
+      'decimals'
+    ])
+  },
+  mounted () {
+    this.handle()
+  },
+  methods: {
+    ...mapMutations('app', [
+      'SET_ACCOUNTNAME'
+    ]),
+    walletMenu () {
+      this.walletMenuVisable = !this.walletMenuVisable
+    },
+    handle () {
+      const that = this
+      document.addEventListener('click', function (e) {
+        if (e.target.parentNode && e.target.parentNode.className !== 'more-icon') {
+          that.walletMenuVisable = false
+        }
+      })
+    },
+    menuClick (item) {
+      const action = item.action
+      switch (action) {
+        case 'editName':
+          this.walletMenuVisable = false
+          this.$emit('update:editNameVisable', true)
+          break
+        case 'viewInBrowser':
+          this.walletMenuVisable = false
+          this.viewInBrowser()
+          break
+        case 'backupPrivateKey':
+          this.walletMenuVisable = false
+          window.location.href = './setting-backups.html?backups=privateKey'
+          break
+        case 'deleteWallet':
+          this.walletMenuVisable = false
+          this.$emit('update:deleteUserVisible', true)
+          break
+      }
+    },
+    viewInBrowser () {
+      if (this.browser) {
+        let url = ''
+        if (isFilecoinChain(this.networkType)) {
+          url = this.browser + `/tipset/address-detail?address=${this.address}`
+          openUrl(url)
+        } else {
+          url = this.browser + `/address/${this.address}`
+          openUrl(url)
+        }
+      } else {
+        this.$message.error(this.$t('wallet.noBrowser'))
+      }
+    },
+    sendFil () {
+      window.location.href = './send-fil.html'
+    },
+    openReceive () {
+      this.$emit('update:receiveVisible', true)
+    },
+    copyAddress1 () {
+      const that = this
+      this.$emit('update:mask', true)
+      const clipboard = new ClipboardJS('.copy-address-box1')
+      clipboard.on('success', function (e) {
+        that.$message({
+          type: 'success',
+          message: that.$t('wallet.copySuccess'),
+          duration: 1000,
+          onClose: () => {
+            that.$emit('update:mask', false)
+          }
+        })
+      })
+      clipboard.on('error', function (e) {})
+    }
+  }
 }
 </script>
 <style lang="less" scoped>

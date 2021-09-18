@@ -28,44 +28,43 @@
 
 <script>
 import ClipboardJS from 'clipboard'
-import { mapState } from 'vuex'
 import kyBack from '@/components/back'
 export default {
-    data(){
-        return{
-            mask:false,
-            logo1:require('@/assets/image/logo-white.png'),
-         }
-    },
-    props:{
-        QRUrl:String,
-        accountName:String,
-        address:String
-    },
-    components:{
-        kyBack
-    },
-    methods:{
-        pageBack(){
-            this.$emit('closeReceive')
-        },
-        copyAddress2(){
-            this.mask = true
-            let that = this
-            const clipboard = new ClipboardJS('.copy-address-box2')
-            clipboard.on('success', function(e) {
-                that.$message({
-                    type:'success',
-                    message:that.$t('wallet.copySuccess'),
-                    duration:1500,
-                    onClose:()=>{
-                        that.mask = false
-                    }
-                })
-            })
-            clipboard.on('error', function(e) {})
-        },
+  data () {
+    return {
+      mask: false,
+      logo1: require('@/assets/image/logo-white.png')
     }
+  },
+  props: {
+    QRUrl: String,
+    accountName: String,
+    address: String
+  },
+  components: {
+    kyBack
+  },
+  methods: {
+    pageBack () {
+      this.$emit('closeReceive')
+    },
+    copyAddress2 () {
+      this.mask = true
+      const that = this
+      const clipboard = new ClipboardJS('.copy-address-box2')
+      clipboard.on('success', function (e) {
+        that.$message({
+          type: 'success',
+          message: that.$t('wallet.copySuccess'),
+          duration: 1500,
+          onClose: () => {
+            that.mask = false
+          }
+        })
+      })
+      clipboard.on('error', function (e) {})
+    }
+  }
 }
 </script>
 

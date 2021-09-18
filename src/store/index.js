@@ -1,5 +1,4 @@
 
-
 import Vue from 'vue'
 import Vuex from 'vuex'
 
@@ -17,7 +16,7 @@ const mergemModules = () => {
 
 const modules = mergemModules()
 const store = new Vuex.Store({
-  modules,
+  modules
 })
 
 export default store

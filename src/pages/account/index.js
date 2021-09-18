@@ -1,20 +1,22 @@
-import Vue from "vue";
-import pageComponent from "./component/index.vue";
+import Vue from 'vue'
+import pageComponent from './component/index.vue'
 import i18n from '../../i18n'
-import ElementUI from 'element-ui';
-import 'element-ui/lib/theme-chalk/index.css';
 import router from '../../router'
 import store from '../../store'
+import { Input, Icon, Dialog, Button } from 'element-ui'
+Vue.use(Input)
+Vue.use(Dialog)
+Vue.use(Button)
+Vue.use(Icon)
+Vue.component('pageComponent', pageComponent)
 
-Vue.use(ElementUI);
-Vue.component("pageComponent", pageComponent);
-
+// eslint-disable-next-line no-new
 new Vue({
-  el: "#app",
+  el: '#app',
   i18n,
   router,
   store,
   render: createElement => {
-    return createElement(pageComponent);
+    return createElement(pageComponent)
   }
-});
+})

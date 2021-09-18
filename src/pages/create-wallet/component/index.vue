@@ -7,11 +7,11 @@
             </div>
             <div class="input-item">
                 <div class="label">{{$t('creatWallet.accountName')}}</div>
-                <kyInput 
+                <kyInput
                     :value="form.accountName"
                     maxlength='15'
                     :error="nameError"
-                    type="text" 
+                    type="text"
                     @changeInput="nameChange"
                 ></kyInput>
                 <div class="error" v-if="nameError">{{$t('creatWallet.nameError')}}</div>
@@ -20,11 +20,11 @@
 
             <div class="input-item">
                 <div class="label">{{$t('creatWallet.password')}}</div>
-                <kyInput 
+                <kyInput
                     :value="form.password"
                     :error="passwordError"
                     :suffix="suffix"
-                    :type="passwordType" 
+                    :type="passwordType"
                     @changeInput="passwordChange"
                     @changeEye="passwordEye"
                 ></kyInput>
@@ -36,7 +36,7 @@
 
             <div class="input-item">
                 <div class="label">{{$t('creatWallet.confirmPassword')}}</div>
-                <kyInput 
+                <kyInput
                     :value="form.confirmPassword"
                     :error="confirmError"
                     :suffix="suffix"
@@ -56,139 +56,137 @@
 </template>
 
 <script>
-import { debounce } from 'lodash'
 import * as bip39 from 'bip39'
 import { getQueryString } from '@/utils'
 import layout from '@/components/layout'
 import kyButton from '@/components/button'
 import kyInput from '@/components/input'
 import kyBack from '@/components/back'
-import { mapState } from 'vuex'
 
 export default {
-    data(){
-        return{
-            agree:false,
-            suffix:true,
-            nameError:false,
-            passwordType:'password',
-            passwordError:false,
-            confirmType:'password',
-            confirmError:false,
-            diff:false,
-            form:{
-                accountName:'',
-                password:'',
-                confirmPassword:''
-            },
-            placeholder:'',
-            createType:''
-        }
-    },
-    computed: {
-        disabled(){
-            let values = Object.values(this.form)
-            let bol = values.every(n=>{
-                return n !==  ''
-            })
-            return !bol 
-        },
-    },
-    components:{
-        layout,
-        kyInput,
-        kyButton,
-        kyBack
-    },
-    mounted(){
-        let createType = getQueryString('createType')
-        this.createType = createType
-        this.$set(this.form,'accountName','Account1')
-    },
-    methods:{
-        async layoutMounted(){
-        },
-        nameChange(val){
-            this.form.accountName = val
-        },
-        passwordChange(val){
-            this.form.password = val
-        },
-        passwordEye(eye){
-            this.passwordType = eye ? 'text':'password'
-        },
-        confirmChange(val){
-            this.form.confirmPassword = val
-        },
-        confirmEye(eye){
-            this.confirmType = eye ? 'text':'password'
-        },
-        create(){
-            if(!this.disabled){
-                this.reset()
-                let v = this.check()
-                if(v){
-                    let trim = this.form.accountName.replace(/(^\s*)|(\s*$)/g, "")
-                    let accountName = encodeURIComponent(trim)
-                    if(this.createType === 'create'){
-                        let mnemonicWords = this.genMnemonic()
-                        let url = `./create-words.html?accountName=${accountName}&password=${this.form.password}&mnemonicWords=${mnemonicWords}&createType=${this.createType}`
-                        window.location.href = url
-                    }else{
-                        let url = `./import-words.html?accountName=${accountName}&password=${this.form.password}&createType=${this.createType}`
-                        window.location.href = url
-                    }
-                }
-            }
-        },
-        reset(){
-            this.nameError = false
-            this.passwordError = false
-            this.confirmError = false
-            this.diff = false
-        },
-        check(){
-            if(this.form.accountName.length > 15){
-                this.nameError = true
-                return false
-            }else{
-                this.nameError = false
-            }
-
-            if(this.form.password.length < 8){
-                this.passwordError = true
-                return false
-            }else{
-                this.passwordError = false
-            }
-
-            if(this.form.confirmPassword.length < 8){
-                this.confirmError = true
-                return false
-            }else{
-                this.confirmError = false
-            }
-            
-            if(this.form.password !== this.form.confirmPassword){
-                this.passwordError = true
-                this.confirmError = true
-                this.diff = true
-                return false
-            }else{
-                this.passwordError = false
-                this.confirmError = false
-                this.diff = false
-            }
-            return true
-        },
-        genMnemonic() {
-            return bip39.generateMnemonic()
-        },
-        back(){
-            let backPage = getQueryString('backPage')
-            window.location.href = './welcome.html'
-        }
+  data () {
+    return {
+      agree: false,
+      suffix: true,
+      nameError: false,
+      passwordType: 'password',
+      passwordError: false,
+      confirmType: 'password',
+      confirmError: false,
+      diff: false,
+      form: {
+        accountName: '',
+        password: '',
+        confirmPassword: ''
+      },
+      placeholder: '',
+      createType: ''
     }
+  },
+  computed: {
+    disabled () {
+      const values = Object.values(this.form)
+      const bol = values.every(n => {
+        return n !== ''
+      })
+      return !bol
+    }
+  },
+  components: {
+    layout,
+    kyInput,
+    kyButton,
+    kyBack
+  },
+  mounted () {
+    const createType = getQueryString('createType')
+    this.createType = createType
+    this.$set(this.form, 'accountName', 'Account1')
+  },
+  methods: {
+    async layoutMounted () {
+    },
+    nameChange (val) {
+      this.form.accountName = val
+    },
+    passwordChange (val) {
+      this.form.password = val
+    },
+    passwordEye (eye) {
+      this.passwordType = eye ? 'text' : 'password'
+    },
+    confirmChange (val) {
+      this.form.confirmPassword = val
+    },
+    confirmEye (eye) {
+      this.confirmType = eye ? 'text' : 'password'
+    },
+    create () {
+      if (!this.disabled) {
+        this.reset()
+        const v = this.check()
+        if (v) {
+          const trim = this.form.accountName.replace(/(^\s*)|(\s*$)/g, '')
+          const accountName = encodeURIComponent(trim)
+          if (this.createType === 'create') {
+            const mnemonicWords = this.genMnemonic()
+            const url = `./create-words.html?accountName=${accountName}&password=${this.form.password}&mnemonicWords=${mnemonicWords}&createType=${this.createType}`
+            window.location.href = url
+          } else {
+            const url = `./import-words.html?accountName=${accountName}&password=${this.form.password}&createType=${this.createType}`
+            window.location.href = url
+          }
+        }
+      }
+    },
+    reset () {
+      this.nameError = false
+      this.passwordError = false
+      this.confirmError = false
+      this.diff = false
+    },
+    check () {
+      if (this.form.accountName.length > 15) {
+        this.nameError = true
+        return false
+      } else {
+        this.nameError = false
+      }
+
+      if (this.form.password.length < 8) {
+        this.passwordError = true
+        return false
+      } else {
+        this.passwordError = false
+      }
+
+      if (this.form.confirmPassword.length < 8) {
+        this.confirmError = true
+        return false
+      } else {
+        this.confirmError = false
+      }
+
+      if (this.form.password !== this.form.confirmPassword) {
+        this.passwordError = true
+        this.confirmError = true
+        this.diff = true
+        return false
+      } else {
+        this.passwordError = false
+        this.confirmError = false
+        this.diff = false
+      }
+      return true
+    },
+    genMnemonic () {
+      return bip39.generateMnemonic()
+    },
+    back () {
+      // const backPage = getQueryString('backPage')
+      window.location.href = './welcome.html'
+    }
+  }
 }
 </script>
 

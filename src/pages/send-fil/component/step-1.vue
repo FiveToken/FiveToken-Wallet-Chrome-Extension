@@ -43,8 +43,8 @@
             <div class="input-item">
                 <div class="label">{{$t('sendFil.number')}}</div>
                 <div class="value">
-                    <kyInput 
-                        :value="formData.fil" 
+                    <kyInput
+                        :value="formData.fil"
                         type="number"
                         @keydown.native="channelInputLimit"
                         @changeInput="filChange"
@@ -100,132 +100,131 @@ import kyInput from '@/components/input'
 import kyButton from '@/components/button'
 import kyAddress from './address.vue'
 import kyToken from './token.vue'
-import kyCanvas from "@/components/canvas";
-import { isValidAddress,formatNumber } from '@/utils'
+import kyCanvas from '@/components/canvas'
+import { isValidAddress, formatNumber } from '@/utils'
 import { mapState } from 'vuex'
-import { BigNumber } from "bignumber.js";
+import { BigNumber } from 'bignumber.js'
 export default {
-    data(){
-        return{
-            // send-fil  select-token  select-address
-            pageType:'send-fil',
-            tokenVisible:false,
-            addressVisible:false,
-            logo:require('@/assets/image/logo.png'),
-            accountList:[],
-            addressRecordLast:[],
-            addressBook:[],
-        }
-    },
-    props:{
-        formData:Object
-    },
-    computed:{
-        ...mapState('app',[
-            'rpc',
-            'symbol',
-            'networkType',
-            'decimals',
-            'activenNetworks'
-        ]),
-        active(){
-            return this.formData.to !== '' && this.formData.fil !== ''
-        },
-        owenChain(){
-            let volid = false
-            if(this.activenNetworks.length){
-                 volid = this.activenNetworks[0].disabled
-            }
-            return volid
-        },
-        chainImg(){
-            let src = ''
-            if(this.activenNetworks.length){
-                 src = this.activenNetworks[0].image
-            }
-            return src
-        },
-        chainName(){
-            let name = ''
-            if(this.activenNetworks.length){
-                 name = this.activenNetworks[0].name
-            }
-            return name
-        }
-    },
-    filters:{
-        formatBalance(val,n){
-            let dec = Number(val)
-            let big = new BigNumber(dec)
-            let str = big.toFixed()
-            let num = formatNumber(str,n)
-            return num
-        },
-    },
-    components:{
-        kyBack,
-        kyInput,
-        kyButton,
-        kyAddress,
-        kyToken,
-        kyCanvas
-    },
-    methods:{
-        sendBack(){
-            this.$router.go(-1)
-        },
-        selectToken(obj){
-            this.tokenVisible = false
-            this.$emit('formDataChange',{
-                key:'token',
-                value:obj,
-            })
-        },
-        selectAddress(obj){
-            this.addressVisible = false
-            let {item,type} = obj
-            this.$emit('formDataChange',{
-                key:'to',
-                value:item.address,
-                accountName:item.accountName,
-                type
-            })
-        },
-        toChange(val){
-            this.$emit('formDataChange',{
-                key:'to',
-                value:val,
-                accountName:'',
-                type:'input'
-            })
-        },
-        channelInputLimit (e) {
-            let key = e.key
-            console.log(key,'8888888')
-            // 不允许输入'e'和'.'
-            if (key === 'e' || key === 'E') {
-                e.returnValue = false
-                return false
-            }
-            return true
-        },
-        filChange(val){
-            this.$emit('formDataChange',{ key:'fil',value:val })
-        },
-        allFil(){
-            this.$emit('formDataChange',{key:'isAll',value:1})
-        },
-        next(){
-            if(this.active){
-                let volid = isValidAddress(this.formData.to,this.networkType)
-                if(volid){
-                    this.$emit('next')
-                }else{
-                    this.$message.error(this.$t('sendFil.addressError'))
-                }
-            }
-        },
+  data () {
+    return {
+      // send-fil  select-token  select-address
+      pageType: 'send-fil',
+      tokenVisible: false,
+      addressVisible: false,
+      logo: require('@/assets/image/logo.png'),
+      accountList: [],
+      addressRecordLast: [],
+      addressBook: []
     }
+  },
+  props: {
+    formData: Object
+  },
+  computed: {
+    ...mapState('app', [
+      'rpc',
+      'symbol',
+      'networkType',
+      'decimals',
+      'activenNetworks'
+    ]),
+    active () {
+      return this.formData.to !== '' && this.formData.fil !== ''
+    },
+    owenChain () {
+      let volid = false
+      if (this.activenNetworks.length) {
+        volid = this.activenNetworks[0].disabled
+      }
+      return volid
+    },
+    chainImg () {
+      let src = ''
+      if (this.activenNetworks.length) {
+        src = this.activenNetworks[0].image
+      }
+      return src
+    },
+    chainName () {
+      let name = ''
+      if (this.activenNetworks.length) {
+        name = this.activenNetworks[0].name
+      }
+      return name
+    }
+  },
+  filters: {
+    formatBalance (val, n) {
+      const dec = Number(val)
+      const big = new BigNumber(dec)
+      const str = big.toFixed()
+      const num = formatNumber(str, n)
+      return num
+    }
+  },
+  components: {
+    kyBack,
+    kyInput,
+    kyButton,
+    kyAddress,
+    kyToken,
+    kyCanvas
+  },
+  methods: {
+    sendBack () {
+      this.$router.go(-1)
+    },
+    selectToken (obj) {
+      this.tokenVisible = false
+      this.$emit('formDataChange', {
+        key: 'token',
+        value: obj
+      })
+    },
+    selectAddress (obj) {
+      this.addressVisible = false
+      const { item, type } = obj
+      this.$emit('formDataChange', {
+        key: 'to',
+        value: item.address,
+        accountName: item.accountName,
+        type
+      })
+    },
+    toChange (val) {
+      this.$emit('formDataChange', {
+        key: 'to',
+        value: val,
+        accountName: '',
+        type: 'input'
+      })
+    },
+    channelInputLimit (e) {
+      const key = e.key
+      // 不允许输入'e'和'.'
+      if (key === 'e' || key === 'E') {
+        e.returnValue = false
+        return false
+      }
+      return true
+    },
+    filChange (val) {
+      this.$emit('formDataChange', { key: 'fil', value: val })
+    },
+    allFil () {
+      this.$emit('formDataChange', { key: 'isAll', value: 1 })
+    },
+    next () {
+      if (this.active) {
+        const volid = isValidAddress(this.formData.to, this.networkType)
+        if (volid) {
+          this.$emit('next')
+        } else {
+          this.$message.error(this.$t('sendFil.addressError'))
+        }
+      }
+    }
+  }
 }
 </script>
 
@@ -264,7 +263,7 @@ export default {
                         margin-right: 15px;
                         .img{
                             width:30px;
-                            height: 30px;  
+                            height: 30px;
                         }
                         .custom-img{
                             background: #5CC1CB;
@@ -344,4 +343,3 @@ export default {
     }
 }
 </style>
-

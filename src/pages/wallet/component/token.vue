@@ -6,7 +6,7 @@
         <div class="logo"></div>
         <div class="balance">{{tokenBalance|formatBalance(tokenDecimals,8)}} {{tokenName}}</div>
         <div class="usd" v-if="tokenIsMain">
-            {{ currency === 'cny' ? "¥" : "$"}} 
+            {{ currency === 'cny' ? "¥" : "$"}}
             {{tokenBalance*price_currency | formatBalance(tokenDecimals,2)}}
         </div>
         <div class="action">
@@ -34,61 +34,61 @@
 
 <script>
 import kyBack from '@/components/back'
-import { mapState } from 'vuex';
+import { mapState } from 'vuex'
 import transactionItem from './transaction-item.vue'
-import {formatNumber} from '@/utils'
-import { BigNumber } from "bignumber.js";
+import { formatNumber } from '@/utils'
+import { BigNumber } from 'bignumber.js'
 export default {
-    data(){
-        return{
-            rec:require('@/assets/image/rec.png'),
-            send:require('@/assets/image/send.png')
-        }
-    },
-    computed:{           
-        ...mapState('app',['currency'])
-    },
-    props:{
-        tokenIsMain:Number,
-        tokenBalance:Number,
-        tokenName:String,
-        price_currency:Number,
-        receiveVisible:Boolean,
-        tokenVisible:Boolean,
-        symbol:String,
-        tokenDecimals:Number,
-        tokenList:Array
-    },
-    filters:{
-        formatBalance(val,decimals,n){
-            let dec = val / Math.pow(10,Number(decimals))
-            let big = new BigNumber(dec).toFixed()
-            let num = formatNumber(big,n)
-            return num
-        }
-    },
-    components:{
-        kyBack,
-        transactionItem
-    },
-    methods:{
-        closeToken(){
-            this.$emit("closeToken")
-        },
-        sendFil(){
-            window.location.href = './send-fil.html'
-        },
-        openReceive(){
-            this.$emit("update:receiveVisible",true)
-        },
-        showDetail(item){
-            let listObj = { 
-                ...item
-             }
-            let listObjStr = JSON.stringify(listObj)
-            window.location.href = `./message-detail.html?signed_cid=${item.signed_cid}&listObjStr=${listObjStr}`
-        }
+  data () {
+    return {
+      rec: require('@/assets/image/rec.png'),
+      send: require('@/assets/image/send.png')
     }
+  },
+  computed: {
+    ...mapState('app', ['currency'])
+  },
+  props: {
+    tokenIsMain: Number,
+    tokenBalance: Number,
+    tokenName: String,
+    price_currency: Number,
+    receiveVisible: Boolean,
+    tokenVisible: Boolean,
+    symbol: String,
+    tokenDecimals: Number,
+    tokenList: Array
+  },
+  filters: {
+    formatBalance (val, decimals, n) {
+      const dec = val / Math.pow(10, Number(decimals))
+      const big = new BigNumber(dec).toFixed()
+      const num = formatNumber(big, n)
+      return num
+    }
+  },
+  components: {
+    kyBack,
+    transactionItem
+  },
+  methods: {
+    closeToken () {
+      this.$emit('closeToken')
+    },
+    sendFil () {
+      window.location.href = './send-fil.html'
+    },
+    openReceive () {
+      this.$emit('update:receiveVisible', true)
+    },
+    showDetail (item) {
+      const listObj = {
+        ...item
+      }
+      const listObjStr = JSON.stringify(listObj)
+      window.location.href = `./message-detail.html?signed_cid=${item.signed_cid}&listObjStr=${listObjStr}`
+    }
+  }
 }
 </script>
 <style lang="less" scoped>

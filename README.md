@@ -7,6 +7,8 @@ $ npm run build-watch
 # build for production
 $ npm run build
 
+[Project structure](https://github.com/FiveToken/FiveToken-Wallet-Chrome-Extension/blob/master/svn.md)
+
 # The original intention of the projec
 
 FiveToken Mobile Wallet & Chrome Extension (for Web3 ID management)
@@ -37,14 +39,14 @@ FiveToken targets to solve the problems via developing cross-chain payment proto
 
 # Multi-chain version roadmap
 
-•BSC, ETH and related DApps;（completed）
-•Users can select chains independently（completed）
-•Polkadot and related Dapps;
-•Cross-chain payment protocol
-•NFT management, storage and encryption 
-•Protocol of ID verification and real-data storage (read-write) 
-•Decentralized verification of real IDs 
-•Reputation system based on real IDs
+•BSC, ETH and related DApps;（completed）  
+•Users can select chains independently（completed）  
+•Polkadot and related Dapps;   
+•Cross-chain payment protocol   
+•NFT management, storage and encryption    
+•Protocol of ID verification and real-data storage (read-write)    
+•Decentralized verification of real IDs     
+•Reputation system based on real IDs     
 
 # Dependencies
 Node.js version 12+

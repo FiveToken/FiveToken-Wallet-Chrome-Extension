@@ -22,10 +22,16 @@ class BSCChainAPI {
     this.walletWithProvider = new ethers.Wallet(privateKey, this.provider)
   }
 
+  // A Provider is an abstraction of a connection to the Ethereum network, providing a concise, consistent interface to standard Ethereum node functionality.
   setProvider (rpc) {
     this.provider = ethers.getDefaultProvider(rpc)
   }
 
+  /**
+   * Returns the balance of address as of the blockTag block height.
+   * @param {String} address
+   * @returns {Number}
+   */
   async getBalance (address) {
     try {
       const res = await this.provider.getBalance(address)
@@ -37,6 +43,12 @@ class BSCChainAPI {
     }
   }
 
+  /**
+   * Submits transaction to the network to be mined. The transaction must be signed,
+   * and be valid (i.e. the nonce is correct and the account has sufficient balance to pay for the transaction).
+   * @param {Object} tx
+   * @returns {Object}
+   */
   async sendTransaction (tx) {
     console.log('ETH sendTransaction')
     try {
@@ -54,6 +66,11 @@ class BSCChainAPI {
     }
   }
 
+  /**
+   * Returns the transaction with hash or null if the transaction is unknown.
+   * @param {String} hash : transaction hash
+   * @returns {Object}
+   */
   async getTransaction (hash) {
     try {
       const res = await this.provider.getTransaction(hash)
@@ -65,6 +82,12 @@ class BSCChainAPI {
     }
   }
 
+  /**
+   * Returns the transaction receipt for hash or null if the transaction has not been mined.
+   * To stall until the transaction has been mined, consider the waitForTransaction method below.
+   * @param {String} hash : transaction hash
+   * @returns {Object}
+   */
   async getTransactionReceipt (hash) {
     try {
       const res = await this.provider.getTransactionReceipt(hash)
@@ -75,6 +98,9 @@ class BSCChainAPI {
     }
   }
 
+  /**
+   * Returns a best guess of the Gas Price to use in a transaction.
+   */
   async getGasPrice () {
     try {
       const res = await this.provider.getGasPrice()
@@ -85,6 +111,9 @@ class BSCChainAPI {
     }
   }
 
+  /**
+   * Returns an estimate of the amount of gas that would be required to submit transaction to the network.
+  */
   async getEstimateGas (transaction) {
     try {
       const res = await this.provider.estimateGas(transaction)
@@ -95,6 +124,11 @@ class BSCChainAPI {
     }
   }
 
+  /**
+   * Get the block from the network, where the result.transactions is a list of transaction hashes.
+   * @param {String} block
+   * @returns {Object}
+   */
   async getBlock (block) {
     try {
       const res = await this.provider.getBlock(block)
@@ -105,6 +139,11 @@ class BSCChainAPI {
     }
   }
 
+  /**
+   * Returns the block number (or height) of the most recently mined block
+   * @param {String} rpc
+   * @returns {Number}
+   */
   async getBlockNumber (rpc) {
     try {
       const res = await this.provider.getBlockNumber()
@@ -125,10 +164,14 @@ class FilecoinAPI {
     }
   }
 
+  // set Filecoin network
   setRpc (rpc) {
     this.rpc = rpc
   }
 
+  /**
+   * Returns a network name object
+   */
   async getStateNetworkName () {
     try {
       const params = {
@@ -147,6 +190,11 @@ class FilecoinAPI {
     }
   }
 
+  /**
+   * The balance of the specified address
+   * @param { string } address
+   * @returns { Object }
+   */
   async getBalance (address) {
     try {
       const params = {
@@ -171,6 +219,13 @@ class FilecoinAPI {
     }
   }
 
+  /**
+   * The gasfee required to send a message
+   * @param { string } from : sending address
+   * @param { string } to : receiving address
+   * @param { string } nonce : The nonce value of the sending address
+   * @returns { Object }
+   */
   async getBaseFeeAndGas (from, to, nonce) {
     try {
       const params = {
@@ -224,6 +279,11 @@ class FilecoinAPI {
     }
   }
 
+  /**
+   * Return the next nonce value of the specified account
+   * @param {*} address
+   * @returns {Object}
+   */
   async getNonce (address) {
     try {
       const params = {
@@ -246,6 +306,11 @@ class FilecoinAPI {
     }
   }
 
+  /**
+   * Push a signed message into the memory pool
+   * @param {Object} data
+   * @returns {Object}
+   */
   async MpoolPush (data) {
     try {
       const params = {
@@ -275,6 +340,11 @@ class FilecoinAPI {
     }
   }
 
+  /**
+   * Read the message of the specified CID from the chain block library
+   * @param {String} hash : transaction hash
+   * @returns {Object}
+   */
   async chainGetMessage (hash) {
     try {
       const params = {
@@ -302,6 +372,11 @@ class FilecoinAPI {
     }
   }
 
+  /**
+   * Return the receipt of the specified message
+   * @param {*} hash : transaction hash
+   * @returns {Object}
+   */
   async stateGetReceipt (hash) {
     try {
       const params = {
@@ -356,6 +431,11 @@ export class GlobalApi {
     this.networkType = type
   }
 
+  /**
+   * The balance of the specified address
+   * @param { string } address
+   * @returns { Object }
+   */
   async getBalance (address) {
     try {
       if (this.networkType === 'proxy') {
@@ -414,6 +494,12 @@ export class GlobalApi {
     }
   }
 
+  /**
+   * Submits transaction to the network to be mined. The transaction must be signed,
+   * and be valid (i.e. the nonce is correct and the account has sufficient balance to pay for the transaction).
+   * @param {Object} tx
+   * @returns {Object}
+   */
   async sendTransaction (tx) {
     try {
       const {
@@ -526,11 +612,16 @@ export class GlobalApi {
     }
   }
 
+  /**
+   * Returns the transaction with hash or null if the transaction is unknown.
+   * @param {String} hash : transaction hash
+   * @returns {Object}
+   */
   async getTransaction (signed_cid) {
     try {
       if (this.networkType === 'proxy') {
         const result = await MessageDetails(signed_cid, this.rpc)
-        if (result && result.code === 200) {
+        if (result && result.code === 200 && result.data) {
           const proxyRes = result.data
           const value = Number(proxyRes.value)
           const all_gas_fee = Number(proxyRes.gas_fee)
@@ -636,6 +727,13 @@ export class GlobalApi {
     }
   }
 
+  /**
+   * The gasfee required to send a message
+   * @param { string } from : sending address
+   * @param { string } to : receiving address
+   * @param { string } nonce : The nonce value of the sending address
+   * @returns { Object }
+   */
   async getGasFee (from, to, nonce) {
     try {
       if (this.networkType === 'proxy') {
@@ -693,6 +791,11 @@ export class GlobalApi {
     }
   }
 
+  /**
+ * Get token exchange rate
+ * @param {String} ids
+ * @returns {Promise}
+ */
   async getPrice (ids) {
     try {
       const res = await getPricePoints(ids)
@@ -717,6 +820,9 @@ export class GlobalApi {
     }
   }
 
+  /**
+   * Returns a network name object
+   */
   async getFIleCoinChainHead (rpc) {
     try {
       this.setFilecoinAPI()
@@ -749,6 +855,11 @@ export class GlobalApi {
     }
   }
 
+  /**
+   * Returns the block number (or height) of the most recently mined block
+   * @param {String} rpc
+   * @returns {Number}
+   */
   async getBlockNumber (rpc) {
     try {
       this.setBSCChainAPI()

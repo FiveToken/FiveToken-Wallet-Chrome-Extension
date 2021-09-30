@@ -17,8 +17,7 @@ export default {
   props: {
     text: String,
     type: String, // default "primary"
-    active: Boolean,
-    loading: Boolean
+    active: Boolean
   },
   methods: {
     btnClick () {

@@ -201,7 +201,6 @@ export default {
     },
     channelInputLimit (e) {
       const key = e.key
-      // 不允许输入'e'和'.'
       if (key === 'e' || key === 'E') {
         e.returnValue = false
         return false

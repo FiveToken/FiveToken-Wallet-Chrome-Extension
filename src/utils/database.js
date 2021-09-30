@@ -69,10 +69,16 @@ export class Database extends Dexie {
     })
   }
 
-  // retrieves all table from the table object store in a defined
-  // order; order can be:
-  // - forwardOrder to get the table in forward chronological order
-  // - reverseOrder to get the table in reverse chronological order
+  /* retrieves all table from the table object store in a defined
+  * order; order can be:
+  * - forwardOrder to get the table in forward chronological order
+  * - reverseOrder to get the table in reverse chronological order
+  * @param {String} key : Which item to get the database
+  * @param {Object} option : Match according to the specified key and value
+  * @param {String} order: Sorting method, positive order or reverse order
+  * @param {String} sort : Sort by a key
+  * @returns {Array} Matched data
+  */
   async getTable (key, option, order, sort) {
     let todos = []
     switch (order) {
@@ -89,8 +95,11 @@ export class Database extends Dexie {
     return todos
   }
 
-  // add data in to the table[key] object store.
-  // Returns a promise that resolves if the addition is successful.
+  /*
+   * add data in to the table[key] object store.
+   * @param {String} key : Which object to add to
+   * @param {Object} data : add data
+   */
   async addTable (key, data) {
     try {
       const create_time = parseInt(new Date().getTime() / 1000)
@@ -103,6 +112,11 @@ export class Database extends Dexie {
     }
   }
 
+  /*
+   * add data in to the table[key] object store.
+   * @param {String} key : Which object to add to
+   * @param {Array} data : add data
+   */
   async bulkAddTable (key, data) {
     try {
       return await this.table(key).bulkAdd([
@@ -113,6 +127,11 @@ export class Database extends Dexie {
     }
   }
 
+  /*
+   * add data in to the table[key] object store.
+   * @param {String} key : Which object to add to
+   * @param {Array} data : add data
+   */
   async bulkPutTable (key, data) {
     try {
       return await this.table(key).bulkPut([
@@ -123,8 +142,12 @@ export class Database extends Dexie {
     }
   }
 
-  // modify matched data
-  // Returns a promise that resolves if the modify is successful.
+  /*
+  * modify matched data in to the table[key] object store.
+  * @param {String} key : Which object to modify to
+  * @param {Object} option : Match according to the specified key and value
+  * @param {Object} data : modify data
+  */
   async modifyTable (key, option, data) {
     try {
       return await this.table(key).where({
@@ -137,8 +160,11 @@ export class Database extends Dexie {
     }
   }
 
-  // delete matched data
-  // store. Returns a promise that resolves if the deletion is successful.
+  /*
+  * delete matched data in to the table[key] object store.
+  * @param {String} key : Which object to delete to
+  * @param {Object} option : Match according to the specified key and value
+  */
   async deleteTable (key, option) {
     try {
       return await this.table(key).where({
@@ -149,8 +175,10 @@ export class Database extends Dexie {
     }
   }
 
-  // delete matched data
-  // store. Returns a promise that resolves if the deletion is successful.
+  /*
+  * clear table store
+  * @returns{Promise}: Returns a promise that resolves if the clear is successful.
+  */
   async clearTable () {
     try {
       // await Dexie.delete('database')

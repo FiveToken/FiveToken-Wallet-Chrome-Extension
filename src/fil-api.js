@@ -2,13 +2,8 @@
 import request from '@/utils/request'
 
 const base_api = '/api/yoju1zfpcidq1arp4fg5ntvd'
-
+// api interface address
 const api = {
-  // BaseFeeAndGas:'/v1/filscan/BaseFeeAndGas',
-  // BalanceNonceByAddress:'/v1/filscan/BalanceNonceByAddress',
-  // MessageDetails:'/v1/filscan/MessageDetails',
-  // MessagePush:'/v1/chainmessage/MessagePush',
-  // pricePoints:'http://8.209.219.115:8090/third/priceByType'
   BalanceNonceByAddress: base_api + '/actor/balance',
   MessageDetails: base_api + '/message',
   MessagePush: base_api + '/message',
@@ -18,6 +13,12 @@ const api = {
   pricePoints: 'http://8.209.219.115:8090/third/priceByType'
 }
 
+/**
+ * get the fee for sending the transaction
+ * @param {*} data : Interface input parameters
+ * @param {*} rpc : Interface domain name
+ * @returns {Promise}
+ */
 export function BaseFeeAndGas (data, rpc) {
   return request({
     url: rpc + api.BaseFeeAndGas,
@@ -28,6 +29,13 @@ export function BaseFeeAndGas (data, rpc) {
     }
   })
 }
+
+/**
+ * The balance and nonce of the specified address
+ * @param {*} data : Interface input parameters
+ * @param {*} rpc : Interface domain name
+ * @returns {Promise}
+ */
 export function BalanceNonceByAddress (data, rpc) {
   return request({
     url: rpc + api.BalanceNonceByAddress,
@@ -38,6 +46,12 @@ export function BalanceNonceByAddress (data, rpc) {
   })
 }
 
+/**
+ * Get token exchange rate
+ * @param {Object} data : Interface input parameters
+ * @param {String} rpc : Interface domain name
+ * @returns {Promise}
+ */
 export function getPricePoints (ids) {
   return request({
     url: api.pricePoints,
@@ -48,6 +62,12 @@ export function getPricePoints (ids) {
   })
 }
 
+/**
+ * get sending the transaction detail
+ * @param {*} data : Interface input parameters
+ * @param {*} rpc : Interface domain name
+ * @returns {Promise}
+ */
 export function MessageDetails (data, rpc) {
   return request({
     url: rpc + api.MessageDetails,
@@ -58,6 +78,12 @@ export function MessageDetails (data, rpc) {
   })
 }
 
+/**
+ * Push a signed message into the memory pool
+ * @param {*} data : Interface input parameters
+ * @param {*} rpc : Interface domain name
+ * @returns {Promise}
+ */
 export function MessagePush (data, rpc) {
   return request({
     url: rpc + api.MessagePush,

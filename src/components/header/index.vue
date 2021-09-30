@@ -40,7 +40,6 @@ export default {
     ])
   },
   methods: {
-
     openNetwork () {
       this.$emit('openNetwork')
     },

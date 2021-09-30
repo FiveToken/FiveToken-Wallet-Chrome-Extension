@@ -1,3 +1,7 @@
+/*
+API is an interface interface between programs and programs,
+providing functions, variables, etc. required by the interface interface.
+*/
 const ABI = [
   {
     constant: true,

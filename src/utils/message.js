@@ -9,7 +9,12 @@ import { trim } from 'mytoolkit'
 import base32Decode from 'base32-decode'
 import BN from 'bn.js'
 import blake from 'blakejs'
-
+/**
+ * Sign message with private key
+ * @param {Object} msg : Messages that need to be signed
+ * @param {String} sk : private key
+ * @returns {Object}
+ */
 export async function getT1SignedMsg (msg, sk) {
   const sig = await getT1Sig(msg, sk)
   return {
@@ -21,6 +26,12 @@ export async function getT1SignedMsg (msg, sk) {
   }
 }
 
+/*
+ * Signed message
+ * @param {Object} msg : Messages that need to be signed
+ * @param {String} sk : private key
+ * @returns {String}
+ */
 export async function getT1Sig (msg, sk) {
   let mcid = await getCid(msg)
   if (typeof sk === 'string') {
@@ -33,6 +44,11 @@ export async function getT1Sig (msg, sk) {
   return sig
 }
 
+/*
+ * Get the cid of the message
+ * @param {Object} msg
+ * @returns {String}
+ */
 export async function getCid (msg) {
   let b = serializeMsg(msg)
   b = Buffer.from(b, 'base64')
@@ -63,6 +79,12 @@ export function serializeMsg (msg) {
   return Buffer.from([138, ...versionBuf, ...toBuf, ...fromBuf, ...nonceBuf, ...valueBuf, ...gasLimitBuf, ...gasFeeCapBuf, ...gasPremiumBuf, ...methodBuf, ...paramsBuf]).toString('base64')
 }
 
+/*
+ * Intercept the specified length ArrayBuffer
+ * @param {ArrayBuffer} arr
+ * @param {number} len
+ * @returns {ArrayBuffer}
+ */
 export function blake2b (arr, len) {
   return blake.blake2b(arr, null, len)
 }

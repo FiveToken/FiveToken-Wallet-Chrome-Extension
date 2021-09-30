@@ -1,3 +1,6 @@
+/**
+ * hot reload for development environment
+ */
 const filesInDirectory = dir => new Promise(resolve =>
   dir.createReader().readEntries(entries =>
     Promise.all(entries.filter(e => e.name[0] !== '.').map(e =>

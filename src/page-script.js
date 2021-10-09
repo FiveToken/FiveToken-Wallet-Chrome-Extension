@@ -56,7 +56,7 @@ window.addEventListener('message', (event) => {
 function inpage () {
   const FiveToken = {
     isFiveToken: true,
-    version: '1.2.0',
+    version: '1.2.1',
     request: ({ method, params }) => {
       return new Promise((resolve, reject) => {
         try {

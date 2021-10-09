@@ -17,7 +17,7 @@ import { Wallet } from 'ethers'
 /**
  * FiveToken Version
  */
-export const fiveTokenVersion = '1.2.0'
+export const fiveTokenVersion = '1.2.1'
 
 /**
  * The smallest unit supported

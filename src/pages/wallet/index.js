@@ -3,10 +3,12 @@ import pageComponent from './component/index.vue'
 import i18n from '../../i18n'
 import router from '../../router'
 import store from '../../store'
-import { Input, Dialog, Icon, Button, Message } from 'element-ui'
+import { Input, Dialog, Icon, Button, Message, Checkbox, Popover } from 'element-ui'
 Vue.use(Input)
 Vue.use(Dialog)
 Vue.use(Button)
+Vue.use(Checkbox)
+Vue.use(Popover)
 Vue.use(Icon)
 Vue.prototype.$message = Message
 Vue.component('pageComponent', pageComponent)

@@ -15,12 +15,17 @@
         "default_popup": "pages/fiveToken.html"
     },
     "permissions":[
+        "tabs",
 		"http://*/*",
 		"https://*/*"
     ],
+    "web_accessible_resources":[
+        "js/*"
+    ],
     "background":
 	{
-		"scripts": ["js/background.js","hot-reload.js"]
+		"scripts": ["js/background.js","hot-reload.js"],
+        "persistent": false
 	},
     "content_scripts": [
         {
@@ -28,7 +33,7 @@
                 "<all_urls>"
             ],
             "js": [
-                "js/content-script.js"
+                "js/page-script.js"
             ],
             "run_at": "document_start",
             "all_frames": true

@@ -9,6 +9,9 @@
 ├── public    
 │   └── index.html # packaged template file    
 ├── src  # project source code    
+│   ├── background.js  # JavaScript in the background that can call almost all Chrome extension APIs    
+│   ├── page-script.js  # JS injected into the page
+│   ├── popup.js  #popupa window page popping up when clicking browser_action & page_action; popup.js can access most APIs 
 │   ├── api.js  # api packaging    
 │   ├── assets   # static resources    
 │   ├── components  # global UI components    
@@ -41,9 +44,7 @@
 │   │   ├── setting-address # address setting and management     
 │   │   ├── setting-backups # pages of back-ups     
 │   │   ├── setting-networks # network management     
-│   │   ├── wallet # wallet pages    
-│   │   ├── background  # JavaScript in the background that can call almost all Chrome extension APIs    
-│   │   ├── popup  #popupa window page popping up when clicking browser_action & page_action; popup.js can access most APIs     
+│   │   ├── wallet # wallet pages  
 │   │   └──  welcome # welcome page     
 │   ├── router  # route     
 │   ├── store  # state management      

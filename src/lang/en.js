@@ -4,6 +4,26 @@ const en = {
   header: {
     customRpc: 'Custom RPC'
   },
+  customSendTransaction: {
+    transfer: 'Directed transfer',
+    confirm: 'Confirm',
+    cancel: 'Cancel',
+    functionType: 'Function Type',
+    params: 'parameters',
+    hexData: 'Hexadecimal data'
+  },
+  fiveTokenContent: {
+    title: 'connect via FiveToken',
+    selectAccount: 'select an account',
+    allSelect: 'select all',
+    newAccount: 'new account',
+    cancel: 'cancel',
+    next: 'next step',
+    linkto: 'link to',
+    allown: 'allow this network',
+    rights: 'check the account address with your permission (required)',
+    connect: 'connect'
+  },
   welcome: {
     title: 'Welcome to FiveToken',
     subTitle1: 'Bridge Filecoin ecosystem to Web 3 and metaverse with multi-chain integration and reliable identity management;',
@@ -104,7 +124,19 @@ const en = {
     tranRecord: 'Activity record',
     noTransactionRecord: 'No Activity',
     waiting: 'Waiting',
-    noBrowser: 'The blockchain browser address is not added to the current network'
+    noBrowser: 'The blockchain browser address is not added to the current network',
+    connected: 'connected',
+    unconnect: 'unconnect',
+    youHave: 'You have ',
+    linkNumbers: ' account connected to this website',
+    disconnect: 'disconnect the account',
+    power: 'permission',
+    allownPower: 'you have granted below permissions',
+    viewAddress: 'check the account address with your permission (required)',
+    connectedNetwork: 'the connected networks',
+    connectedRights: 'These networks have been connected. They can check your account address.',
+    unconnectTips: 'FiveToken has no permission to connect to this network. If it is required, please find the access button on the Web3 network.',
+    unconnectNetworksTips: 'No network is connected.'
   },
   messageDetail: {
     title: 'Detailed messages',
@@ -262,7 +294,7 @@ const en = {
     {
       name: 'Filcoin Mainnet',
       rpc: 'https://api.fivetoken.io',
-      chainID: '',
+      chainID: '1',
       symbol: 'FIL',
       ids: 'filecoin',
       browser: 'https://filscan.io',
@@ -310,7 +342,7 @@ const en = {
     {
       name: 'Filecoin Calibration Testnet',
       rpc: 'https://api.calibration.fivetoken.io',
-      chainID: '',
+      chainID: '1',
       symbol: 'FIL',
       ids: 'filecoin',
       browser: 'https://calibration.filscan.io',

@@ -66,7 +66,6 @@ import kyBack from '@/components/back'
 import { getQueryString, formatNumber, formatDate, isFilecoinChain } from '@/utils'
 import { mapState } from 'vuex'
 import { BigNumber } from 'bignumber.js'
-import { openUrl } from '@/pages/popup/index.js'
 export default {
   data () {
     return {
@@ -162,10 +161,12 @@ export default {
         if (isFilecoinChain(this.networkType)) {
           // eslint-disable-next-line camelcase
           url = this.browser + `/tipset/message-detail?cid=${signed_cid}`
+          // eslint-disable-next-line no-undef
           openUrl(url)
         } else {
           // eslint-disable-next-line camelcase
           url = this.browser + `/tx/${signed_cid}`
+          // eslint-disable-next-line no-undef
           openUrl(url)
         }
       } else {

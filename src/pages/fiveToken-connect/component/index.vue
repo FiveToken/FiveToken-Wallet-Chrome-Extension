@@ -3,27 +3,39 @@
     <welcome v-if="accountList.length === 0"/>
     <lockUser v-else-if="lockUser.length"/>
     <layout  v-else @layoutMounted="layoutMounted">
-      <div class="content-wrap">
-        <div class="logo">
-          <img class="img" :src="logo" />
-        </div>
-        <div class="www">{{origin}}</div>
-        <div class="title">{{$t('connect.title')}}</div>
-        <div class="select-address" v-if="accountList.length">
-          <el-radio-group v-model="address" @change="radioClick">
-            <el-radio :label="item.address" v-for="(item,index) in accountList" :key="index">
-              <div class="name">{{item.accountName}}</div>
-              <div class="address">{{item.address | formatAddress}}</div>
-            </el-radio>
-          </el-radio-group>
-        </div>
-        <div class="btn-wrap" v-if="accountList.length">
-          <kyButton @btnClick="cancel">{{$t('connect.cancel')}}</kyButton>
-          <kyButton type="primary" :active='active' @btnClick="connect">{{$t('connect.connect')}}</kyButton>
-        </div>
-      </div>
+      <stepOne
+        :accountList="accountList"
+        :origin="origin"
+        v-if="step === 1"
+        @next="next"
+        @addAccount="addAccount"
+      />
+      <stepTwo
+        :origin="origin"
+        :step.sync="step"
+        :accountList="accountList"
+        :checkList="checkList"
+        @connect="connect"
+        v-if="step === 2"
+      />
     </layout>
-
+    <el-dialog
+      :visible.sync="addAccountVisable"
+      width="300px"
+      :show-close="false"
+      class="network-dialog"
+      :top="'34vh'"
+    >
+        <kyAdd
+          v-if="addAccountVisable"
+          :addName.sync="addName"
+          @confirmAdd="confirmAdd"
+          @closeAdd="closeAdd"
+        />
+    </el-dialog>
+    <div class="loading" v-if="isFetch">
+      <img :src="loading" alt="" class="img">
+    </div>
   </div>
 </template>
 
@@ -31,23 +43,33 @@
 import welcome from '@/pages/welcome/component/index.vue'
 import lockUser from '@/pages/lock-user/component/index.vue'
 import layout from '@/components/layout'
-import kyButton from '@/components/button'
-import { mapState } from 'vuex'
+import stepOne from './step-1.vue'
+import stepTwo from './step-2.vue'
+import kyAdd from '@/pages/account/component/add.vue'
+import { mapMutations, mapState } from 'vuex'
 import { Database } from '@/utils/database.js'
-import { popupSendMessage } from '@/pages/popup/index.js'
-import { backgroundWindowRemove } from '@/pages/background/index.js'
-
+import { getF1ByMne, getGlobalKek } from '@/utils'
+import { AESDecrypt } from '@/utils/key'
 export default {
   data () {
     return {
+      isFetch: false,
+      loading: require('@/assets/image/loading.png'),
+      step: 1,
       rpc: '',
       address: '',
       accountList: [],
       lockUser: [],
-      connectAccount: null,
-      logo: require('@/assets/image/logo.png'),
       db: null,
-      origin: ''
+      origin: '',
+      addAccountVisable: false,
+      addName: '',
+      activeF1: null,
+      ethereumF1: null,
+      filecoinF1: null,
+      calibrationF1: null,
+      checkList: [],
+      mnemonicWords: ''
     }
   },
   computed: {
@@ -55,27 +77,21 @@ export default {
       return this.address !== ''
     },
     ...mapState('app', [
-      'activenNetworks'
+      'activenNetworks',
+      'deriveIndex',
+      'networks'
     ])
   },
   components: {
     welcome,
     lockUser,
     layout,
-    kyButton
-  },
-  filters: {
-    formatAddress (address) {
-      if (address.length > 12) {
-        const str = address.substr(0, 6) + '...' + address.substr(address.length - 6, 6)
-        return str
-      } else {
-        return address
-      }
-    }
+    stepOne,
+    stepTwo,
+    kyAdd
   },
   async mounted () {
-    const origin = window.localStorage.getItem('fiveTokenConnect')
+    const origin = window.localStorage.getItem('fiveTokenConnectOrigin')
     this.origin = origin
     const db = new Database()
     this.db = db
@@ -87,126 +103,182 @@ export default {
       this.rpc = rpc
       const accountList = await db.getTable('accountList', { rpc: rpc, isDelete: 0 })
       this.accountList = accountList
+      const walletKey = await db.getTable('walletKey', { khazix: 'khazix' })
+      if (walletKey.length) {
+        const nme = walletKey[0].mnemonicWords
+        this.mnemonicWords = AESDecrypt(nme)
+      }
       if (accountList.length) {
         const frist = accountList[0]
         this.address = frist.address
-        this.connectAccount = {
-          address: frist.address,
-          fil: frist.fil,
-          accountName: frist.accountName
-        }
       }
     }
   },
   methods: {
-    layoutMounted () {
+    ...mapMutations('app', ['SET_DERIVEINDEX']),
+    async layoutMounted () {
 
     },
-    createAccount () {
-      window.location.href = './welcome.html'
+    async addAccount () {
+      const _accountList_ = await this.db.getTable('accountList', { rpc: this.rpc })
+      this.addName = 'Account' + (_accountList_.length + 1)
+      this.addAccountVisable = true
     },
-    radioClick () {
-      this.connectAccount = this.accountList.find(n => {
-        return n.address === this.address
-      })
-      console.log(this.connectAccount, 'connectAccount')
+    next (checkList) {
+      this.step = 2
+      this.checkList = checkList
+    },
+    closeAdd () {
+      this.addAccountVisable = false
     },
     cancel () {
-      backgroundWindowRemove()
+      // eslint-disable-next-line no-undef
+      popupWindowRemove()
     },
     async connect () {
-      const { address, fil, accountName, createType } = this.connectAccount
-      await this.db.addTable('connectAccount', {
-        address,
-        rpc: this.rpc,
-        accountName,
-        createType,
-        fil,
-        origin: this.origin,
-        isActive: 1,
-        khazix: 'khazix'
+      this.isFetch = true
+      const list = this.accountList.filter(n => {
+        return this.checkList.includes(n.address)
       })
-      popupSendMessage('eth_requestAccounts', { accountChanged: true, message: [address] })
-      backgroundWindowRemove()
+      const account = list.map((n, index) => {
+        return {
+          address: n.address,
+          rpc: n.rpc,
+          accountName: n.accountName,
+          createType: n.createType,
+          fil: n.fil,
+          origin: this.origin,
+          khazix: 'khazix'
+        }
+      })
+      // eslint-disable-next-line no-undef
+      const address = account.length && account[0].address
+      // eslint-disable-next-line no-undef
+      popupToBackground('fil_requestAccounts', { account: [address] })
+      this.isFetch = false
+      // eslint-disable-next-line no-undef
+      popupWindowRemove()
+    },
+    async confirmAdd () {
+      this.isFetch = true
+      try {
+        setTimeout(async () => {
+          const kek = getGlobalKek()
+          const deriveIndex = this.deriveIndex
+          console.log('deriveIndex:', deriveIndex)
+          const ethereumF1 = await getF1ByMne(this.mnemonicWords, kek, 'ethereum', '', deriveIndex)
+          const filecoinF1 = await getF1ByMne(this.mnemonicWords, kek, 'proxy', 'f', deriveIndex)
+          const calibrationF1 = await getF1ByMne(this.mnemonicWords, kek, 'proxy', 't', deriveIndex)
+          const accountName = this.addName
+          // eslint-disable-next-line camelcase
+          const create_time = parseInt(new Date().getTime() / 1000)
+          const _account = []
+          const _networks = []
+          for (const n of this.networks) {
+            if (n.filecoinAddress0 === 'f') {
+              _account.push({
+                accountName,
+                address: filecoinF1.address,
+                createType: 'mnemonic',
+                privateKey: filecoinF1.privateKey,
+                create_time,
+                khazix: 'khazix',
+                digest: filecoinF1.digest,
+                fil: 0,
+                isDelete: 0,
+                rpc: n.rpc
+              })
+            } else if (n.filecoinAddress0 === 't') {
+              _account.push({
+                accountName,
+                address: calibrationF1.address,
+                createType: 'mnemonic',
+                privateKey: calibrationF1.privateKey,
+                create_time,
+                khazix: 'khazix',
+                digest: calibrationF1.digest,
+                fil: 0,
+                isDelete: 0,
+                rpc: n.rpc
+              })
+            } else {
+              _account.push({
+                accountName,
+                address: ethereumF1.address,
+                createType: 'mnemonic',
+                privateKey: ethereumF1.privateKey,
+                create_time,
+                khazix: 'khazix',
+                digest: ethereumF1.digest,
+                fil: 0,
+                isDelete: 0,
+                rpc: n.rpc
+              })
+            }
+            _networks.push({
+              ...n,
+              deriveIndex: n.deriveIndex + 1
+            })
+          }
+          await this.db.bulkAddTable('accountList', _account)
+          await this.db.bulkPutTable('networks', _networks)
+          this.SET_DERIVEINDEX(this.deriveIndex + 1)
+          await this.db.modifyTable(
+            'activenNetworks',
+            { rpc: this.rpc },
+            { deriveIndex: this.deriveIndex + 1 }
+          )
+          const accountList = await this.db.getTable('accountList', { rpc: this.rpc, isDelete: 0 })
+          this.accountList = accountList
+          this.isFetch = false
+          this.addAccountVisable = false
+        }, 0)
+      } catch (error) {
+        this.isFetch = false
+        this.addAccountVisable = false
+        console.log(error, 'error')
+      }
     }
   }
 }
 </script>
 <style lang="less" scoped>
+/deep/.el-dialog{
+    border-radius: 10px;
+    .el-dialog__header{
+        padding: 0;
+    }
+    .el-dialog__body{
+        padding: 0;
+    }
+}
 .content-page{
   width: 100%;
-  padding: 20px;
+  height: 100%;
+  padding:0 20px;
   box-sizing: border-box;
-  .logo{
-    width: 100px;
-    height: 100px;
-    margin: 0 auto;
-    padding:50px 0 30px;
-    .img{
-      width:100px;
-      height: 100px;
-    }
-  }
-  .www{
-    font-size: 14px;
-    color: #222;
-    text-align: center;
-    padding: 0 20px;
-    margin-bottom: 20px;
-  }
-  .title{
-    font-size: 24px;
-    color: #222;
-    font-weight: bolder;
-    margin-bottom: 5px;
-    text-align: center;
-  }
-  .sub-title{
-    font-size: 14px;
-    color: #222;
-    text-align: center;
-    padding: 0 20px;
-    margin-bottom: 20px;
-  }
-  .new-account{
-    font-size: 14px;
-    margin-bottom: 20px;
-    color: #5CC1CB;
-    text-align: right;
-    cursor: pointer;
-  }
-  .select-address{
-    margin-bottom: 20px;
-    border:1px solid #eee;
-    border-radius: 5px;
-    padding: 20px;
-    height: 160px;
-    overflow: auto;
-    /deep/.el-radio{
-      margin: 0 0 20px 0;
-      display: flex;
-      align-items: center;
-      .el-radio__input.is-checked .el-radio__inner{
-        border-color: #5CC1CB;
-        background: #5CC1CB;
-      }
-      .name{
-        font-size: 16px;
-        color: #222;
-        margin-bottom: 5px;
-      }
-      .address{
-        font-size: 12px;
-        color: #999;
-      }
-    }
-  }
-  .btn-wrap{
+  position: relative;
+  .loading{
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.6);
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    /deep/.button-wrap{
-      width: 155px;
+    justify-content: center;
+    z-index: 99999;
+    .img{
+        animation:turnX 3s linear infinite;
+    }
+    @keyframes turnX{
+        0%{
+            transform:rotateZ(0deg);
+        }
+        100%{
+            transform:rotateZ(360deg);
+        }
     }
   }
 }

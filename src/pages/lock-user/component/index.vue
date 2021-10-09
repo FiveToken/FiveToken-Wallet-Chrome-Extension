@@ -74,7 +74,13 @@ export default {
         const voild = await validatePassword(this.password, this.salt)
         if (voild) {
           await this.db.deleteTable('lockUser', { khazix: 'khazix' })
-          window.location.href = './wallet.html'
+          const nextPage = window.localStorage.getItem('nextPage')
+          if (nextPage === 'fiveToken-connect') {
+            window.localStorage.removeItem('nextPage')
+            window.location.href = './fiveToken-connect.html'
+          } else {
+            window.location.href = './wallet.html'
+          }
         } else {
           this.$message.error(this.$t('lock.passwordError'))
         }

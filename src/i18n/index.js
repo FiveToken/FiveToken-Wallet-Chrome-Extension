@@ -20,7 +20,6 @@ const messages = {
     ...ko
   }
 }
-
 const language = window.localStorage.getItem('fiveTokenLanguage')
 const currency = window.localStorage.getItem('fiveTokenCurrency')
 if (!language) {

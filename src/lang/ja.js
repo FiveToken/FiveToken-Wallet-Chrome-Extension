@@ -4,6 +4,27 @@ const ja = {
   header: {
     customRpc: 'カスタムRPC'
   },
+  customSendTransaction: {
+    transfer: '直接転送',
+    confirm: '確認',
+    cancel: 'キャンセル',
+    functionType: '関数タイプ',
+    params: 'パラメータ',
+    hexData: '16進データ'
+  },
+  fiveTokenContent: {
+    title: 'FiveTokenを使用して接続',
+    selectAccount: 'アカウントの選択',
+    allSelect: 'すべて選択',
+    newAccount: '新しいアカウント',
+    cancel: 'キャンセル',
+    next: '次へ',
+    linkto: '接続先',
+    allown: 'このウェブサイトを許可する',
+    rights: '許可するアカウントのアドレスを表示する（必須）',
+    connect: '接続'
+  },
+
   welcome: {
     title: 'FiveTokenをご利用頂きありがとうございます',
     subTitle1: 'Filecoin生態分野の接続器で、複数チェーンを融合し、未来の保存世界への入口である。',
@@ -104,7 +125,18 @@ const ja = {
     tranRecord: '活動記録',
     noTransactionRecord: '活動記録がありません',
     waiting: '待っている',
-    noBrowser: '現在のネットワークはブロックチェーンブラウザアドレスが追加されていません'
+    noBrowser: '現在のネットワークはブロックチェーンブラウザアドレスが追加されていません',
+
+    youHave: 'あなたは',
+    linkNumbers: 'アカウントこのウェブサイトに接続',
+    disconnect: 'このアカウントを切断します',
+    power: '許可',
+    allownPower: '次の権限を承認しました',
+    viewAddress: '許可するアカウントのアドレスを表示する（必須）',
+    connectedNetwork: '接続されたウェブサイト',
+    connectedRights: 'これらのサイトに接続しました。彼らはあなたのアカウントアドレスを見ることができます。',
+    unconnectTips: 'FiveTokenはこのWebサイトに接続しませんでした。 web3 Webサイトに接続するには、Webサイトの接続ボタンを見つけます。',
+    unconnectNetworksTips: 'Webサイトはまだ接続されていません。'
   },
   messageDetail: {
     title: 'メッセージ詳細',
@@ -262,7 +294,7 @@ const ja = {
     {
       name: 'Filcoin Mainnet',
       rpc: 'https://api.fivetoken.io',
-      chainID: '',
+      chainID: '1',
       symbol: 'FIL',
       ids: 'filecoin',
       browser: 'https://filscan.io',
@@ -310,7 +342,7 @@ const ja = {
     {
       name: 'Filecoin Calibration Testnet',
       rpc: 'https://api.calibration.fivetoken.io',
-      chainID: '',
+      chainID: '1',
       symbol: 'FIL',
       ids: 'filecoin',
       browser: 'https://calibration.filscan.io',

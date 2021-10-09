@@ -64,8 +64,7 @@ export class Database extends Dexie {
       networks: 'id++,rpc,image,create_time,name,chainID,symbol,browser,decimals,ids,khazix,networkType,filecoinAddress0,deriveIndex,disabled',
       activenNetworks: 'id++,rpc,create_time,name,image,chainID,symbol,ids,browser,decimals,networkType,filecoinAddress0,deriveIndex,disabled,khazix',
       tokenList: 'id++,rpc,create_time,chainName,decimals,symbol,contract,address,khazix',
-      walletKey: 'id++,create_time,mnemonicWords,salt,khazix,rpc',
-      connectAccount: 'id++,address,origin,rpc,accountName,createType,fil,isActive,khazix'
+      walletKey: 'id++,create_time,mnemonicWords,salt,khazix,rpc'
     })
   }
 

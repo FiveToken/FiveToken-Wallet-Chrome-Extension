@@ -49,7 +49,6 @@ export function BalanceNonceByAddress (data, rpc) {
 /**
  * Get token exchange rate
  * @param {Object} data : Interface input parameters
- * @param {String} rpc : Interface domain name
  * @returns {Promise}
  */
 export function getPricePoints (ids) {

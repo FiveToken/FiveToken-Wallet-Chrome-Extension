@@ -22,7 +22,6 @@
 import layout from '@/components/layout'
 import kyBack from '@/components/back'
 import { fiveTokenVersion } from '@/utils'
-import { openUrl } from '@/pages/popup/index.js'
 export default {
   data () {
     return {
@@ -47,11 +46,13 @@ export default {
     toService () {
       let lang = this.$i18n.locale
       lang = lang === 'zh' ? 'cn' : lang
+      // eslint-disable-next-line no-undef
       openUrl(`https://fivetoken.io/service?lang=${lang}`)
     },
     toPrivacy () {
       let lang = this.$i18n.locale
       lang = lang === 'zh' ? 'cn' : lang
+      // eslint-disable-next-line no-undef
       openUrl(`https://fivetoken.io/private?lang=${lang}`)
     }
   }

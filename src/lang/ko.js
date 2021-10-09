@@ -4,6 +4,27 @@ const ko = {
   header: {
     customRpc: '사용자 지정 RPC'
   },
+  customSendTransaction: {
+    transfer: '지시 전송',
+    confirm: '확인',
+    cancel: '취소',
+    functionType: '함수 유형',
+    params: '매개변수',
+    hexData: '16진수 데이터'
+  },
+  fiveTokenContent: {
+    title: 'FiveToken을 사용하여 연결',
+    selectAccount: '계정 선택',
+    allSelect: '모두 선택',
+    newAccount: '새 계정',
+    cancel: '취소',
+    next: '다음',
+    linkto: '연결',
+    allown: '이 웹사이트 허용',
+    rights: '허용한 계정 주소 보기(필수)',
+    connect: '연결'
+  },
+
   welcome: {
     title: 'FiveToken에 오신 것을 환영합니다.',
     subTitle1: 'Filecoin 생태 분야의 커넥터, 멀티 체인 융합, 미래 저장 세계의 입구입니다.',
@@ -104,7 +125,18 @@ const ko = {
     tranRecord: '활동 기록',
     noTransactionRecord: '활동 기록 없음',
     waiting: '대기',
-    noBrowser: '현재 네트워크에 블록체인 브라우저을 추가하지 않았습니다'
+    youHave: '있다',
+    linkNumbers: '이 사이트 에 연 결 된 계 정',
+
+    noBrowser: '현재 네트워크에 블록체인 브라우저을 추가하지 않았습니다',
+    disconnect: '이 계정 연결 해제',
+    power: '권한',
+    allownPower: '다음 권한을 승인했습니다',
+    viewAddress: '허용한 계정 주소 보기(필수)',
+    connectedNetwork: '연결된 웹사이트',
+    connectedRights: '이 사이트에 연결되었습니다. 그들은 귀하의 계정 주소를 볼 수 있습니다.',
+    unconnectTips: 'FiveToken이 이 웹사이트에 연결되지 않았습니다. web3 웹사이트에 연결하려면 웹사이트에서 연결 버튼을 찾으세요.',
+    unconnectNetworksTips: '아직 연결된 웹사이트가 없습니다.'
   },
   messageDetail: {
     title: '소식 상세 정보',
@@ -262,7 +294,7 @@ const ko = {
     {
       name: 'Filcoin Mainnet',
       rpc: 'https://api.fivetoken.io',
-      chainID: '',
+      chainID: '1',
       symbol: 'FIL',
       ids: 'filecoin',
       browser: 'https://filscan.io',
@@ -310,7 +342,7 @@ const ko = {
     {
       name: 'Filecoin Calibration Testnet',
       rpc: 'https://api.calibration.fivetoken.io',
-      chainID: '',
+      chainID: '1',
       symbol: 'FIL',
       ids: 'filecoin',
       browser: 'https://calibration.filscan.io',

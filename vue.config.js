@@ -24,9 +24,7 @@ const chromeName = [
   'account',
   'message-detail',
   'add-token',
-  'content-script',
-  'background',
-  'popup'
+  'custom-send-transaction'
 ]
 
 chromeName.forEach(name => {
@@ -38,6 +36,18 @@ chromeName.forEach(name => {
 })
 
 const plugins = [
+  {
+    from: path.resolve('src/page-script.js'),
+    to: `${path.resolve('dist')}/js/page-script.js`
+  },
+  {
+    from: path.resolve('src/popup.js'),
+    to: `${path.resolve('dist')}/js/popup.js`
+  },
+  {
+    from: path.resolve('src/background.js'),
+    to: `${path.resolve('dist')}/js/background.js`
+  },
   {
     from: path.resolve('src/manifest.production.json'),
     to: `${path.resolve('dist')}/manifest.json`
@@ -54,7 +64,7 @@ function resolve (dir) {
 
 module.exports = {
   pages: pagesObj,
-  // productionSourceMap: true,
+  productionSourceMap: false,
   filenameHashing: false,
   chainWebpack: config => {
     config.resolve.alias.set('@', resolve('src'))

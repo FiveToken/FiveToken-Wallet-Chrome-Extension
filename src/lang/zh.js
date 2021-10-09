@@ -4,6 +4,27 @@ const zh = {
   header: {
     customRpc: '自定义RPC'
   },
+  customSendTransaction: {
+    transfer: '定向转账',
+    confirm: '确认',
+    cancel: '取消',
+    functionType: '功能类型',
+    params: '参数',
+    hexData: '十六进制数据'
+  },
+  fiveTokenContent: {
+    title: '使用 FiveToken 连接',
+    selectAccount: '选择账户',
+    allSelect: '全部选择',
+    newAccount: '新账户',
+    cancel: '取消',
+    next: '下一步',
+    linkto: '连接到',
+    allown: '允许本网站',
+    rights: '查看您允许的账户的地址（必填）',
+    connect: '连接'
+  },
+
   welcome: {
     title: '欢迎使用 FiveToken',
     subTitle1: 'Filecoin生态领域的连接器，多链融合，未来存储世界的入口。',
@@ -104,7 +125,20 @@ const zh = {
     tranRecord: '活动记录',
     noTransactionRecord: '没有活动记录',
     waiting: '等待',
-    noBrowser: '当前网络未添加区块链浏览器地址'
+    noBrowser: '当前网络未添加区块链浏览器地址',
+
+    youHave: '你有 ',
+    linkNumbers: ' 个连接到此网站的帐户',
+    connected: '已连接',
+    unconnect: '未连接',
+    disconnect: '断开此账户的连接',
+    power: '权限',
+    allownPower: '您已授权以下权限',
+    viewAddress: '查看您允许的账户的地址（必填）',
+    connectedNetwork: '已连接的网站',
+    connectedRights: '已连接到这些网站。他们可以查看您的账户地址。',
+    unconnectTips: 'FiveToken 没有连接这个网站。要连接到 web3 网站，请在他们的网站上找到连接按钮。',
+    unconnectNetworksTips: '还没连接任何网站。'
   },
   messageDetail: {
     title: '消息详情',
@@ -262,7 +296,7 @@ const zh = {
     {
       name: 'Filecoin主网络',
       rpc: 'https://api.fivetoken.io',
-      chainID: '',
+      chainID: '1',
       symbol: 'FIL',
       ids: 'filecoin',
       browser: 'https://filscan.io',
@@ -310,7 +344,7 @@ const zh = {
     {
       name: 'Filecoin Calibration测试网',
       rpc: 'https://api.calibration.fivetoken.io',
-      chainID: '',
+      chainID: '1',
       symbol: 'FIL',
       ids: 'filecoin',
       browser: 'https://calibration.filscan.io',

@@ -86,11 +86,7 @@ export default {
       isFetch: false,
       addAccountVisable: false,
       addName: '',
-      nme: '',
-      activeF1: null,
-      ethereumF1: null,
-      filecoinF1: null,
-      calibrationF1: null,
+      mnemonicWords: '',
       db: null
     }
   },
@@ -189,7 +185,8 @@ export default {
         })
         const walletKey = await db.getTable('walletKey', { khazix: 'khazix' })
         if (walletKey.length) {
-          this.nme = walletKey[0].mnemonicWords
+          const nme = walletKey[0].mnemonicWords
+          this.mnemonicWords = AESDecrypt(nme)
         }
         this.isFetch = false
       } catch (err) {
@@ -197,114 +194,104 @@ export default {
         console.log(err, 'eeeeeerrrrrrrr')
       }
     },
-    async initAdd () {
-      const index = this.accountList.length + 1
-      const kek = getGlobalKek()
-      const mnemonic = AESDecrypt(this.nme)
-      const ethereumF1 = await getF1ByMne(mnemonic, kek, 'ethereum', '', index)
-      const filecoinF1 = await getF1ByMne(mnemonic, kek, 'filecoin', 'f', index)
-      const calibrationF1 = await getF1ByMne(mnemonic, kek, 'filecoin', 't', index)
-      let activeF1 = null
-      if (this.filecoinAddress0 === 't') {
-        activeF1 = calibrationF1
-      } else if (this.filecoinAddress0 === 'f') {
-        activeF1 = filecoinF1
-      } else {
-        activeF1 = ethereumF1
-      }
-      this.activeF1 = activeF1
-      this.ethereumF1 = ethereumF1
-      this.filecoinF1 = filecoinF1
-      this.calibrationF1 = calibrationF1
-    },
     async confirmAdd () {
+      this.isFetch = true
       try {
-        this.isFetch = true
-        this.addAccountVisable = false
-        const accountName = this.addName
-        // eslint-disable-next-line camelcase
-        const create_time = parseInt(new Date().getTime() / 1000)
-        await this.db.modifyTable(
-          'activeAccount',
-          { rpc: this.rpc },
-          {
-            address: this.activeF1.address,
-            accountName,
-            privateKey: this.activeF1.privateKey,
-            create_time,
-            khazix: 'khazix',
-            rpc: this.rpc,
-            fil: 0,
-            createType: 'mnemonic',
-            digest: this.activeF1.digest
+        setTimeout(async () => {
+          const kek = getGlobalKek()
+          const deriveIndex = this.deriveIndex
+          const ethereumF1 = await getF1ByMne(this.mnemonicWords, kek, 'ethereum', '', deriveIndex)
+          const filecoinF1 = await getF1ByMne(this.mnemonicWords, kek, 'proxy', 'f', deriveIndex)
+          const calibrationF1 = await getF1ByMne(this.mnemonicWords, kek, 'proxy', 't', deriveIndex)
+          const accountName = this.addName
+          // eslint-disable-next-line camelcase
+          const create_time = parseInt(new Date().getTime() / 1000)
+          const _account = []
+          const _networks = []
+          for (const n of this.networks) {
+            if (n.filecoinAddress0 === 'f') {
+              _account.push({
+                accountName,
+                address: filecoinF1.address,
+                createType: 'mnemonic',
+                privateKey: filecoinF1.privateKey,
+                create_time,
+                khazix: 'khazix',
+                digest: filecoinF1.digest,
+                fil: 0,
+                isDelete: 0,
+                rpc: n.rpc
+              })
+            } else if (n.filecoinAddress0 === 't') {
+              _account.push({
+                accountName,
+                address: calibrationF1.address,
+                createType: 'mnemonic',
+                privateKey: calibrationF1.privateKey,
+                create_time,
+                khazix: 'khazix',
+                digest: calibrationF1.digest,
+                fil: 0,
+                isDelete: 0,
+                rpc: n.rpc
+              })
+            } else {
+              _account.push({
+                accountName,
+                address: ethereumF1.address,
+                createType: 'mnemonic',
+                privateKey: ethereumF1.privateKey,
+                create_time,
+                khazix: 'khazix',
+                digest: ethereumF1.digest,
+                fil: 0,
+                isDelete: 0,
+                rpc: n.rpc
+              })
+            }
+            _networks.push({
+              ...n,
+              deriveIndex: n.deriveIndex + 1
+            })
           }
-        )
-
-        const _accountList = []
-        const _networks = []
-        const _index = this.deriveIndex + 1
-        for (const n of this.networks) {
-          if (n.filecoinAddress0 === 't') {
-            _accountList.push({
-              accountName,
-              address: this.calibrationF1.address,
-              createType: 'mnemonic',
-              privateKey: this.calibrationF1.privateKey,
-              create_time,
-              khazix: 'khazix',
-              digest: this.calibrationF1.digest,
-              rpc: n.rpc,
-              isDelete: 0,
-              fil: 0
-            })
-          } else if (n.filecoinAddress0 === 'f') {
-            _accountList.push({
-              accountName,
-              address: this.filecoinF1.address,
-              createType: 'mnemonic',
-              privateKey: this.filecoinF1.privateKey,
-              create_time,
-              khazix: 'khazix',
-              digest: this.filecoinF1.digest,
-              rpc: n.rpc,
-              isDelete: 0,
-              fil: 0
-            })
+          await this.db.bulkAddTable('accountList', _account)
+          await this.db.bulkPutTable('networks', _networks)
+          this.SET_DERIVEINDEX(this.deriveIndex + 1)
+          this.isFetch = false
+          let activeF1 = null
+          if (this.filecoinAddress0 === 't') {
+            activeF1 = calibrationF1
+          } else if (this.filecoinAddress0 === 'f') {
+            activeF1 = filecoinF1
           } else {
-            _accountList.push({
+            activeF1 = ethereumF1
+          }
+          await this.db.modifyTable(
+            'activeAccount',
+            { rpc: this.rpc },
+            {
+              address: activeF1.address,
               accountName,
-              address: this.ethereumF1.address,
-              createType: 'mnemonic',
-              privateKey: this.ethereumF1.privateKey,
+              privateKey: activeF1.privateKey,
               create_time,
               khazix: 'khazix',
-              digest: this.ethereumF1.digest,
-              rpc: n.rpc,
-              isDelete: 0,
-              fil: 0
-            })
-          }
-          _networks.push({
-            ...n,
-            deriveIndex: _index
-          })
-        }
-
-        await this.db.bulkAddTable('accountList', _accountList)
-        await this.db.bulkPutTable('networks', _networks)
-        await this.db.modifyTable(
-          'activenNetworks',
-          { rpc: this.rpc },
-          { deriveIndex: _index }
-        )
-
-        this.SET_DERIVEINDEX(_index)
+              rpc: this.rpc,
+              fil: 0,
+              createType: 'mnemonic',
+              digest: activeF1.digest
+            }
+          )
+          await this.db.modifyTable(
+            'activenNetworks',
+            { rpc: this.rpc },
+            { deriveIndex: this.deriveIndex + 1 }
+          )
+          window.location.href = './wallet.html'
+        }, 0)
+      } catch (error) {
         this.isFetch = false
-        window.location.href = './wallet.html'
-      } catch (err) {
         this.addAccountVisable = false
-        this.isFetch = false
-        console.log(err, 'add error')
+        console.log(error, 'error')
       }
     },
     closeAdd () {
@@ -354,6 +341,8 @@ export default {
           digest
         }
       )
+      // eslint-disable-next-line no-undef
+      popupToBackground('accountsChanged', { address: [address] })
       window.location.href = './wallet.html'
     },
     async createWallet () {
@@ -361,10 +350,6 @@ export default {
       const addName = 'Account' + (_accountList_.length + 1)
       this.addName = addName
       this.addAccountVisable = true
-
-      setTimeout(async () => {
-        await this.initAdd()
-      }, 100)
     },
     importWallet () {
       window.location.href = './import-privatekey.html'
@@ -406,7 +391,7 @@ export default {
         display: flex;
         align-items: center;
         justify-content: center;
-        z-index: 999;
+        z-index: 99999;
         .img{
             animation:turnX 3s linear infinite;
         }

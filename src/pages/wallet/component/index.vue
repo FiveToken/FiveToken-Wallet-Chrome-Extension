@@ -196,6 +196,16 @@ export default {
             fil: balance
           }
         )
+        await this.db.modifyTable(
+          'accountList',
+          {
+            address: address,
+            rpc: rpc
+          },
+          {
+            fil: balance
+          }
+        )
         this.isLoading = false
         await this.$refs.kyList.getTokenList()
         await this.$refs.kyList.updateActivityList()

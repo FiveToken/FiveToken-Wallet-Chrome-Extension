@@ -95,7 +95,8 @@ export default {
         decimals,
         image,
         disabled,
-        deriveIndex
+        deriveIndex,
+        chainID
       } = obj
       await this.db.addTable('activenNetworks', {
         ...obj,
@@ -116,6 +117,8 @@ export default {
       this.SET_OWENCHAIN(disabled)
       this.SET_RPCIMAGE(image)
       this.SET_DERIVEINDEX(deriveIndex)
+      // eslint-disable-next-line no-undef
+      popupToBackground('chainChanged', { chainID })
       if (accountList.length) {
         // createType mnemonic
         if (currentIsFileCoin === nextIsFileCoin) {

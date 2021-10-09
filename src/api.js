@@ -532,7 +532,6 @@ export class GlobalApi {
           raw: JSON.stringify(signedMsg)
         }
         const proxyRes = await MessagePush(objparams, this.rpc)
-        console.log(proxyRes, 'proxyRes   12312')
 
         if (proxyRes && proxyRes.code === 200) {
           const signed_cid = proxyRes.data

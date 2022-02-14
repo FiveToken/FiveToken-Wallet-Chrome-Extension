@@ -1,5 +1,5 @@
 <template>
-  <layout>
+  <ky-layout>
     <div class="welcome-page">
       <div class="logo-wrap">
         <img class="img" :src="logo" />
@@ -8,18 +8,16 @@
       <div class="sub-title">{{$t('welcome.subTitle1')}}{{$t('welcome.subTitle2')}}</div>
       <!-- <div class="sub-title">{{$t('welcome.subTitle2')}}</div> -->
       <div class="btn-wrap">
-        <kyButton :type="'primary'" :active="active" style="margin-bottom:20px" @btnClick="createWallet">
+        <ky-button :type="'primary'" :active="active" style="margin-bottom:20px" @btnClick="createWallet">
           {{$t('welcome.btn1')}}
-        </kyButton>
-        <kyButton @btnClick="importWallet">{{$t('welcome.btn2')}}</kyButton>
+        </ky-button>
+        <ky-button @btnClick="importWallet">{{$t('welcome.btn2')}}</ky-button>
       </div>
     </div>
-  </layout>
+  </ky-layout>
 </template>
 
 <script>
-import layout from '@/components/layout'
-import kyButton from '@/components/button'
 export default {
   data () {
     return {
@@ -28,16 +26,12 @@ export default {
       bls: null
     }
   },
-  components: {
-    layout,
-    kyButton
-  },
   methods: {
     createWallet () {
       window.location.href = './create-wallet.html?createType=create'
     },
     importWallet () {
-      window.location.href = './create-wallet.html?createType=importWords'
+      window.location.href = './create-wallet.html?createType=importWords&sourceType=import'
     }
   }
 }

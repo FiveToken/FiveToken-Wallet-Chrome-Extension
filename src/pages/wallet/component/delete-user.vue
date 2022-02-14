@@ -6,29 +6,60 @@
            <i class="el-icon-close"></i>
        </div>
        <div class="delete-content">
-           {{$t('wallet.deleteTips')}}
+         <div class="tips"> {{$t('wallet.deleteTips')}} </div>
+          <div class="input-item">
+            <div class="label">{{$t('wallet.deleteLabel')}}</div>
+            <ky-input
+              :value="password"
+              :type="passwordType"
+              :suffix="suffix"
+              @changeInput="passwordChange"
+              @changeEye="passwordEye"
+            >
+            </ky-input>
+        </div>
        </div>
+
        <div class="btn-wrap">
-           <kyButton @btnClick="closeDelete">{{ $t('wallet.cancel') }}</kyButton>
-           <kyButton :type="'primary'" :active="true" @btnClick="confirmDelete">
-               {{ $t('wallet.confirm') }}
-            </kyButton>
+           <ky-button @btnClick="closeDelete">{{ $t('wallet.cancel') }}</ky-button>
+           <ky-button :type="'primary'" :active="active" @btnClick="confirmDelete(active)">
+               {{ $t('wallet.confirmDelete') }}
+            </ky-button>
        </div>
     </div>
 </template>
 
 <script>
-import kyButton from '@/components/button'
+import { mapState } from 'vuex'
+import { decryptByPrivateKey } from '@/utils/encrypt'
 export default {
   data () {
-    return { }
+    return {
+      passwordType: 'password',
+      suffix: true,
+      password: ''
+    }
   },
-  components: {
-    kyButton
+  computed: {
+    ...mapState('app', ['privateKey', 'address']),
+    active () {
+      return this.password !== ''
+    }
   },
   methods: {
-    confirmDelete (val) {
-      this.$emit('confirmDelete')
+    passwordChange (val) {
+      this.password = val
+    },
+    passwordEye (eye) {
+      this.passwordType = eye ? 'text' : 'password'
+    },
+    async confirmDelete (val) {
+      if (val) {
+        const voild = await decryptByPrivateKey(this.privateKey, this.password, this.address)
+        if (voild) {
+          this.$emit('confirmDelete')
+        }
+      }
     },
     closeDelete () {
       this.$emit('closeDelete')
@@ -66,15 +97,11 @@ export default {
     }
     .delete-content{
         padding: 20px;
-        overflow-y: auto;
-        .netwotk-item{
-            height: 50px;
-            line-height: 50px;
-            position: relative;
-            cursor: pointer;
-            color: #131313;
-            font-size: 14px;
-            padding: 0 10px;
+        .tips{
+          margin-bottom: 10px;
+        }
+        .label{
+          margin-bottom: 5px;
         }
     }
     .btn-wrap{
@@ -83,7 +110,7 @@ export default {
         align-items: center;
         padding: 0 20px;
         /deep/.button-wrap{
-            width: 105px;
+            width: 48%;
         }
     }
 }

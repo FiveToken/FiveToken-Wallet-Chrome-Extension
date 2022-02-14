@@ -1,9 +1,10 @@
 /* eslint-disable no-unused-vars */
+const webpack = require('webpack')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
-const UglifyJsPlugin = require('uglifyjs-webpack-plugin')
 const path = require('path')
-const pagesObj = {}
 
+const pagesObj = {}
+const jsObj = {}
 const chromeName = [
   'fiveToken',
   'welcome',
@@ -19,12 +20,20 @@ const chromeName = [
   'lock-user',
   'fiveToken-connect',
   'setting-networks',
+  'setting-password',
   'import-words',
   'import-privatekey',
   'account',
   'message-detail',
   'add-token',
+  'add-account',
   'custom-send-transaction'
+]
+
+const jsName = [
+  'content-script',
+  'popup',
+  'background'
 ]
 
 chromeName.forEach(name => {
@@ -35,26 +44,29 @@ chromeName.forEach(name => {
   }
 })
 
+jsName.forEach(name => {
+  jsObj[name] = {
+    entry: `src/${name}.js`,
+    filename: `pages/${name}.html`
+  }
+})
+
 const plugins = [
   {
-    from: path.resolve('src/page-script.js'),
-    to: `${path.resolve('dist')}/js/page-script.js`
-  },
-  {
-    from: path.resolve('src/popup.js'),
-    to: `${path.resolve('dist')}/js/popup.js`
-  },
-  {
-    from: path.resolve('src/background.js'),
-    to: `${path.resolve('dist')}/js/background.js`
-  },
-  {
-    from: path.resolve('src/manifest.production.json'),
-    to: `${path.resolve('dist')}/manifest.json`
+    from: path.resolve('src/assets/style/common.css'),
+    to: `${path.resolve('dist')}/css/common.css`
   },
   {
     from: path.resolve('src/assets/image'),
-    to: `${path.resolve('dist')}/assets/image`
+    to: `${path.resolve('dist')}/img`
+  },
+  {
+    from: path.resolve('src/inject.js'),
+    to: `${path.resolve('dist')}/js/inject.js`
+  },
+  {
+    from: path.resolve('src/manifest.json'),
+    to: `${path.resolve('dist')}/manifest.json`
   }
 ]
 
@@ -63,47 +75,31 @@ function resolve (dir) {
 }
 
 module.exports = {
-  pages: pagesObj,
-  productionSourceMap: false,
-  filenameHashing: false,
-  chainWebpack: config => {
-    config.resolve.alias.set('@', resolve('src'))
-    config.optimization.minimize(true)
-    config.optimization.splitChunks({
-      chunks: 'async',
-      minSize: 30000,
-      maxSize: 0,
-      minChunks: 1,
-      maxAsyncRequests: 6,
-      maxInitialRequests: 4,
-      automaticNameDelimiter: '~',
-      cacheGroups: {
-        vendors: {
-          name: 'chunk-vendors',
-          test: /[\\/]node_modules[\\/]/,
-          priority: -10,
-          chunks: 'initial'
-        },
-        common: {
-          name: 'chunk-common',
-          minChunks: 2,
-          priority: -20,
-          chunks: 'initial',
-          reuseExistingChunk: true
-        }
-      }
-    })
+  pages: {
+    ...pagesObj,
+    ...jsObj
   },
+  productionSourceMap: true,
+  filenameHashing: false,
   configureWebpack: {
-    plugins: [
-      new UglifyJsPlugin({
-        uglifyOptions: {
-          compress: {
-            drop_console: true
+    devtool: 'cheap-module-source-map',
+    optimization: {
+      splitChunks: {
+        cacheGroups: {
+          vendor: {
+            chunks: 'all',
+            test: /[\\/]node_modules[\\/]/,
+            name: 'chunk-vendors',
+            minChunks: 2,
+            maxInitialRequests: 5,
+            minSize: 30000,
+            priority: 100
           }
         }
-      }),
-      CopyWebpackPlugin(plugins)
+      }
+    },
+    plugins: [
+      new CopyWebpackPlugin(plugins)
     ]
   }
 }

@@ -3,8 +3,8 @@ import pageComponent from './component/index.vue'
 import i18n from '../../i18n'
 import router from '../../router'
 import store from '../../store'
-
 import { Input, Dialog, Icon, Button, Message } from 'element-ui'
+import '../../components/index'
 Vue.component('pageComponent', pageComponent)
 Vue.use(Input)
 Vue.use(Dialog)

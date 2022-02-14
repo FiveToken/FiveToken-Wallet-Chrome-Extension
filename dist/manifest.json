@@ -1,0 +1,42 @@
+{
+    "manifest_version": 2,
+    "name": "FiveToken",
+    "description": "chrome FiveToken extension",
+    "version": "1.3.0",
+    "options_page": "pages/fiveToken.html",
+    "icons":{
+		"16": "img/logo.png",
+		"48": "img/logo.png",
+		"128": "img/logo.png"
+	},
+    "browser_action": {
+        "default_icon": "img/logo.png",
+		"default_title": "fiveToken",
+        "default_popup": "pages/fiveToken.html"
+    },
+    "permissions":[
+        "storage",
+        "unlimitedStorage",
+		"http://*/*",
+		"https://*/*"
+    ],
+    "web_accessible_resources":[
+        "js/inject.js"
+    ],
+    "content_scripts": [
+        {
+            "matches": [
+                "<all_urls>"
+            ],
+            "js": [
+                "js/chunk-vendors.js",
+                "js/content-script.js"
+            ],
+            "run_at": "document_start"
+        }
+    ],
+    "background":{
+		"scripts": ["js/chunk-vendors.js","js/background.js"],
+        "persistent": false
+	}
+}

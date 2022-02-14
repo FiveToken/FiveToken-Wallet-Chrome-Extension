@@ -2,38 +2,71 @@
 <div class="step-1-component">
     <div class="send-fil-box">
         <div class="back-wrap">
-            <kyBack :name="$t('sendFil.send')" @pageBack="sendBack" />
+            <ky-back
+              :name="$t('sendFil.send')"
+              @pageBack="sendBack"
+            ></ky-back>
         </div>
         <div class="send-content">
             <div class="input-item">
-                <div class="label">{{$t('sendFil.token')}}</div>
-                <div class="value" @click="tokenVisible = true">
-                    <div class="main-logo" v-if="formData.isMain">
-                        <div class="logo" v-if="activenNetworks.length">
+                <div class="label">
+                  {{$t('sendFil.token')}}
+                </div>
+                <div
+                  class="value"
+                  @click="tokenVisible = true"
+                >
+                    <div
+                      class="main-logo"
+                      v-if="formData.isMain === 1"
+                    >
+                        <div
+                          class="logo"
+                          v-if="activeNetwork.length"
+                        >
                             <div class="img-wrap" v-if="owenChain">
-                                <img class="img" :src="require(`@/assets/svg/${chainImg}`)"/>
+                                <img
+                                  class="img"
+                                  :src="require(`@/assets/svg/${chainImg}`)"
+                                />
                             </div>
-                            <div class="custom-img" v-else>{{chainName.substring(0,1)}}</div>
+                            <div v-else class="custom-img">
+                              {{chainName.substring(0,1)}}
+                            </div>
                         </div>
                     </div>
-                    <div class="token-logo" v-else>
+                    <div v-if="formData.isMain === 0" class="token-logo">
                         <div class="logo">
-                            <kyCanvas :contract="formData.contract" />
+                            <ky-canvas :contract="formData.contract"></ky-canvas>
                         </div>
                     </div>
-                    <div class="token">{{formData.symbol}}</div>
-                    <div class="name">{{formData.chainName}}</div>
+                    <div class="token">
+                      {{formData.symbol}}
+                    </div>
+                    <div class="name">
+                      {{formData.chainName}}
+                    </div>
                     <div class="icon">
                         <i class="el-icon-arrow-right"></i>
                     </div>
                 </div>
             </div>
             <div class="input-item">
-                <div class="label">{{$t('sendFil.toAddress')}}</div>
+                <div class="label">
+                  {{$t('sendFil.toAddress')}}
+                </div>
                 <div class="value">
-                    <div class="name" v-if="formData.toName">{{formData.toName.substring(0,8)}}</div>
+                    <div
+                      class="name"
+                      v-if="formData.toName"
+                    >
+                      {{formData.toName.substring(0,8)}}
+                    </div>
                     <div class="address">
-                        <kyInput :value="formData.to" @changeInput="toChange"/>
+                        <ky-input
+                          :value="formData.to"
+                          @changeInput="toChange"
+                        ></ky-input>
                     </div>
                     <div class="icon" @click="addressVisible = true">
                         <i class="el-icon-notebook-1"></i>
@@ -43,26 +76,31 @@
             <div class="input-item">
                 <div class="label">{{$t('sendFil.number')}}</div>
                 <div class="value">
-                    <kyInput
-                        :value="formData.fil"
-                        type="number"
-                        @keydown.native="channelInputLimit"
-                        @changeInput="filChange"
-                    />
+                    <ky-input
+                      :value="formData.fil"
+                      type="number"
+                      @keydown.native="channelInputLimit"
+                      @changeInput="filChange"
+                    ></ky-input>
                     <div class="all" @click="allFil">{{$t('sendFil.all')}}</div>
                 </div>
-                <div class="available">
+                <div class="available" v-if="onLine">
                     {{ $t('sendFil.available') }} :
                     {{ formData.balance | formatBalance(12)}}
                     {{ formData.symbol }}
                 </div>
+                <div class="available" v-else>---</div>
             </div>
         </div>
         <div class="position">
             <div class="btn-wrap">
-                <kyButton :type="'primary'" :active="active" @btnClick="next">
+                <ky-button
+                  :type="'primary'"
+                  :active="active"
+                  @btnClick="next"
+                >
                     {{$t('sendFil.send')}}
-                </kyButton>
+                </ky-button>
             </div>
         </div>
 
@@ -73,10 +111,11 @@
             :top="'0'"
             :show-close="false"
         >
-            <kyToken
+            <select-token
                 @selectToken="selectToken"
                 @colseToken="tokenVisible = false"
-            />
+            >
+            </select-token>
         </el-dialog>
         <el-dialog
             :visible.sync="addressVisible"
@@ -85,29 +124,32 @@
             :top="'0'"
             :show-close="false"
         >
-            <kyAddress
-                @selectAddress="selectAddress"
-                @colseAddress="addressVisible = false"
-            />
+            <select-address
+              @selectAddress="selectAddress"
+              @colseAddress="addressVisible = false"
+            >
+            </select-address>
         </el-dialog>
     </div>
 </div>
 </template>
 
 <script>
-import kyBack from '@/components/back'
-import kyInput from '@/components/input'
-import kyButton from '@/components/button'
-import kyAddress from './address.vue'
-import kyToken from './token.vue'
-import kyCanvas from '@/components/canvas'
+import selectAddress from './select-address.vue'
+import selectToken from './select-token.vue'
 import { isValidAddress, formatNumber } from '@/utils'
 import { mapState } from 'vuex'
 import { BigNumber } from 'bignumber.js'
 export default {
+  components: {
+    selectAddress,
+    selectToken
+  },
+  props: {
+    formData: Object
+  },
   data () {
     return {
-      // send-fil  select-token  select-address
       pageType: 'send-fil',
       tokenVisible: false,
       addressVisible: false,
@@ -117,62 +159,57 @@ export default {
       addressBook: []
     }
   },
-  props: {
-    formData: Object
-  },
   computed: {
     ...mapState('app', [
       'rpc',
       'symbol',
+      'address',
       'networkType',
       'decimals',
-      'activenNetworks'
+      'activeNetwork',
+      'onLine'
     ]),
     active () {
       return this.formData.to !== '' && this.formData.fil !== ''
     },
     owenChain () {
       let volid = false
-      if (this.activenNetworks.length) {
-        volid = this.activenNetworks[0].disabled
+      if (this.activeNetwork) {
+        volid = this.activeNetwork.disabled
       }
       return volid
     },
     chainImg () {
       let src = ''
-      if (this.activenNetworks.length) {
-        src = this.activenNetworks[0].image
+      if (this.activeNetwork) {
+        src = this.activeNetwork.image
       }
       return src
     },
     chainName () {
       let name = ''
-      if (this.activenNetworks.length) {
-        name = this.activenNetworks[0].name
+      if (this.activeNetwork) {
+        name = this.activeNetwork.name
       }
       return name
     }
   },
   filters: {
     formatBalance (val, n) {
-      const dec = Number(val)
-      const big = new BigNumber(dec)
-      const str = big.toFixed()
-      const num = formatNumber(str, n)
-      return num
+      if (val) {
+        const dec = Number(val)
+        const big = new BigNumber(dec)
+        const str = big.toFixed()
+        const num = formatNumber(str, n)
+        return num
+      } else {
+        return 0
+      }
     }
-  },
-  components: {
-    kyBack,
-    kyInput,
-    kyButton,
-    kyAddress,
-    kyToken,
-    kyCanvas
   },
   methods: {
     sendBack () {
-      this.$router.go(-1)
+      window.location.href = './wallet.html'
     },
     selectToken (obj) {
       this.tokenVisible = false
@@ -213,11 +250,17 @@ export default {
     allFil () {
       this.$emit('formDataChange', { key: 'isAll', value: 1 })
     },
-    next () {
+    async next () {
       if (this.active) {
-        const volid = isValidAddress(this.formData.to, this.networkType)
+        const to = this.formData.to.toLowerCase()
+        const from = this.address.toLowerCase()
+        const volid = await isValidAddress(to, this.networkType)
         if (volid) {
-          this.$emit('next')
+          if (from === to) {
+            this.$message.error(this.$t('sendFil.sameAddressError'))
+          } else {
+            this.$emit('next')
+          }
         } else {
           this.$message.error(this.$t('sendFil.addressError'))
         }

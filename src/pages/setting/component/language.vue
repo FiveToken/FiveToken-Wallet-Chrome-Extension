@@ -25,9 +25,6 @@ export default {
       'language'
     ])
   },
-  mounted () {
-    // const language = window.localStorage.getItem('fiveTokenLanguage')
-  },
   methods: {
     confirm (val) {
       this.$emit('confirm', val)

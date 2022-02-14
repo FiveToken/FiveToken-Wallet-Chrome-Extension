@@ -22,26 +22,24 @@
           </div>
         </div>
         <div class="btn-wrap">
-          <kyButton @btnClick="cancel">{{$t('fiveTokenContent.cancel')}}</kyButton>
-          <kyButton type="primary" :active='active' @btnClick="connect">{{$t('fiveTokenContent.connect')}}</kyButton>
+          <ky-button @btnClick="cancel">{{$t('fiveTokenContent.cancel')}}</ky-button>
+          <ky-button type="primary" :active='active' @btnClick="connect">{{$t('fiveTokenContent.connect')}}</ky-button>
         </div>
       </div>
 </template>
 
 <script>
-import kyButton from '@/components/button'
-
 export default {
+  props: {
+    origin: String,
+    accountList: Array,
+    checkList: Array
+  },
   data () {
     return {
       logo: require('@/assets/image/logo.png'),
       active: true
     }
-  },
-  props: {
-    origin: String,
-    accountList: Array,
-    checkList: Array
   },
   computed: {
     checkedAccount () {
@@ -50,9 +48,6 @@ export default {
       })
       return list
     }
-  },
-  components: {
-    kyButton
   },
   filters: {
     formatAddress (address) {

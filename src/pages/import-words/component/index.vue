@@ -1,49 +1,42 @@
 <template>
-    <layout @layoutMounted="layoutMounted">
+    <ky-layout @layoutMounted="layoutMounted">
         <div class="import-words">
-            <kyBack @pageBack="back"></kyBack>
-            <div class="title">{{$t('importWords.title')}}</div>
+            <ky-back @pageBack="back"></ky-back>
+            <div class="title">{{ sourceType === 'recovery'? $t('creatWallet.recoveryWords') : $t('importWords.title')}}</div>
             <div class="sub-title">{{$t('importWords.subTitle')}}</div>
-
             <div class="input-item" :class="{error}">
-                <kyInput
+                <ky-input
                     :value="form.mnemonicWords"
                     type="textarea"
                     :rows="3"
                     @focus="focus"
                     @changeInput="mnemonicWordsChange"
                 >
-                </kyInput>
+                </ky-input>
             </div>
             <div class="error-tips" v-if="error">{{ $t('importWords.error') }}</div>
             <div class="tips" v-else>{{ $t('importWords.tips') }}</div>
 
             <div class="btn-wrap">
-                <kyButton
+                <ky-button
                     :type="'primary'"
                     :active='active'
                     @btnClick="importWallet"
                 >
                     {{$t('importWords.btn')}}
-                </kyButton>
+                </ky-button>
             </div>
             <div class="loading" v-if="isFetch">
                 <img :src="loading" alt="" class="img">
             </div>
         </div>
-    </layout>
+    </ky-layout>
 </template>
-
 <script>
-import { getQueryString, trimStr, getF1ByMne, setGlabolKek } from '@/utils'
-import { genSalt, genKek, AESEncrypt } from '@/utils/key'
-import layout from '@/components/layout'
-import kyButton from '@/components/button'
-import kyInput from '@/components/input'
-import kyBack from '@/components/back'
+import { getQueryString, trimStr } from '@/utils'
+import { encryptCreate } from '@/utils/encrypt'
 import { mapMutations, mapState } from 'vuex'
 import * as bip39 from 'bip39'
-import { Database } from '@/utils/database.js'
 export default {
   data () {
     return {
@@ -56,7 +49,8 @@ export default {
         accountName: '',
         password: ''
       },
-      error: false
+      error: false,
+      sourceType: ''
     }
   },
   computed: {
@@ -75,19 +69,13 @@ export default {
       return bol
     }
   },
-  components: {
-    layout,
-    kyInput,
-    kyBack,
-    kyButton
-  },
   mounted () {
     const password = getQueryString('password')
+    const sourceType = getQueryString('sourceType')
+    this.sourceType = sourceType
     const accountName = decodeURIComponent(this.getQuery('accountName'))
     this.$set(this.form, 'accountName', accountName)
     this.$set(this.form, 'password', password)
-    const db = new Database()
-    this.db = db
   },
   methods: {
     ...mapMutations('app', [
@@ -100,100 +88,22 @@ export default {
       try {
         const mneWords = trimStr(this.form.mnemonicWords)
         const nospace = mneWords.replace(/\s+/ig, ' ')
-        console.log(nospace, 'nospace')
         const volid = bip39.validateMnemonic(nospace)
         if (volid) {
           this.isFetch = true
           this.error = false
+          const { password, accountName } = this.form
+          const options = {
+            accountName,
+            password,
+            mnemonicWords: nospace,
+            networks: this.networks,
+            rpc: this.rpc,
+            createType: 'import'
+          }
+          this.SET_DERIVEINDEX(1)
           setTimeout(async () => {
-            const kek = genKek(this.form.password)
-            // let f1 = await getF1ByMne(mneWords,kek,this.networkType,this.filecoinAddress0,index)
-            const ethereumF1 = await getF1ByMne(nospace, kek, 'ethereum', '', 0)
-            const filecoinF1 = await getF1ByMne(nospace, kek, 'proxy', 'f', 0)
-            const calibrationF1 = await getF1ByMne(nospace, kek, 'proxy', 't', 0)
-            console.log(calibrationF1, filecoinF1, 'calibrationF1')
-            const { address, privateKey, digest } = filecoinF1
-            // eslint-disable-next-line camelcase
-            const create_time = parseInt(new Date().getTime() / 1000)
-            const accountName = this.form.accountName
-            this.SET_DERIVEINDEX(1)
-            await this.db.modifyTable(
-              'activenNetworks',
-              { rpc: this.rpc },
-              { deriveIndex: 1 }
-            )
-            const _account = []
-            const _networks = []
-            for (const n of this.networks) {
-              if (n.filecoinAddress0 === 'f') {
-                _account.push({
-                  accountName,
-                  address: filecoinF1.address,
-                  createType: 'mnemonic',
-                  privateKey: filecoinF1.privateKey,
-                  create_time,
-                  khazix: 'khazix',
-                  digest: filecoinF1.digest,
-                  fil: 0,
-                  isDelete: 0,
-                  rpc: n.rpc
-                })
-              } else if (n.filecoinAddress0 === 't') {
-                _account.push({
-                  accountName,
-                  address: calibrationF1.address,
-                  createType: 'mnemonic',
-                  privateKey: calibrationF1.privateKey,
-                  create_time,
-                  khazix: 'khazix',
-                  digest: calibrationF1.digest,
-                  fil: 0,
-                  isDelete: 0,
-                  rpc: n.rpc
-                })
-              } else {
-                _account.push({
-                  accountName,
-                  address: ethereumF1.address,
-                  createType: 'mnemonic',
-                  privateKey: ethereumF1.privateKey,
-                  create_time,
-                  khazix: 'khazix',
-                  digest: ethereumF1.digest,
-                  fil: 0,
-                  isDelete: 0,
-                  rpc: n.rpc
-                })
-
-                _networks.push({
-                  ...n,
-                  deriveIndex: 1
-                })
-              }
-            }
-            await this.db.bulkAddTable('accountList', _account)
-            await this.db.bulkPutTable('networks', _networks)
-            await this.db.addTable('activeAccount', {
-              address,
-              accountName,
-              privateKey,
-              create_time,
-              khazix: 'khazix',
-              createType: 'mnemonic',
-              fil: 0,
-              digest,
-              rpc: this.rpc
-            })
-            const salt = genSalt(this.form.password)
-            setGlabolKek(kek)
-            const mnemonic = AESEncrypt(mneWords, kek)
-
-            await this.db.addTable('walletKey', {
-              mnemonicWords: mnemonic,
-              salt,
-              rpc: this.rpc,
-              khazix: 'khazix'
-            })
+            await encryptCreate(options, this.sourceType, this.$t('defaultNetworks'))
             this.isFetch = false
             window.location.href = './wallet.html'
           }, 0)
@@ -201,7 +111,7 @@ export default {
           this.error = true
         }
       } catch (error) {
-        console.log(error, 'error')
+        this.isFetch = false
       }
     },
     focus () {

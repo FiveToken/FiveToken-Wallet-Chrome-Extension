@@ -20,12 +20,12 @@
 
 <script>
 export default {
-  data () {
-    return { }
-  },
   props: {
     networks: Array,
     net: String
+  },
+  data () {
+    return { }
   },
   methods: {
     confirmNet (val) {

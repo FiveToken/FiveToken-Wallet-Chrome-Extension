@@ -1,5 +1,5 @@
 /* eslint-disable no-undef */
-import { GlobalApi } from '@/api'
+import { GlobalApi } from '@/api/index.js'
 
 test('fn GlobalApi()', async () => {
   const MyGlobalApi = new GlobalApi()

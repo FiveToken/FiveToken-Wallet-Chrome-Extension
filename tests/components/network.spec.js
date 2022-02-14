@@ -1,14 +1,13 @@
 /* eslint-disable no-undef */
 import { shallowMount, createLocalVue } from '@vue/test-utils'
 import Vuex from 'vuex'
-import { Database } from '@/utils/database.js'
-import kyNetwork from '@/components/header/network.vue'
-const Dexie = require('dexie')
-Dexie.dependencies.indexedDB = require('fake-indexeddb')
-Dexie.dependencies.IDBKeyRange = require('fake-indexeddb/lib/FDBKeyRange')
-
+import ExtensionStore from '@/utils/local-store'
+import kyNetwork from '@/components/network/src/index.vue'
+import { mocksData } from '../mock'
+import elementUI from 'element-ui'
 const localVue = createLocalVue()
 localVue.use(Vuex)
+localVue.use(elementUI)
 
 const networks = [
   {
@@ -18,7 +17,6 @@ const networks = [
     symbol: 'FIL',
     ids: 'filecoin',
     browser: 'https://filscan.io',
-    khazix: 'khazix',
     networkType: 'proxy',
     filecoinAddress0: 'f',
     decimals: 18,
@@ -33,7 +31,6 @@ const networks = [
     symbol: 'FIL',
     ids: 'filecoin',
     browser: 'https://calibration.filscan.io',
-    khazix: 'khazix',
     networkType: 'proxy',
     filecoinAddress0: 't',
     decimals: 18,
@@ -48,7 +45,6 @@ const networks = [
     symbol: 'BNB',
     ids: 'binancecoin',
     browser: 'https://testnet.bscscan.com',
-    khazix: 'khazix',
     networkType: 'ethereum',
     filecoinAddress0: '',
     decimals: 18,
@@ -57,14 +53,13 @@ const networks = [
     deriveIndex: 0
   }
 ]
-const activenNetworks = {
+const activeNetwork = {
   name: 'Filcoin Mainnet',
   rpc: 'https://api.fivetoken.io',
   chainID: '',
   symbol: 'FIL',
   ids: 'filecoin',
   browser: 'https://filscan.io',
-  khazix: 'khazix',
   networkType: 'proxy',
   filecoinAddress0: 'f',
   decimals: 18,
@@ -78,8 +73,6 @@ const accountList = {
   createType: 'mnemonic',
   digest: '6u5t8LsDu1Y+QZkN',
   fil: 0,
-  isDelete: 0,
-  khazix: 'khazix',
   privateKey: 'ac9bda1e19100c4728cd5d60a5506d81330e91de7592f20716fe4cb879692536e367504ab9a684c5c378e21e',
   rpc: 'https://api.fivetoken.io'
 }
@@ -89,17 +82,25 @@ const activeAccount = {
   createType: 'mnemonic',
   digest: '6u5t8LsDu1Y+QZkN',
   fil: 0,
-  isDelete: 0,
-  khazix: 'khazix',
   privateKey: 'ac9bda1e19100c4728cd5d60a5506d81330e91de7592f20716fe4cb879692536e367504ab9a684c5c378e21e',
   rpc: 'https://api.fivetoken.io'
 }
+
+jest.mock('@/utils/local-store', () => (class ExtensionStore {
+  get (key) {
+    return mocksData[key]
+  }
+
+  set () {
+    jest.fn()
+  }
+}))
 
 describe('network component', () => {
   let store
   let state
   let mutations
-  let db
+  let localStore
   const assignMock = jest.fn()
   delete window.location
   window.location = { assign: assignMock }
@@ -107,16 +108,17 @@ describe('network component', () => {
     assignMock.mockClear()
   })
   beforeEach(() => {
-    db = new Database()
-    db.bulkAddTable('networks', networks)
-    db.addTable('activenNetworks', activenNetworks)
-    db.addTable('accountList', accountList)
-    db.addTable('activeAccount', activeAccount)
+    localStore = new ExtensionStore()
+    localStore.set({ networks: networks })
+    localStore.set({ activeNetwork: activeNetwork })
+    localStore.set({ accountList: accountList })
+    localStore.set({ activeAccount: activeAccount })
 
     state = {
       address: () => 'f1ntv4qlgoi55wqqxrxxolatfdgn7xvu7vfhrkcfq',
       networkType: () => 'proxy',
-      networks: () => networks
+      networks: () => networks,
+      activeAccount: []
     }
     mutations = {
       SET_ADDRESS: (state, data) => {
@@ -131,8 +133,8 @@ describe('network component', () => {
       SET_DIGEST: (state, data) => {
         state.digest = data
       },
-      SET_ACTIVENETWORKS: (state, data) => {
-        state.activenNetworks = data
+      SET_ACTIVETWORKS: (state, data) => {
+        state.activeNetwork = data
       },
       SET_LANGUAGE: (state, data) => {
         state.language = data
@@ -178,6 +180,9 @@ describe('network component', () => {
       },
       SET_RPCIMAGE: (state, data) => {
         state.rpcImage = data
+      },
+      SET_ACTIVEACCOUNT: (state, data) => {
+        state.activeAccount = data
       }
     }
     store = new Vuex.Store({
@@ -200,12 +205,22 @@ describe('network component', () => {
       localVue,
       store,
       mocks: {
-        $t: key => key
+        $t: key => key,
+        chrome: {
+          runtime: {
+            onMessage: {
+              addListener: jest.fn()
+            }
+          }
+        }
       },
       data () {
         return {
-          db
+          localStore
         }
+      },
+      stubs: {
+        'el-message': true
       }
     })
     expect(wrapper.html()).toContain('select-network-component')
@@ -215,23 +230,6 @@ describe('network component', () => {
     customItem.trigger('click')
     const customHref = window.location.href
     expect(customHref).toBe('./setting-networks.html')
-    const obj = {
-      name: 'Binance TEST',
-      rpc: 'https://data-seed-prebsc-1-s1.binance.org:8545',
-      chainID: '56',
-      symbol: 'BNB',
-      ids: 'binancecoin',
-      browser: 'https://testnet.bscscan.com',
-      khazix: 'khazix',
-      networkType: 'ethereum',
-      filecoinAddress0: '',
-      decimals: 18,
-      image: 'bnb.svg',
-      disabled: true,
-      deriveIndex: 0
-    }
-    // await wrapper.vm.confirmNetwork(obj)
-    // expect(store.state.app.rpc).toBe('https://data-seed-prebsc-1-s1.binance.org:8545')
 
     const acc = {
       address: 'f1ntv4qlgoi55wqqxrxxolatfdgn7xvu7vfhrkcfq',
@@ -239,10 +237,32 @@ describe('network component', () => {
       privateKey: '98b983395737275c208f5b6884180cbc7575e7c208dba4621da300fc5248046ec7224a209285b4e9e770fa1e',
       digest: 'zBUjeDDJuuDAPNQF',
       createType: 'mnemonic',
-      create_time: 1631613193,
+      createTime: 1631613193,
       rpc: 'https://api.fivetoken.io'
     }
     await wrapper.vm.changeAccount(acc)
     expect(store.state.app.address).toBe('f1ntv4qlgoi55wqqxrxxolatfdgn7xvu7vfhrkcfq')
+
+    const obj = {
+      name: 'Binance TEST',
+      rpc: 'https://data-seed-prebsc-1-s1.binance.org:8545',
+      chainID: '56',
+      symbol: 'BNB',
+      ids: 'binancecoin',
+      browser: 'https://testnet.bscscan.com',
+      networkType: 'ethereum',
+      filecoinAddress0: '',
+      decimals: 18,
+      image: 'bnb.svg',
+      disabled: true,
+      deriveIndex: 0
+    }
+    await wrapper.vm.changeNetwork(obj)
+    expect(obj.rpc).toBe('https://data-seed-prebsc-1-s1.binance.org:8545')
   })
 })
+
+// test('ethers ', async () => {
+//   const string = 'hello'
+//   expect(string).toBe('hello')
+// })

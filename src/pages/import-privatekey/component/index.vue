@@ -1,24 +1,26 @@
 <template>
-    <layout @layoutMounted="layoutMounted">
+    <ky-layout @layoutMounted="layoutMounted">
         <div class="import-privatkey">
-            <kyBack @pageBack="back"/>
+            <ky-back @pageBack="back"/>
             <div class="title">{{$t('importPrivatkey.title')}}</div>
-            <div class="input-item">
+            <div class="import-content">
+              <div class="input-item">
                 <div class="label">{{$t('importPrivatkey.label1')}}</div>
                 <div class="select-network" @click="selectNet">
                     <div class="value">{{ netName }}</div>
                     <i class="el-icon-arrow-right"></i>
                 </div>
+              </div>
+              <div class="input-item">
+                  <div class="label">{{$t('importPrivatkey.label2')}}</div>
+                  <ky-input :value="privatekey" type="textarea" :rows="3" @changeInput="privatekeyChange"></ky-input>
+              </div>
             </div>
 
-            <div class="input-item">
-                <div class="label">{{$t('importPrivatkey.label2')}}</div>
-                <kyInput :value="privatekey" type="textarea" :rows="3" @changeInput="privatekeyChange"></kyInput>
-            </div>
             <div class="btn-wrap">
-                <kyButton :type="'primary'" :active="active" @btnClick="importWallet">
+                <ky-button :type="'primary'" :active="active" @btnClick="importWallet">
                     {{$t('importPrivatkey.btn')}}
-                </kyButton>
+                </ky-button>
             </div>
             <div class="loading" v-if="isFetch">
                 <img :src="loading" alt="" class="img">
@@ -32,20 +34,35 @@
         >
             <kyNetwork :networks="networks" @confirmNet="confirmNet" @closeNet="closeNet" :net="net"/>
         </el-dialog>
-    </layout>
+
+        <el-dialog
+          :visible.sync="passwordVisable"
+          width="300px"
+          :show-close="false"
+          class="password-verification"
+          :top="'34vh'"
+        >
+          <password-verification
+            v-if="passwordVisable"
+            @confirm="confirmPassword"
+            @close="closePassword"
+          >
+          </password-verification>
+        </el-dialog>
+    </ky-layout>
 </template>
 
 <script>
-import { trimStr, getF1ByPrivateKey, isFilecoinChain, getGlobalKek } from '@/utils'
-import layout from '@/components/layout'
-import kyInput from '@/components/input'
-import kyButton from '@/components/button'
-import kyBack from '@/components/back'
+import passwordVerification from '@/components/password-verification'
+import { trimStr, getF1ByPrivateKey, isFilecoinChain } from '@/utils'
 import kyNetwork from './select-network.vue'
 import { mapMutations, mapState } from 'vuex'
-
-import { Database } from '@/utils/database.js'
+import { importCreate } from '@/utils/encrypt'
 export default {
+  components: {
+    passwordVerification,
+    kyNetwork
+  },
   data () {
     return {
       loading: require('@/assets/image/loading.png'),
@@ -54,11 +71,9 @@ export default {
       center: true,
       net: '',
       networkVisible: false,
+      passwordVisable: false,
       mnePsd: null,
-      customNetworkType: '',
-      customFilecoinAddress0: '',
-      kek: null,
-      db: null
+      customNetwork: ''
     }
   },
   computed: {
@@ -66,10 +81,7 @@ export default {
       'rpc',
       'networks',
       'accountList',
-      'activeAccount',
-      'networkType',
-      'filecoinAddress0',
-      'deriveIndex'
+      'activeNetwork'
     ]),
     active () {
       return this.net !== '' && this.privatekey !== ''
@@ -85,38 +97,14 @@ export default {
       return str
     }
   },
-  components: {
-    layout,
-    kyInput,
-    kyButton,
-    kyBack,
-    kyNetwork
-  },
-  async mounted () {
-    const kek = getGlobalKek()
-    this.kek = kek
-    const db = new Database()
-    this.db = db
-  },
   methods: {
     ...mapMutations('app', [
-      'SET_RPC',
-      'SET_RPCNAME',
-      'SET_BROWSER',
       'SET_ACCOUNTLIST',
-      'SET_SYMBOL',
-      'SET_IDS',
-      'SET_NETWORKTYPE',
-      'SET_FILECOINADDRESS0',
-      'SET_DECIMALS',
-      'SET_OWENCHAIN',
-      'SET_RPCIMAGE',
-      'SET_DERIVEINDEX'
+      'SET_CUSTOMNETWORK'
     ]),
     async layoutMounted () {
       this.net = this.rpc
-      this.customNetworkType = this.networkType
-      this.customFilecoinAddress0 = this.filecoinAddress0
+      this.customNetwork = this.activeNetwork
     },
     privatekeyChange (val) {
       this.privatekey = val
@@ -125,146 +113,82 @@ export default {
       this.networkVisible = true
     },
     confirmNet (val) {
-      console.log(val, 'val 1234')
       this.net = val.rpc
-      this.customNetworkType = val.networkType
-      this.customFilecoinAddress0 = val.filecoinAddress0
+      this.customNetwork = val
       this.networkVisible = false
     },
     closeNet () {
       this.networkVisible = false
     },
-    async importWallet () {
-      if (this.privatekey) {
-        try {
-          this.isFetch = true
-          const f1 = await this.getf1ByCK()
-          if (f1) {
-            const { address, privateKey, digest } = f1
-            const isExist = this.accountList.find(n => {
-              return n.address === address
-            })
-            if (!isExist) {
-              let obj = null
-              const isFileCoin = isFilecoinChain(this.customNetworkType)
-              const _account = []
-              const _accountList_ = await this.db.getTable('accountList', { rpc: this.rpc })
-              const accountName = 'Account' + (_accountList_.length + 1)
-              // eslint-disable-next-line camelcase
-              const create_time = parseInt(new Date().getTime() / 1000)
-              this.networks.forEach(n => {
-                if (n.rpc === this.net) {
-                  obj = n
-                }
-                if (isFileCoin === isFilecoinChain(n.networkType)) {
-                  if (isFileCoin) {
-                    const _add = address.substring(1, address.length)
-                    _account.push({
-                      accountName,
-                      address: n.filecoinAddress0 + _add,
-                      createType: 'privateKey',
-                      privateKey,
-                      create_time,
-                      khazix: 'khazix',
-                      digest,
-                      fil: 0,
-                      isDelete: 0,
-                      rpc: n.rpc
-                    })
-                  } else {
-                    _account.push({
-                      accountName,
-                      address,
-                      createType: 'privateKey',
-                      privateKey,
-                      create_time,
-                      khazix: 'khazix',
-                      digest,
-                      isDelete: 0,
-                      fil: 0,
-                      rpc: n.rpc
-                    })
-                  }
-                }
-              })
-              const {
-                name,
-                rpc,
-                symbol,
-                browser,
-                networkType,
-                filecoinAddress0,
-                ids,
-                decimals,
-                image,
-                disabled,
-                deriveIndex
-              } = obj
-              await this.db.bulkAddTable('accountList', _account)
-              await this.db.deleteTable('activeAccount', { khazix: 'khazix' })
-              await this.db.addTable('activeAccount', {
-                address,
-                accountName,
-                privateKey,
-                create_time,
-                khazix: 'khazix',
-                createType: 'privateKey',
-                fil: 0,
-                digest,
-                rpc: this.net
-              })
-              await this.db.deleteTable('activenNetworks', { khazix: 'khazix' })
-              await this.db.addTable('activenNetworks', {
-                ...obj,
-                khazix: 'khazix'
-              })
-              const accountList = await this.db.getTable('accountList', { rpc: rpc, isDelete: 0 })
-              this.SET_RPC(rpc)
-              this.SET_RPCNAME(name)
-              this.SET_BROWSER(browser)
-              this.SET_ACCOUNTLIST(accountList)
-              this.SET_SYMBOL(symbol)
-              this.SET_IDS(ids)
-              this.SET_NETWORKTYPE(networkType)
-              this.SET_FILECOINADDRESS0(filecoinAddress0)
-              this.SET_DECIMALS(decimals)
-              this.SET_OWENCHAIN(disabled)
-              this.SET_RPCIMAGE(image)
-              this.SET_DERIVEINDEX(deriveIndex)
-              this.isFetch = false
-              window.location.href = './wallet.html'
-            } else {
-              this.isFetch = false
-              this.$message.error(this.$t('importPrivatkey.exist'))
-            }
+    async confirmPassword (password) {
+      this.passwordVisable = false
+      try {
+        if (!this.privatekey) {
+          return
+        }
+        this.isFetch = true
+        const f1 = await this.getf1ByCK(password)
+        if (f1) {
+          const accountList = this.accountList
+          const _customNetworkAccount = accountList.filter(n => n.rpc === this.customNetwork.rpc)
+          const _index = _customNetworkAccount.length + 1
+          const accountName = 'Account' + _index
+          const _customNetwork = {
+            ...this.customNetwork,
+            accountName
+          }
+          const options = {
+            encryptKey: f1,
+            accountList: this.accountList,
+            networks: this.networks,
+            customNetwork: _customNetwork,
+            net: this.net,
+            thisRpc: this.rpc,
+            rpcName: this.rpcName
+          }
+          const resule = await importCreate(options)
+          if (resule != null) {
+            this.SET_ACCOUNTLIST(accountList)
+            this.SET_CUSTOMNETWORK(_customNetwork)
+            this.isFetch = false
+            window.location.href = './wallet.html'
           } else {
             this.isFetch = false
-            this.$message.error(this.$t('importPrivatkey.importError'))
+            this.$message.error(this.$t('importPrivatkey.exist'))
           }
-        } catch (err) {
-          console.log(err, 'err')
+        } else {
           this.isFetch = false
+          this.$message.error(this.$t('importPrivatkey.importError'))
         }
+      } catch (err) {
+        this.isFetch = false
       }
     },
-    async getf1ByCK () {
+    closePassword () {
+      this.passwordVisable = false
+    },
+    async importWallet () {
+      this.passwordVisable = true
+    },
+    async getf1ByCK (password) {
       const thisPk = trimStr(this.privatekey)
+      const customNetwork = this.customNetwork
       try {
-        if (isFilecoinChain(this.customNetworkType)) {
+        if (isFilecoinChain(customNetwork.networkType)) {
           const keyStore = JSON.parse(Buffer.from(thisPk, 'hex').toString())
           if (keyStore.Type === 'bls') {
             return null
           } else {
             const privateKey = keyStore.PrivateKey
-            const f1 = await getF1ByPrivateKey(privateKey, this.kek, this.customNetworkType, this.customFilecoinAddress0)
+            const f1 = await getF1ByPrivateKey(privateKey, password, customNetwork.networkType, customNetwork.filecoinAddress0)
             return f1
           }
         } else {
-          const f1 = await getF1ByPrivateKey(thisPk, this.kek, this.customNetworkType, this.customFilecoinAddress0)
+          console.log(thisPk)
+          const f1 = await getF1ByPrivateKey(thisPk, password, customNetwork.networkType, customNetwork.filecoinAddress0)
           return f1
         }
       } catch (error) {
-        console.log(error, 'err')
         this.isFetch = false
         return null
       }
@@ -285,6 +209,8 @@ export default {
     box-sizing: border-box;
     padding: 20px;
     position: relative;
+    display: flex;
+    flex-direction: column;
     .loading{
         position: absolute;
         top: 0;
@@ -319,6 +245,9 @@ export default {
         color: #222;
         font-size: 14px;
         margin-bottom: 30px;
+    }
+    .import-content{
+      flex-grow: 1;
     }
     .input-item{
         margin-bottom: 20px;

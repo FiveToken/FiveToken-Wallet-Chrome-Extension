@@ -1,6 +1,7 @@
 /* eslint-disable camelcase */
-const create_time = parseInt(new Date().getTime() / 1000)
+const createTime = parseInt(new Date().getTime() / 1000)
 const ja = {
+  noNetWork: 'ネットワークに接続できません',
   header: {
     customRpc: 'カスタムRPC'
   },
@@ -10,6 +11,7 @@ const ja = {
     cancel: 'キャンセル',
     functionType: '関数タイプ',
     params: 'パラメータ',
+    noSupported: 'このネットワーク振替はしばらくサポートされていません。filecoinネットワークに切り替えてください。',
     hexData: '16進データ'
   },
   fiveTokenContent: {
@@ -29,12 +31,13 @@ const ja = {
     title: 'FiveTokenをご利用頂きありがとうございます',
     subTitle1: 'Filecoin生態分野の接続器で、複数チェーンを融合し、未来の保存世界への入口である。',
     subTitle2: 'ようこそ。',
-    btn1: '新しいウォレットを作成する',
-    btn2: '既存ウォレットを導入する'
+    btn1: '新しいアカウントを作成する',
+    btn2: '既存のアカウントをインポートする'
   },
   creatWallet: {
-    title: '新しいウォレットを作成する',
+    title: '新しいアカウントを作成する',
     importWords: 'ニーモニック導入',
+    recoveryWords: '回復助記',
     back: '前へ',
     accountName: 'アカウントネームをご入力ください',
     nameTips: '15文字以内',
@@ -45,14 +48,16 @@ const ja = {
     diffError: 'パスワードが間違っています',
     correctPassword: '正しいパスワードをご入力ください',
     confirmPassword: 'パスワード確認',
-    btn: '次へ'
+    btn: '次へ',
+    strengthTips: '数字、大文字と小文字、特殊文字を含む9～16ビットの文字で、パスワードは最強レベルに達します',
+    passwordStrength: '数字、大文字小文字、特殊文字を含む9ビット以上の文字'
   },
   creatWords: {
     title: 'ニーモニックバックアップ',
     subTitle: '順を追いニーモニックをお書きください',
     showWords: 'ここをクリックし密語を表示させる',
     btn1: 'ニーモニック検証',
-    btn2: 'ウォレットに入る',
+    btn2: 'アカウントを入力してください',
     copy: 'ニーモニックコピー',
     copySuccess: 'コピー成功',
     tips1: '！ ニーモニックを如何なるネットと隔離した安全なところにご保存ください。',
@@ -66,7 +71,7 @@ const ja = {
   },
   importWords: {
     title: '導入助记词',
-    subTitle: 'ウォレットを復旧させるために、ニーモニックをご入力ください',
+    subTitle: 'アカウントを復元するには、ニーモニックフレーズを入力してください',
     tips: '単語をスペースで区切る',
     btn: '輸入',
     error: 'ニーモニックエラー',
@@ -75,7 +80,7 @@ const ja = {
   importPrivatkey: {
     title: '秘密鍵導入',
     label1: '対応するネットワークをご選択ください',
-    label2: 'ウォレットを復旧させるために、秘密鍵をご入力ください',
+    label2: 'アカウントを復元するには、秘密鍵を入力してください',
     btn: '輸入',
     titleNetwork: 'ネットワーク選択',
     importError: 'タイプは対応できません',
@@ -86,7 +91,7 @@ const ja = {
     lock: 'ロック',
     mneAccount: 'ニーモニックアカウント',
     pkAccount: '秘密鍵アカウント',
-    createWallet: 'ウォレット作成',
+    createWallet: 'アカウントを作成する',
     import: '秘密鍵導入',
     setting: '設定',
     titleAdd: 'アカウント追加',
@@ -104,7 +109,7 @@ const ja = {
       { name: 'アカウントネーム変更', action: 'editName' },
       { name: 'ブロックチェーンブラウザ閲覧', action: 'viewInBrowser' },
       { name: '秘密鍵バックアップ', action: 'backupPrivateKey' },
-      { name: 'ウォレット削除', action: 'deleteWallet' }
+      { name: 'アカウントを削除する', action: 'deleteAccount' }
     ],
     statusSuccess: '完了',
     statusError: '失敗',
@@ -119,7 +124,9 @@ const ja = {
     cancel: 'キャンセル',
     confirm: '確認',
     deleteTitle: '削除確認',
-    deleteTips: '秘密鍵はバックアップされたことをご確認ください。削除後、当該ウォレットを表示したい場合、秘密鍵を利用し導入する必要があります。',
+    deleteLabel: 'パスワードを入力してください',
+    confirmDelete: '消去',
+    deleteTips: '秘密鍵がバックアップされていることを確認してください。削除後、ウォレットを使用する場合は、秘密鍵を使用してインポートする必要があります。',
     copyAddress: 'アドレスコピー',
     copySuccess: '正常にコピー',
     tranRecord: '活動記録',
@@ -136,7 +143,8 @@ const ja = {
     connectedNetwork: '接続されたウェブサイト',
     connectedRights: 'これらのサイトに接続しました。彼らはあなたのアカウントアドレスを見ることができます。',
     unconnectTips: 'FiveTokenはこのWebサイトに接続しませんでした。 web3 Webサイトに接続するには、Webサイトの接続ボタンを見つけます。',
-    unconnectNetworksTips: 'Webサイトはまだ接続されていません。'
+    unconnectNetworksTips: 'Webサイトはまだ接続されていません。',
+    noAccountTips: 'アクセスしたいネットワークにアカウントがありません'
   },
   messageDetail: {
     title: 'メッセージ詳細',
@@ -175,21 +183,37 @@ const ja = {
     recordLast: '最近の記録',
     myAccount: 'マイアカウント',
     addressBook: 'アドレスブック',
-    gasLimit: 'ガスリミット',
     confirmTransaction: '取引確認',
     sendAmount: '金額発信',
-    networkGas: 'ネットワークガス',
     maxGas: '最大Gas費用見積',
     totalTips: '金額+Gas費用見積発信',
     total: '総額',
-    gasFeeError: '現在のBaseFee以下',
     gasLimitError: '現在のGas Limit以下',
     addressError: 'アドレスフォーマットエラー',
     insufficientBalance: '残高不十分',
-    filBaseFeeTips: 'ネットワーク料金はネットワーク料金の支払いに使用され、メッセージはネットワーク料金レート> BaseFeeの場合にのみパッケージ化されます。 nanoFIL = 10 ^ -9',
-    baseFeeTips: 'Gガス価格は、ガスの単位あたりの支払いトークンの数です、Gwei = 10 ^ -9',
-    gasLimitTips: 'ガス制限は、メッセージを送信するときに消費される最大ガスです。',
+    ethereumMainGasLimitTips: 'ガス制限は、使用できるガスの最大単位です。 ガスの単位は、「最大優先料金」と「最大料金」の乗数です。',
+    filecoinGasLimitTips: 'ガス制限は、使用できるガスの最大単位です。 ガスの単位は、「GasPremium」と「GasFeeCap」の乗数です。',
+    ethereumOthersGasLimitTips: 'ガス制限は、使用できるガスの最大単位です。 ガスの単位は、「Max priority fee」と「Max fee」の乗数です。',
+    maxPriorityFeeTips: '最大優先料金（別名「マイナーチップ」）は、マイナーに直接送られ、トランザクションに優先順位を付けるようにインセンティブを与えます。ほとんどの場合、最大設定を支払います',
+    maxFeeTips: '最大料金は、支払う金額の上限です（基本料金+優先料金）。',
+    gasFeeCapTips: '最大料金はあなたが支払う最も高いものです。 nanoFIL = 10 ^ -9 FIL',
+    gasPremiumTips: 'GasPremium（別名「マイナーチップ」）は、マイナーに直接アクセスし、トランザクションに優先順位を付けるようにインセンティブを与えます。ほとんどの場合、最大設定を支払います。 nanoFIL = 10 ^ -9FIL',
+    gasPriceTips: 'ガス価格は、ガスの各ユニットに支払うことをいとわないトークンの量を指定します。 Gwei = 10 ^ -9。',
+    sameAddressError: '送信アドレスは受信アドレスと同じものであってはなりません',
     vaildNumber: '有効な数値を入力してください'
+  },
+  passwordVerification: {
+    title: 'パスワードの検証',
+    label: 'パスワードを入力してください',
+    confirm: '確認',
+    cancel: 'キャンセル'
+  },
+  addAccount: {
+    title: 'アカウント作成',
+    nameLabel: 'アカウント名を入力してください',
+    nameTips: '15文字以下',
+    tips: 'このアカウントは、Hierarchical Deterministic Walletに基づいており、他のニーモニックアカウントと同じニーモニックフレーズを使用しますが、秘密鍵が異なります。',
+    button: '確認'
   },
   setting: {
     name: '設定',
@@ -211,6 +235,7 @@ const ja = {
       { name: 'インターネット', url: './setting-networks.html' },
       { name: 'アドレスブック', url: './setting-address.html' },
       { name: '秘密鍵のエクスポート', url: './setting-backups.html' },
+      { name: 'パスワードの変更', url: './setting-password.html' },
       { name: 'について', url: './setting-about.html' }
     ]
   },
@@ -234,6 +259,16 @@ const ja = {
     delete: '削除',
     deleteTips: 'このネットワークを削除してもよろしいですか？',
     deleteSuccess: '正常に削除されました'
+  },
+  settingPassword: {
+    title: 'パスワードの変更',
+    currentPassword: '現在のパスワードの確認',
+    newPassword: '新しいパスワード',
+    newPlaceholder: '新しいパスワードを入力してください',
+    passwordTips: 'アカウントのセキュリティのために、最強のパスワードを使用してください',
+    confirmPassword: 'パスワードの確認',
+    confirmPlaceholder: '確認パスワードを入力してください',
+    confirm: '確認'
   },
   settingAbout: {
     about: 'について',
@@ -283,7 +318,10 @@ const ja = {
     subTitle: 'Filecoin生態分野の接続器で、複数チェーンを融合し、未来の保存世界への入口である。',
     unlocking: 'アンロック',
     label: 'パスワード',
-    passwordError: 'パスワードエラー'
+    passwordError: 'パスワードエラー',
+    bottomLabel: 'または',
+    bottomLabel2: 'メモのインポート',
+    bottomLabel3: '(インポート後、既存のアカウントが初期化されます)'
   },
   connect: {
     title: 'FiveTokenで接続する',
@@ -298,8 +336,7 @@ const ja = {
       symbol: 'FIL',
       ids: 'filecoin',
       browser: 'https://filscan.io',
-      khazix: 'khazix',
-      create_time: create_time,
+      createTime: createTime,
       networkType: 'proxy',
       filecoinAddress0: 'f',
       decimals: 18,
@@ -314,10 +351,9 @@ const ja = {
       symbol: 'ETH',
       browser: 'https://etherscan.io',
       ids: 'ethereum',
-      khazix: 'khazix',
       networkType: 'ethereum',
       filecoinAddress0: '',
-      create_time: create_time + 1,
+      createTime: createTime + 1,
       decimals: 18,
       image: 'eth.svg',
       disabled: true,
@@ -330,10 +366,9 @@ const ja = {
       symbol: 'BNB',
       ids: 'binancecoin',
       browser: 'https://bscscan.com',
-      khazix: 'khazix',
       networkType: 'ethereum',
       filecoinAddress0: '',
-      create_time: create_time + 2,
+      createTime: createTime + 2,
       decimals: 18,
       image: 'bnb.svg',
       disabled: true,
@@ -346,10 +381,9 @@ const ja = {
       symbol: 'FIL',
       ids: 'filecoin',
       browser: 'https://calibration.filscan.io',
-      khazix: 'khazix',
       networkType: 'proxy',
       filecoinAddress0: 't',
-      create_time: create_time + 3,
+      createTime: createTime + 3,
       decimals: 18,
       image: 'fil.svg',
       disabled: true,
@@ -362,10 +396,9 @@ const ja = {
       symbol: 'ETH',
       ids: 'ethereum',
       browser: 'https://ropsten.etherscan.io',
-      khazix: 'khazix',
       networkType: 'ethereum',
       filecoinAddress0: '',
-      create_time: create_time + 4,
+      createTime: createTime + 4,
       decimals: 18,
       image: 'eth.svg',
       disabled: true,
@@ -378,10 +411,9 @@ const ja = {
       symbol: 'ETH',
       ids: 'ethereum',
       browser: 'https://kovan.etherscan.io',
-      khazix: 'khazix',
       networkType: 'ethereum',
       filecoinAddress0: '',
-      create_time: create_time + 5,
+      createTime: createTime + 5,
       decimals: 18,
       image: 'eth.svg',
       disabled: true,
@@ -394,10 +426,9 @@ const ja = {
       symbol: 'ETH',
       ids: 'ethereum',
       browser: 'https://rinkeby.etherscan.io',
-      khazix: 'khazix',
       networkType: 'ethereum',
       filecoinAddress0: '',
-      create_time: create_time + 6,
+      createTime: createTime + 6,
       decimals: 18,
       image: 'eth.svg',
       disabled: true,
@@ -410,10 +441,9 @@ const ja = {
       symbol: 'ETH',
       ids: 'ethereum',
       browser: 'https://goerli.etherscan.io',
-      khazix: 'khazix',
       networkType: 'ethereum',
       filecoinAddress0: '',
-      create_time: create_time + 7,
+      createTime: createTime + 7,
       decimals: 18,
       image: 'eth.svg',
       disabled: true,
@@ -426,10 +456,9 @@ const ja = {
       symbol: 'BNB',
       ids: 'binancecoin',
       browser: 'https://testnet.bscscan.com',
-      khazix: 'khazix',
       networkType: 'ethereum',
       filecoinAddress0: '',
-      create_time: create_time + 8,
+      createTime: createTime + 8,
       decimals: 18,
       image: 'bnb.svg',
       disabled: true,

@@ -1,7 +1,7 @@
 <template>
-    <layout>
+    <ky-layout>
         <div class="check-wallet">
-            <div class="back"><kyBack @pageBack="back"></kyBack></div>
+            <div class="back"><ky-back @pageBack="back"></ky-back></div>
             <div class="content">
                 <div class="title">{{$t('checkWords.title')}}</div>
                 <div class="sub-title">{{$t('checkWords.subTitle')}}</div>
@@ -22,24 +22,19 @@
                     </div>
                 </div>
                 <div class="btn-wrap">
-                    <kyButton :type="'primary'" :active="active" @btnClick="confrim">{{$t('checkWords.btn')}}</kyButton>
+                    <ky-button :type="'primary'" :active="active" @btnClick="confrim">{{$t('checkWords.btn')}}</ky-button>
                 </div>
             </div>
             <div class="loading" v-if="isFetch">
                 <img :src="loading" alt="" class="img">
             </div>
         </div>
-    </layout>
+    </ky-layout>
 </template>
 <script>
-import layout from '@/components/layout'
-import kyButton from '@/components/button'
 import { mapMutations, mapState } from 'vuex'
-import kyBack from '@/components/back'
-import { getQueryString, getF1ByMne, setGlabolKek } from '@/utils'
-import { genSalt, genKek, AESEncrypt } from '@/utils/key'
-import { Database } from '@/utils/database.js'
-
+import { getQueryString } from '@/utils'
+import { encryptCreate } from '@/utils/encrypt'
 export default {
   data () {
     return {
@@ -49,8 +44,7 @@ export default {
       accountName: '',
       password: '',
       mnemonicWords: [],
-      error: false,
-      db: null
+      error: false
     }
   },
   computed: {
@@ -65,11 +59,6 @@ export default {
       return this.selected.length === 12
     }
   },
-  components: {
-    layout,
-    kyButton,
-    kyBack
-  },
   async mounted () {
     const accountName = decodeURIComponent(this.getQuery('accountName'))
     const password = getQueryString('password')
@@ -78,8 +67,6 @@ export default {
     this.password = password
     this.createType = getQueryString('createType')
     this.mnemonicWords = this.shuffle(mnemonicWords)
-    const db = new Database()
-    this.db = db
   },
   methods: {
     ...mapMutations('app', [
@@ -125,101 +112,25 @@ export default {
         if (bol) {
           this.isFetch = true
           this.error = false
+          this.SET_DERIVEINDEX(1)
+          const options = {
+            accountName: this.accountName,
+            password: this.password,
+            mnemonicWords: mne,
+            networks: this.networks,
+            rpc: this.rpc,
+            createType: 'create'
+          }
           setTimeout(async () => {
-            const kek = genKek(this.password)
-            const ethereumF1 = await getF1ByMne(mne, kek, 'ethereum', '', 0)
-            const filecoinF1 = await getF1ByMne(mne, kek, 'proxy', 'f', 0)
-            const calibrationF1 = await getF1ByMne(mne, kek, 'proxy', 't', 0)
-
-            const { address, privateKey, digest } = filecoinF1
-            const accountName = this.accountName
-            // eslint-disable-next-line camelcase
-            const create_time = parseInt(new Date().getTime() / 1000)
-            this.SET_DERIVEINDEX(1)
-            await this.db.modifyTable(
-              'activenNetworks',
-              { rpc: this.rpc },
-              { deriveIndex: 1 }
-            )
-            const _account = []
-            const _networks = []
-            for (const n of this.networks) {
-              if (n.filecoinAddress0 === 'f') {
-                _account.push({
-                  accountName,
-                  address: filecoinF1.address,
-                  createType: 'mnemonic',
-                  privateKey: filecoinF1.privateKey,
-                  create_time,
-                  khazix: 'khazix',
-                  digest: filecoinF1.digest,
-                  fil: 0,
-                  isDelete: 0,
-                  rpc: n.rpc
-                })
-              } else if (n.filecoinAddress0 === 't') {
-                _account.push({
-                  accountName,
-                  address: calibrationF1.address,
-                  createType: 'mnemonic',
-                  privateKey: calibrationF1.privateKey,
-                  create_time,
-                  khazix: 'khazix',
-                  digest: calibrationF1.digest,
-                  fil: 0,
-                  isDelete: 0,
-                  rpc: n.rpc
-                })
-              } else {
-                _account.push({
-                  accountName,
-                  address: ethereumF1.address,
-                  createType: 'mnemonic',
-                  privateKey: ethereumF1.privateKey,
-                  create_time,
-                  khazix: 'khazix',
-                  digest: ethereumF1.digest,
-                  fil: 0,
-                  isDelete: 0,
-                  rpc: n.rpc
-                })
-              }
-              _networks.push({
-                ...n,
-                deriveIndex: 1
-              })
-            }
-            await this.db.bulkAddTable('accountList', _account)
-            await this.db.bulkPutTable('networks', _networks)
-            await this.db.addTable('activeAccount', {
-              address,
-              accountName,
-              privateKey,
-              createType: 'mnemonic',
-              create_time,
-              khazix: 'khazix',
-              fil: 0,
-              digest,
-              rpc: this.rpc
-            })
-
-            const salt = genSalt(this.password)
-            setGlabolKek(kek)
-            const mnemonic = AESEncrypt(mne, kek)
-            await this.db.addTable('walletKey', {
-              mnemonicWords: mnemonic,
-              salt,
-              rpc: this.rpc,
-              khazix: 'khazix'
-            })
+            await encryptCreate(options, 'create', this.$t('defaultNetworks'))
             this.isFetch = false
             window.location.href = './wallet.html'
-          }, 0)
+          })
         } else {
           this.error = true
         }
       } catch (error) {
-        console.log(error, 'error')
+        this.isFetch = false
       }
     },
     arrayEquals (array1, array2) {

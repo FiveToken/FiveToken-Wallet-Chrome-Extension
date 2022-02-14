@@ -2,14 +2,18 @@
 import { shallowMount, createLocalVue } from '@vue/test-utils'
 import checkWords from '@/pages/check-words/component/index.vue'
 import elementUI from 'element-ui'
+import ExtensionStore from '@/utils/local-store'
+import KyLayout from '@/components/layout/index'
+import KyBack from '@/components/back/index'
+import KyButton from '@/components/button/index'
 import Vuex from 'vuex'
-import { Database } from '@/utils/database.js'
-const Dexie = require('dexie')
-Dexie.dependencies.indexedDB = require('fake-indexeddb')
-Dexie.dependencies.IDBKeyRange = require('fake-indexeddb/lib/FDBKeyRange')
+import { mocksData } from '../../mock'
 const localVue = createLocalVue()
 localVue.use(Vuex)
 localVue.use(elementUI)
+localVue.use(KyLayout)
+localVue.use(KyBack)
+localVue.use(KyButton)
 
 const networks = [
   {
@@ -19,8 +23,7 @@ const networks = [
     symbol: 'FIL',
     ids: 'filecoin',
     browser: 'https://filscan.io',
-    khazix: 'khazix',
-    create_time: 1631613194,
+    createTime: 1631613194,
     networkType: 'proxy',
     filecoinAddress0: 'f',
     decimals: 18,
@@ -35,10 +38,9 @@ const networks = [
     symbol: 'FIL',
     ids: 'filecoin',
     browser: 'https://calibration.filscan.io',
-    khazix: 'khazix',
     networkType: 'proxy',
     filecoinAddress0: 't',
-    create_time: 1631613195,
+    createTime: 1631613195,
     decimals: 18,
     image: 'fil.svg',
     disabled: true,
@@ -51,10 +53,9 @@ const networks = [
     symbol: 'BNB',
     ids: 'binancecoin',
     browser: 'https://testnet.bscscan.com',
-    khazix: 'khazix',
     networkType: 'ethereum',
     filecoinAddress0: '',
-    create_time: 1631613196,
+    createTime: 1631613196,
     decimals: 18,
     image: 'bnb.svg',
     disabled: true,
@@ -62,14 +63,27 @@ const networks = [
   }
 ]
 
+jest.mock('@/utils/local-store', () => (class ExtensionStore {
+  get (key) {
+    return mocksData[key]
+  }
+
+  set () {
+    jest.fn()
+  }
+}))
+
 describe('account index.vue', () => {
+  let localStore
   const assignMock = jest.fn()
   delete window.location
   window.location = { assign: assignMock }
   afterEach(() => {
     assignMock.mockClear()
   })
-  const db = new Database()
+  beforeEach(() => {
+    localStore = new ExtensionStore()
+  })
   const store = new Vuex.Store({
     modules: {
       app: {
@@ -85,12 +99,10 @@ describe('account index.vue', () => {
               accountName: 'Account1',
               address: 'f1ntv4qlgoi55wqqxrxxolatfdgn7xvu7vfhrkcfq',
               createType: 'mnemonic',
-              create_time: 1631613193,
+              createTime: 1631613193,
               digest: 'zBUjeDDJuuDAPNQF',
               fil: 0,
               id: 1,
-              isDelete: 0,
-              khazix: 'khazix',
               privateKey: '98b983395737275c208f5b6884180cbc7575e7c208dba4621da300fc5248046ec7224a209285b4e9e770fa1e',
               rpc: 'https://api.fivetoken.io'
             }
@@ -122,7 +134,7 @@ describe('account index.vue', () => {
     data () {
       return {
         selected: ['robot', 'sort', 'steak', 'cart', 'banana', 'bracket', 'cat', 'mass', 'room', 'success', 'tackle', 'rival'],
-        db
+        localStore
       }
     },
     mocks: {
@@ -130,6 +142,11 @@ describe('account index.vue', () => {
       $router: {
         go: key => key
       }
+    },
+    stubs: {
+      'el-dialog': true,
+      'el-input': true,
+      'el-button': true
     }
   })
 

@@ -1,55 +1,77 @@
 <template>
-    <layout @layoutMounted="layoutMounted">
-        <div class="send-fil">
-            <stepOne
-                v-if="step === 1"
-                :formData="formData"
-                @formDataChange="formDataChange"
-                @next="next"
-            />
-            <stepTwo
-                v-else
-                :price_currency="price_currency"
-                :formData="formData"
-                :mainBalance="mainBalance"
-                @formDataChange="formDataChange"
-                :baseFeeCap="baseFeeCap"
-                :baseLimit="baseLimit"
-                @previousStep="step = 1"
-                @sendSubmit="sendSubmit"
-            />
-
-            <div class="loading" v-if="isFetch">
-                <img :src="loading" alt="" class="img">
-            </div>
-        </div>
-    </layout>
+  <ky-layout @layoutMounted="layoutMounted">
+    <div class="send-fil">
+      <step-one
+        v-if="step === 1"
+        :formData="formData"
+        @formDataChange="formDataChange"
+        @next="next"
+      >
+      </step-one>
+      <step-two
+        v-else
+        :priceCurrency="priceCurrency"
+        :formData="formData"
+        :mainBalance="mainBalance"
+        @formDataChange="formDataChange"
+        @previousStep="step = 1"
+        @sendSubmit="sendSubmit"
+      >
+      </step-two>
+      <div class="loading" v-if="isFetch">
+        <img :src="loading" alt="" class="img" />
+      </div>
+      <el-dialog
+        :visible.sync="passwordVisable"
+        width="300px"
+        :show-close="false"
+        class="password-verification"
+        :top="'34vh'"
+      >
+        <password-verification
+          v-if="passwordVisable"
+          @confirm="confirmPassword"
+          @close="closePassword"
+        >
+        </password-verification>
+      </el-dialog>
+    </div>
+  </ky-layout>
 </template>
-
 <script>
 import stepOne from './step-1'
 import stepTwo from './step-2'
-import layout from '@/components/layout'
-import { getDecodePrivateKey, getGlobalKek, formatNumber, bigNumbers } from '@/utils'
-import { GlobalApi } from '@/api'
-import { mapMutations, mapState } from 'vuex'
+import passwordVerification from '@/components/password-verification'
+import {
+  formatNumber,
+  bigNumbers,
+  getQueryString,
+  isFilecoinChain
+} from '@/utils'
+import { GlobalApi } from '@/api/index.js'
+import { mapGetters, mapMutations, mapState } from 'vuex'
 import ABI from '@/utils/abi'
 import { ethers } from 'ethers'
-import { Database } from '@/utils/database.js'
+import ExtensionStore from '@/utils/local-store'
+import { decryptMessage, encrypt } from '@/utils/aes-gcm'
 export default {
+  components: {
+    stepOne,
+    stepTwo,
+    passwordVerification
+  },
   data () {
     return {
       loading: require('@/assets/image/loading.png'),
+      passwordVisable: false,
       isFetch: false,
       step: 1,
-      price_currency: 0,
+      priceCurrency: 0,
       nonce: 0,
       maxNonce: 0,
-      baseFeeCap: 0,
-      baseLimit: 0,
       pkk: '',
       contractSigner: null,
-      db: null,
+      localStore: null,
       mainBalance: 0,
       formData: {
         balance: 0,
@@ -58,109 +80,129 @@ export default {
         fil: '',
         symbol: '',
         chainName: '',
-        gasLimit: 0,
-        gasPremium: 0,
-        gasFeeCap: 0,
         decimals: 0,
         isAll: 0,
-        isMain: 1,
+        isMain: -1,
         contract: ''
       }
     }
   },
   computed: {
+    ...mapState('send-fil', [
+      'serviceGas',
+      'tokenList'
+    ]),
     ...mapState('app', [
       'rpc',
       'address',
       'privateKey',
       'networkType',
       'accountList',
-      'activenNetworks',
+      'activeNetwork',
       'decimals',
+      'rpcName',
       'ids',
       'symbol',
+      'rpcImage',
       'currency'
-    ])
-  },
-  components: {
-    stepOne,
-    layout,
-    stepTwo
+    ]),
+    ...mapGetters('send-fil', [
+      'handlingFee'])
   },
   methods: {
     ...mapMutations('send-fil', [
       'SET_ACCOUNTLIST',
       'SET_ADDRESSBOOK',
       'SET_ADDRESSRECORDLAST',
-      'SET_TOKENLIST'
+      'SET_TOKENLIST',
+      'SET_ACCOUNTLIST',
+      'SET_ADDRESS',
+      'SET_SERVICEGAS'
     ]),
     async layoutMounted () {
-      const kek = getGlobalKek()
-      this.pkk = getDecodePrivateKey(this.privateKey, kek, this.networkType)
-      const db = new Database()
-      this.db = db
-      const myRecordLast = await db.getTable('addressRecordLast', {
-        rpc: this.rpc
-      })
-      this.SET_ADDRESSRECORDLAST(myRecordLast)
-      const addressBook = await db.getTable('addressBook', { rpc: this.rpc })
-
-      this.SET_ADDRESSBOOK(addressBook)
-      this.SET_ACCOUNTLIST(this.accountList)
-      const chainName = this.activenNetworks.length && this.activenNetworks[0].name
-      this.$set(this.formData, 'chainName', chainName)
-      this.$set(this.formData, 'symbol', this.symbol)
-      this.$set(this.formData, 'decimals', this.decimals)
-      this.getFilPricePoints()
+      const localStore = new ExtensionStore()
+      this.localStore = localStore
+      this.isFetch = true
       await this.getBalanceNonceByAddress()
-      this.getTokenList()
+      await this.getTokenList()
+      this.isFetch = false
+      this.getFilPricePoints()
+      const myRecordLast = await localStore.get('addressRecordLast')
+      if (myRecordLast) {
+        const _myRecordLast = myRecordLast.filter(n => n.rpc === this.rpc)
+        this.SET_ADDRESSRECORDLAST(_myRecordLast)
+      }
+      const addressBook = await localStore.get('addressBook')
+      if (addressBook) {
+        const _addressBook = addressBook.filter(n => n.rpc === this.rpc)
+        this.SET_ADDRESSBOOK(_addressBook)
+      }
+      this.SET_ADDRESS(this.address)
+      this.SET_ACCOUNTLIST(this.accountList)
     },
     // get token list
     async getTokenList () {
-      const list = await this.db.getTable('tokenList', {
-        rpc: this.rpc,
-        address: this.address
-      })
-      const chainImg = this.activenNetworks.length && this.activenNetworks[0].image
-      const customNetwork = this.activenNetworks.length && !this.activenNetworks[0].disabled
-      const tokenList = [
-        {
+      try {
+        let list = []
+        const _tokenList = await this.localStore.get('tokenList')
+        if (_tokenList) {
+          list = _tokenList.filter(n => {
+            return (n.rpc === this.rpc) && (n.address === this.address)
+          })
+        }
+        const customNetwork = this.activeNetwork.disabled
+        const mainToken = {
           rpc: this.rpc,
-          chainName: this.formData.chainName,
+          chainName: this.rpcName,
           decimals: this.decimals,
           symbol: this.symbol,
           contract: '',
-          balance: this.formData.balance,
+          balance: this.mainBalance,
           isMain: 1,
-          image: chainImg,
+          image: this.rpcImage,
           customNetwork
         }
-      ]
-      const provider = ethers.getDefaultProvider(this.rpc)
-      list.forEach(async (n) => {
-        try {
+        const tokenList = [{
+          ...mainToken
+        }]
+        const tokenSymbol = getQueryString('tokenSymbol')
+        if (tokenSymbol === this.symbol) {
+          this.formDataChange({
+            key: 'token',
+            value: mainToken
+          })
+        }
+        const provider = ethers.getDefaultProvider(this.rpc)
+        list.forEach(async (n) => {
           const contract = new ethers.Contract(n.contract, ABI, provider)
-          contract.balanceOf(this.address).then(res => {
+          contract.balanceOf(this.address).then((res) => {
             const balance = res.toString()
             const num = bigNumbers(balance)
-            const big = num.dividedBy(Math.pow(10, Number(n.decimals))).toString()
+            const big = num
+              .dividedBy(Math.pow(10, Number(n.decimals)))
+              .toString()
             const _balance = formatNumber(big, 12)
-            tokenList.push(
-              {
-                ...n,
-                balance: _balance,
-                isMain: 0,
-                chainName: this.formData.chainName,
-                image: '',
-                contract: n.contract
-              }
-            )
+            const tokenItem = {
+              ...n,
+              balance: _balance,
+              isMain: 0,
+              chainName: this.formData.chainName,
+              image: '',
+              contract: n.contract
+            }
+            tokenList.push(tokenItem)
+            if (tokenSymbol === n.symbol) {
+              this.formDataChange({
+                key: 'token',
+                value: tokenItem
+              })
+            }
           })
-        } catch (err) {
-          console.log(err, 'getTokenList err')
-        }
-      })
-      this.SET_TOKENLIST(tokenList)
+        })
+        this.SET_TOKENLIST(tokenList)
+      } catch (error) {
+        this.isFetch = false
+      }
     },
     formDataChange (obj) {
       const { key, value } = obj
@@ -181,7 +223,8 @@ export default {
           break
         case 'token':
           // eslint-disable-next-line no-case-declarations
-          const { balance, symbol, chainName, decimals, isMain, contract } = value
+          const { balance, symbol, chainName, decimals, isMain, contract } =
+            value
           this.formData = Object.assign({}, this.formData, {
             balance,
             fil: '',
@@ -201,21 +244,28 @@ export default {
     },
     async getNextNonce () {
       const time = parseInt(new Date().getTime() / 1000)
-      const messageList = await this.db.getTable('messageList', { rpc: this.rpc })
-      const myMsgList = messageList.filter(n => {
-        return n.from === this.address
-      })
-      const creatTimeList = myMsgList.map(n => {
-        return n.create_time
-      }) || []
-      const nonceList = myMsgList.map(n => {
-        return n.nonce || 0
-      }) || []
-      const maxDbCreateTime = (creatTimeList.length && Math.max(...creatTimeList)) || 0
-      const maxDbNonce = nonceList.length && Math.max(...nonceList)
-      // nonce time > 300s res.nonce ,else db none
-      const maxNonce = time - maxDbCreateTime > 300 ? this.nonce : Math.max(this.nonce, maxDbNonce)
-      this.maxNonce = maxNonce
+      const messageList = await this.localStore.get('messageList')
+      if (messageList) {
+        const myMessageList = messageList.filter(n => {
+          return (n.rpc === this.rpc) && (n.from === this.address)
+        })
+        const creatTimeList = myMessageList.map((n) => {
+          return n.createTime
+        }) || []
+        const nonceList = myMessageList.map((n) => {
+          return n.nonce || 0
+        }) || []
+        const maxDbCreateTime = (creatTimeList.length && Math.max(...creatTimeList)) || 0
+        const maxDbNonce = nonceList.length && Math.max(...nonceList)
+        // nonce time > 300s res.nonce ,else store none
+        const maxNonce =
+        time - maxDbCreateTime > 300
+          ? this.nonce
+          : Math.max(this.nonce, maxDbNonce)
+        this.maxNonce = maxNonce
+      } else {
+        this.maxNonce = this.nonce
+      }
     },
     // get current account balance
     async getBalanceNonceByAddress () {
@@ -227,7 +277,6 @@ export default {
       const num = bigNumbers(balance)
       const big = num.dividedBy(Math.pow(10, Number(this.decimals))).toString()
       const _balance = formatNumber(big, 12)
-      this.$set(this.formData, 'balance', Number(_balance))
       this.mainBalance = Number(_balance)
       this.nonce = nonce
       this.getNextNonce()
@@ -237,13 +286,23 @@ export default {
       const MyGlobalApi = new GlobalApi()
       MyGlobalApi.setRpc(this.rpc)
       MyGlobalApi.setNetworkType(this.networkType)
-      const res = await MyGlobalApi.getGasFee(from, to, nonce)
-      const { gasLimit, gasPremium, gasFeeCap } = res
-      this.$set(this.formData, 'gasLimit', gasLimit)
-      this.$set(this.formData, 'gasPremium', gasPremium)
-      this.$set(this.formData, 'gasFeeCap', gasFeeCap)
-      this.baseFeeCap = gasFeeCap
-      this.baseLimit = gasLimit
+      const chainID = this.activeNetwork.chainID
+      let rpcType = ''
+      if (isFilecoinChain(this.networkType)) {
+        rpcType = 'filecoin'
+      } else {
+        if (chainID === '1') {
+          rpcType = 'ethereumMain'
+        } else {
+          rpcType = 'ethereumOthers'
+        }
+      }
+      const isEthereumMain = rpcType === 'ethereumMain'
+      const res = await MyGlobalApi.getGasFee(from, to, nonce, isEthereumMain)
+      this.SET_SERVICEGAS({
+        ...res,
+        rpcType
+      })
       if (this.formData.isAll === 1) {
         const fil = this.formData.balance
         this.$set(this.formData, 'fil', fil)
@@ -258,38 +317,39 @@ export default {
         const res = await MyGlobalApi.getPrice(this.ids)
         const { usd, cny } = res
         if (this.currency === 'cny') {
-          this.price_currency = cny
+          this.priceCurrency = cny
         } else {
-          this.price_currency = usd
+          this.priceCurrency = usd
         }
       }
     },
     // next step
     async next () {
-      const bigBalance = bigNumbers(this.formData.balance)
-      const balance = bigBalance.toNumber()
-      const bigFil = bigNumbers(this.formData.fil)
-      const fil = bigFil.toNumber()
-      const isNumber = bigNumbers(fil).isPositive()
+      const balance = bigNumbers(this.formData.balance)
+      const value = bigNumbers(this.formData.fil)
+      const isNumber = bigNumbers(value).isPositive()
+      const handlingFee = bigNumbers(this.handlingFee).dividedBy(Math.pow(10, this.formData.decimals))
       if (isNumber) {
-        if (bigFil.isGreaterThan(balance)) {
+        if (value.isGreaterThan(balance)) {
           this.$message.error(this.$t('sendFil.insufficientBalance'))
         } else {
-          this.step = 2
           this.isFetch = true
-          await this.getBaseFeeAndGas(this.address, this.formData.to, this.maxNonce)
+          await this.getBaseFeeAndGas(
+            this.address,
+            this.formData.to,
+            this.maxNonce
+          )
+          this.step = 2
           this.isFetch = false
-          const gasTimes = bigNumbers(this.formData.gasFeeCap).multipliedBy(this.formData.gasLimit)
-          const gas = gasTimes.dividedBy(Math.pow(10, 9))
           // Judge whether it is the main currency
           if (this.formData.isMain === 1) {
             // Determine whether to send all
             if (this.formData.isAll === 1) {
               // Judge the balance is Greater Than gas fee
-              if (bigBalance.isGreaterThan(gas)) {
-                const fil = bigBalance.minus(gas).toString()
-                const num = formatNumber(fil, 12)
-                this.$set(this.formData, 'fil', num)
+              if (balance.isGreaterThan(handlingFee)) {
+                const actualValue = balance.minus(handlingFee).toString()
+                const value = formatNumber(actualValue, 12)
+                this.$set(this.formData, 'fil', value)
               } else {
                 this.$message.error(this.$t('sendFil.insufficientBalance'))
               }
@@ -298,8 +358,8 @@ export default {
             // If the sending is not in the primary currency, the consumed service charge is still in the primary currency
             if (this.formData.isAll === 1) {
               const mainBanance = bigNumbers(this.mainBalance)
-              if (mainBanance.isGreaterThan(gas)) {
-                this.$set(this.formData, 'fil', balance)
+              if (mainBanance.isGreaterThan(handlingFee)) {
+                this.$set(this.formData, 'fil', balance.toNumber())
               } else {
                 this.$message.error(this.$t('sendFil.insufficientBalance'))
               }
@@ -308,12 +368,11 @@ export default {
 
           if (this.formData.isMain !== 1) {
             // Sending token gaslimit needs to be multiplied by 2.5
-            const double = bigNumbers(this.formData.gasLimit).multipliedBy(2.5)
-            this.$set(this.formData, 'gasLimit', double)
-            const provider = ethers.getDefaultProvider(this.rpc)
-            const wallet = new ethers.Wallet(this.pkk, provider)
-            const contractSigner = new ethers.Contract(this.formData.contract, ABI, wallet)
-            this.contractSigner = contractSigner
+            const increaseGasLimit = bigNumbers(this.serviceGas.gasLimit).multipliedBy(2.5)
+            this.SET_SERVICEGAS({
+              ...this.serviceGas,
+              gasLimit: increaseGasLimit
+            })
           }
         }
       } else {
@@ -321,82 +380,49 @@ export default {
       }
     },
     async sendSubmit () {
-      console.log('sendSubmit')
       const balance = bigNumbers(this.formData.balance)
-      const gasTimes = bigNumbers(this.formData.gasFeeCap).multipliedBy(this.formData.gasLimit)
-      const gas = gasTimes.dividedBy(Math.pow(10, 9))
       const fil = bigNumbers(this.formData.fil)
       const mainBanance = bigNumbers(this.mainBalance)
+      const handlingFee = bigNumbers(this.handlingFee).div(Math.pow(10, this.decimals))
       // Judgment gasfee
       if (this.formData.isMain === 1) {
-        const filGas = fil.plus(gas)
+        const filGas = fil.plus(handlingFee)
         if (filGas.isGreaterThan(balance)) {
           this.$message.error(this.$t('sendFil.insufficientBalance'))
           return
         }
       } else {
-        if ((gas.isGreaterThan(mainBanance)) || (fil.isGreaterThan(balance))) {
+        if (handlingFee.isGreaterThan(mainBanance) || fil.isGreaterThan(balance)) {
           this.$message.error(this.$t('sendFil.insufficientBalance'))
           return
         }
       }
-      if (this.formData.isMain === 1) {
-        this.sendMain()
-      } else {
-        this.sendToken()
-      }
+      this.passwordVisable = true
     },
-    async sendMain () {
+    async sendMain (_privateKey) {
       this.isFetch = true
-      // eslint-disable-next-line camelcase
-      const create_time = parseInt(new Date().getTime() / 1000)
       try {
         const address = this.address
         const tx = {
           from: address,
           to: this.formData.to,
           value: this.formData.fil,
-          privateKey: this.pkk,
+          privateKey: _privateKey,
           nonce: this.maxNonce,
-          GasPremium: this.formData.gasPremium,
-          GasFeeCap: bigNumbers(this.formData.gasFeeCap).multipliedBy(Math.pow(10, 9)).toNumber(),
-          GasLimit: Math.ceil(this.formData.gasLimit)
+          serviceGas: this.serviceGas
         }
-        // create Api
         const MyGlobalApi = new GlobalApi()
         MyGlobalApi.setRpc(this.rpc)
         MyGlobalApi.setNetworkType(this.networkType)
+
         const result = await MyGlobalApi.sendTransaction(tx)
-        const gasTimes = bigNumbers(this.formData.gasFeeCap).multipliedBy(this.formData.gasLimit)
-        const _AllGas = gasTimes.multipliedBy(Math.pow(10, 9)).toNumber()
-        if (result && result.signed_cid) {
-          // Successfully sent and stored in the message database
-          const _value = bigNumbers(this.formData.fil).multipliedBy(Math.pow(10, Number(this.formData.decimals))).toNumber()
-          await this.db.addTable('messageList', {
-            signed_cid: result.signed_cid,
-            from: address,
-            to: this.formData.to,
-            create_time,
-            block_time: 0,
-            nonce: result.nonce,
-            allGasFee: _AllGas,
-            decimals: this.formData.decimals,
-            token: this.formData.symbol,
-            type: 'pending',
-            khazix: 'khazix',
-            value: _value,
-            rpc: this.rpc
-          })
-          await this.db.deleteTable('addressRecordLast', {
-            address: this.formData.to,
-            rpc: this.rpc
-          })
-          await this.db.addTable('addressRecordLast', {
-            address: this.formData.to,
-            create_time,
-            rpc: this.rpc,
-            khazix: 'khazix'
-          })
+        const handlingFee = this.handlingFee
+        if (result && result.cid) {
+          // Successfully sent and stored in the message
+          const value = bigNumbers(this.formData.fil)
+            .multipliedBy(Math.pow(10, Number(this.formData.decimals)))
+            .toNumber()
+          await this.storeMessage({ value, cid: result.cid, nonce: result.nonce, handlingFee })
           this.isFetch = false
           window.location.href = './wallet.html?fromPage=sendFil'
         } else {
@@ -404,131 +430,178 @@ export default {
         }
       } catch (err) {
         this.isFetch = false
-        console.log(err, 'senFIl err')
       }
     },
     // Send token
-    async sendToken () {
+    async sendToken (_privateKey) {
       try {
         this.isFetch = true
         const fil = this.formData.fil.toString()
-        const numberOfTokens = ethers.utils.parseUnits(fil, this.formData.decimals)
-        const gasTimes = bigNumbers(this.formData.gasFeeCap).multipliedBy(this.formData.gasLimit)
-        const _AllGas = gasTimes.multipliedBy(Math.pow(10, 9)).toNumber()
-        this.contractSigner.transfer(this.formData.to, numberOfTokens, {
-          gasPrice: bigNumbers(this.formData.gasFeeCap).multipliedBy(Math.pow(10, 9)).toNumber(),
-          gasLimit: Math.ceil(this.formData.gasLimit)
+        const numberOfTokens = ethers.utils.parseUnits(
+          fil,
+          this.formData.decimals
+        )
+        const handlingFee = this.handlingFee
+        const provider = ethers.getDefaultProvider(this.rpc)
+        const wallet = new ethers.Wallet(_privateKey, provider)
+        const contractSigner = new ethers.Contract(
+          this.formData.contract,
+          ABI,
+          wallet
+        )
+        contractSigner.transfer(this.formData.to, numberOfTokens, {
+          gasPrice: bigNumbers(this.serviceGas.gasPrice).toNumber(),
+          gasLimit: Math.ceil(this.serviceGas.gasLimit)
         }).then(async (res) => {
-          // eslint-disable-next-line camelcase
-          const create_time = parseInt(new Date().getTime() / 1000)
-          const _value = bigNumbers(this.formData.fil).multipliedBy(Math.pow(10, Number(this.formData.decimals))).toNumber()
-          // Successfully sent and stored in the message database
-          await this.db.addTable('messageList', {
-            signed_cid: res.hash,
-            from: this.address,
-            to: this.formData.to,
-            create_time,
-            block_time: 0,
-            nonce: res.nonce,
-            decimals: this.formData.decimals,
-            token: this.formData.symbol,
-            allGasFee: _AllGas,
-            type: 'pending',
-            khazix: 'khazix',
-            value: _value,
-            rpc: this.rpc
-          })
-          await this.db.deleteTable('addressRecordLast', {
-            address: this.formData.to,
-            rpc: this.rpc
-          })
-          await this.db.addTable('addressRecordLast', {
-            address: this.formData.to,
-            create_time,
-            rpc: this.rpc,
-            khazix: 'khazix'
-          })
+          const value = bigNumbers(this.formData.fil)
+            .multipliedBy(Math.pow(10, Number(this.formData.decimals)))
+            .toNumber()
+          await this.storeMessage({ value, cid: res.hash, nonce: res.nonce, handlingFee })
           this.isFetch = false
           window.location.href = './wallet.html?fromPage=sendFil'
-        }).catch(error => {
-          if (error.error && error.error.message) {
-            if (error.error.message.indexOf('insufficient funds') > -1) {
-              this.$message({
-                type: 'error',
-                message: 'insufficient funds for gas * price + value'
-              })
-            } else {
-              this.$message({
-                type: 'error',
-                message: error.error && error.error.message
-              })
-            }
-          }
-          setTimeout(() => {
-            this.isFetch = false
-          }, 2000)
         })
+          .catch((error) => {
+            if (error.error && error.error.message) {
+              if (error.error.message.indexOf('insufficient funds') > -1) {
+                this.$message({
+                  type: 'error',
+                  message: 'insufficient funds for gas * price + value'
+                })
+              } else {
+                this.$message({
+                  type: 'error',
+                  message: error.error && error.error.message
+                })
+              }
+            }
+            setTimeout(() => {
+              this.isFetch = false
+            }, 2000)
+          })
       } catch (error) {
-        console.log(error, 33333)
         this.$message({
           type: 'error',
           message: error && error.message
         })
         this.isFetch = false
       }
+    },
+    async confirmPassword (password) {
+      const _salt = await encrypt(password, this.address)
+      const _privateKey = await decryptMessage(this.privateKey, _salt, this.address)
+      if (_privateKey) {
+        this.passwordVisable = false
+        if (this.formData.isMain === 1) {
+          this.sendMain(_privateKey)
+        } else {
+          this.sendToken(_privateKey)
+        }
+      }
+    },
+    closePassword () {
+      this.passwordVisable = false
+    },
+    // Successfully sent and stored in the message
+    async storeMessage (data) {
+      const createTime = parseInt(new Date().getTime() / 1000)
+      const messageList = await this.localStore.get('messageList') || []
+      const message = {
+        cid: data.cid,
+        from: this.address,
+        to: this.formData.to,
+        createTime,
+        blockTime: 0,
+        nonce: data.nonce,
+        allGasFee: data.handlingFee,
+        decimals: this.formData.decimals,
+        token: this.formData.symbol,
+        type: 'pending',
+        value: data.value,
+        rpc: this.rpc
+      }
+      await this.localStore.set({
+        messageList: [
+          ...messageList,
+          message
+        ]
+      })
+
+      const addressRecordLast = await this.localStore.get('addressRecordLast') || []
+      const restRecordList = addressRecordLast.filter(n => {
+        return (n.address !== this.formData.to) && (n.rpc !== this.rpx)
+      })
+      const addressRecord = {
+        address: this.formData.to,
+        rpc: this.rpc
+      }
+      await this.localStore.set({
+        addressRecordLast: [
+          ...restRecordList,
+          addressRecord
+        ]
+      })
     }
   }
 }
 </script>
 
 <style  lang="less" scoped>
-.send-fil{
+.send-fil {
+  width: 100%;
+  height: 100%;
+  position: relative;
+
+  .loading {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
-    position: relative;
-
-    .loading{
-        position: absolute;
-        top: 0;
-        left: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+    .img {
+      animation: turnX 3s linear infinite;
+    }
+    @keyframes turnX {
+      0% {
+        transform: rotateZ(0deg);
+      }
+      100% {
+        transform: rotateZ(360deg);
+      }
+    }
+  }
+  /deep/.el-dialog {
+    margin: 0 auto;
+    &.password-verification {
+      border-radius: 10px;
+      .el-dialog__header {
+        padding: 0;
+      }
+      .el-dialog__body {
+        padding: 0;
+      }
+    }
+    &.is-fullscreen {
+      border-radius: 0;
+      .el-dialog__body {
         width: 100%;
         height: 100%;
-        background: rgba(0,0,0,0.6);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 999;
-        .img{
-            animation:turnX 3s linear infinite;
-        }
-        @keyframes turnX{
-            0%{
-                transform:rotateZ(0deg);
-            }
-            100%{
-                transform:rotateZ(360deg);
-            }
-        }
+      }
     }
-    /deep/.el-dialog{
-        margin: 0 auto;
-        &.is-fullscreen{
-            border-radius: 0;
-            .el-dialog__body{
-                width: 100%;
-                height: 100%;
-            }
-        }
-    }
-    /deep/.el-dialog__header{
-        padding:0;
-    }
-    /deep/.el-dialog__body{
-        padding: 0;
-    }
-    /deep/.el-dialog__footer{
-        padding: 30px;
-        border-top:1px solid #eee;
-    }
+  }
+  /deep/.el-dialog__header {
+    padding: 0;
+  }
+  /deep/.el-dialog__body {
+    padding: 0;
+  }
+  /deep/.el-dialog__footer {
+    padding: 30px;
+    border-top: 1px solid #eee;
+  }
 }
 </style>

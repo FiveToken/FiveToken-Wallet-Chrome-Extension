@@ -1,5 +1,5 @@
 <template>
-  <layout>
+  <ky-layout>
     <div class="lock-page">
       <div class="logo">
         <img class="img" :src="logo" />
@@ -8,28 +8,29 @@
       <div class="sub-title">{{$t('lock.subTitle')}}</div>
       <div class="input-item">
         <div class="label">{{$t('lock.label')}}</div>
-        <kyInput
+        <ky-input
           :value="password"
           :type="passwordType"
           @changeInput="passwordChange"
           @changeEye="changeEye"
           :suffix="suffix"
           @keyup.enter.native="unlocking"
-        > </kyInput>
+        > </ky-input>
       </div>
       <div class="btn-wrap">
-        <kyButton type="primary" :active='active' @btnClick="unlocking">{{$t('lock.unlocking')}}</kyButton>
+        <ky-button type="primary" :active='active' @btnClick="unlocking">{{$t('lock.unlocking')}}</ky-button>
+      </div>
+      <div class="btn-bottom">
+        {{$t('lock.bottomLabel')}} <a href="./create-wallet.html?createType=importWords&sourceType=recovery">{{$t('lock.bottomLabel2')}}</a> {{$t('lock.bottomLabel3')}}
       </div>
     </div>
-  </layout>
+  </ky-layout>
 </template>
 
 <script>
-import { validatePassword } from '@/utils'
-import layout from '@/components/layout'
-import kyInput from '@/components/input'
-import kyButton from '@/components/button'
-import { Database } from '@/utils/database.js'
+import ExtensionStore from '@/utils/local-store'
+import { decryptByPrivateKey } from '@/utils/encrypt'
+import { mapState } from 'vuex'
 export default {
   data () {
     return {
@@ -37,27 +38,18 @@ export default {
       suffix: true,
       password: '',
       passwordType: 'password',
-      salt: null,
-      db: null
+      localStore: null
     }
   },
   computed: {
+    ...mapState('app', ['privateKey', 'address']),
     active () {
       return this.password !== ''
     }
   },
-  components: {
-    layout,
-    kyInput,
-    kyButton
-  },
   async mounted () {
-    const db = new Database()
-    this.db = db
-    const walletKey = await db.getTable('walletKey', { khazix: 'khazix' })
-    if (walletKey.length) {
-      this.salt = walletKey[0].salt
-    }
+    const localStore = new ExtensionStore()
+    this.localStore = localStore
   },
   methods: {
     passwordChange (val) {
@@ -70,20 +62,18 @@ export default {
       if (!this.password) {
         return
       }
-      if (this.salt) {
-        const voild = await validatePassword(this.password, this.salt)
-        if (voild) {
-          await this.db.deleteTable('lockUser', { khazix: 'khazix' })
-          const nextPage = window.localStorage.getItem('nextPage')
-          if (nextPage === 'fiveToken-connect') {
-            window.localStorage.removeItem('nextPage')
-            window.location.href = './fiveToken-connect.html'
-          } else {
-            window.location.href = './wallet.html'
-          }
+      const voild = await decryptByPrivateKey(this.privateKey, this.password, this.address)
+      if (voild) {
+        await this.localStore.remove('lockUser')
+        const nextPage = window.localStorage.getItem('nextPage')
+        if (nextPage === 'fiveToken-connect') {
+          window.localStorage.removeItem('nextPage')
+          window.location.href = './fiveToken-connect.html'
         } else {
-          this.$message.error(this.$t('lock.passwordError'))
+          window.location.href = './wallet.html'
         }
+      } else {
+        this.$message.error(this.$t('lock.passwordError'))
       }
     }
   }
@@ -127,7 +117,15 @@ export default {
   }
   .btn-wrap{
     display: flex;
-
+  }
+  .btn-bottom{
+    font-size: 14px;
+    color: #222;
+    margin: 10px 0 20px 0;
+    a{
+      color: #1895A2;
+      cursor: pointer;
+    }
   }
 }
 </style>

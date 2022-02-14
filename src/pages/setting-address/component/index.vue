@@ -1,5 +1,5 @@
 <template>
-    <layout @layoutMounted="layoutMounted">
+    <ky-layout @layoutMounted="layoutMounted">
         <div class="setting-address">
             <addressList
                 v-if="pageType === 'list'"
@@ -20,17 +20,20 @@
                 :to="to"
             />
         </div>
-    </layout>
+    </ky-layout>
 </template>
 
 <script>
 import addressList from './address-list'
 import addressFrom from './address-form'
-import layout from '@/components/layout'
 import { getQueryString } from '@/utils'
 import { mapState } from 'vuex'
-import { Database } from '@/utils/database.js'
+import ExtensionStore from '@/utils/local-store'
 export default {
+  components: {
+    addressList,
+    addressFrom
+  },
   data () {
     return {
       pageType: 'list',
@@ -39,13 +42,8 @@ export default {
       editAddress: '',
       addressRecordLast: [],
       addressBook: [],
-      db: null
+      localStore: null
     }
-  },
-  components: {
-    addressList,
-    addressFrom,
-    layout
   },
   computed: {
     ...mapState('app', ['rpc', 'address'])
@@ -56,17 +54,25 @@ export default {
       this.to = to
       this.pageType = 'add'
     }
-    console.log(to, 'ttoo')
   },
   methods: {
     async layoutMounted () {
       const rpc = this.rpc
-      const db = new Database()
-      this.db = db
-      const addressRecordLast = await db.getTable('addressRecordLast', { rpc: rpc, address: this.address })
-      this.addressRecordLast = addressRecordLast
-      const addressBook = await db.getTable('addressBook', { rpc: rpc })
-      this.addressBook = addressBook
+      const localStore = new ExtensionStore()
+      this.localStore = localStore
+      const _addressRecordLast = await localStore.get('addressRecordLast')
+      if (_addressRecordLast) {
+        const addressRecordLast = _addressRecordLast.filter(n => {
+          return (n.rpc === rpc) && (n.address === this.address)
+        })
+        this.addressRecordLast = addressRecordLast
+      }
+
+      const _addressBook = await localStore.get('addressBook')
+      if (_addressBook) {
+        const addressBook = _addressBook.filter(n => n.rpc === rpc)
+        this.addressBook = addressBook
+      }
     },
     addressDetail (detailObj) {
       this.pageType = 'edit'
@@ -79,14 +85,20 @@ export default {
     },
     async addEditAddressCb () {
       const rpc = this.rpc
-      const addressBook = await this.db.getTable('addressBook', { rpc: rpc })
-      this.addressBook = addressBook
+      const _addressBook = await this.localStore.get('addressBook') || []
+      if (_addressBook) {
+        const addressBook = _addressBook.filter(n => n.rpc === rpc)
+        this.addressBook = addressBook
+      }
       this.pageType = 'list'
     },
     async deleteAddressCb () {
       const rpc = this.rpc
-      const addressBook = await this.db.getTable('addressBook', { rpc: rpc })
-      this.addressBook = addressBook
+      const _addressBook = await this.localStore.get('addressBook') || []
+      if (_addressBook) {
+        const addressBook = _addressBook.filter(n => n.rpc === rpc)
+        this.addressBook = addressBook
+      }
       this.pageType = 'list'
     }
   }

@@ -1,8 +1,8 @@
 <template>
-  <layout>
+  <ky-layout>
     <div class="message-detail-page">
       <div class="back-wrap">
-        <kyBack :name="$t('messageDetail.title')" @pageBack="back" />
+        <ky-back :name="$t('messageDetail.title')" @pageBack="back" />
       </div>
       <div class="content" v-if="detail">
         <div class="icon-wrap">
@@ -24,7 +24,7 @@
             </div>
             <div class="value">
               <div class="text">
-                {{ detail.allGasFee | formatGas(18,decimals) }} {{ symbol }}
+                {{ detail.allGasFee | formatGas(decimals) }} {{ symbol }}
               </div>
             </div>
           </div>
@@ -49,7 +49,7 @@
           <div class="info-item">
             <div class="label">{{ $t("messageDetail.messageId") }}</div>
             <div class="value">
-              <div class="text">{{ detail.signed_cid }}</div>
+              <div class="text">{{ detail.cid }}</div>
             </div>
             <div class="view" @click="viewInBroswer">
               <i class="el-icon-top-right"></i>
@@ -58,14 +58,13 @@
         </div>
       </div>
     </div>
-  </layout>
+  </ky-layout>
 </template>
 <script>
-import layout from '@/components/layout'
-import kyBack from '@/components/back'
 import { getQueryString, formatNumber, formatDate, isFilecoinChain } from '@/utils'
 import { mapState } from 'vuex'
 import { BigNumber } from 'bignumber.js'
+import { openUrl } from '@/popup.js'
 export default {
   data () {
     return {
@@ -79,11 +78,10 @@ export default {
       const num = formatNumber(big, n)
       return num
     },
-    formatGas (val, n, decimals) {
-      console.log(decimals, 'decimals 77777')
-      const dec = val / Math.pow(10, Number(decimals))
+    formatGas (val, decimals) {
+      const dec = Number(val) / Math.pow(10, Number(decimals))
       const big = new BigNumber(dec).toFixed()
-      const num = formatNumber(big, n)
+      const num = formatNumber(big, 12)
       return num
     }
   },
@@ -92,9 +90,9 @@ export default {
     time () {
       let str = ''
       if (this.detail && this.detail.type === 'pending') {
-        str = formatDate(this.detail.create_time, true)
+        str = formatDate(this.detail.createTime, true)
       } else {
-        str = this.detail.block_time
+        str = this.detail.blockTime
       }
       return str
     },
@@ -139,15 +137,10 @@ export default {
       return name
     }
   },
-  components: {
-    layout,
-    kyBack
-  },
   mounted () {
     const listObjStr = getQueryString('listObjStr')
     const detailObj = JSON.parse(listObjStr)
     this.detail = Object.assign({}, this.detail, detailObj)
-    console.log(detailObj, 'listObjStr 123')
   },
   methods: {
     back () {
@@ -156,17 +149,13 @@ export default {
     viewInBroswer () {
       if (this.browser) {
         // eslint-disable-next-line camelcase
-        const signed_cid = this.detail.signed_cid
+        const cid = this.detail.cid
         let url = ''
         if (isFilecoinChain(this.networkType)) {
-          // eslint-disable-next-line camelcase
-          url = this.browser + `/tipset/message-detail?cid=${signed_cid}`
-          // eslint-disable-next-line no-undef
+          url = this.browser + `/tipset/message-detail?cid=${cid}`
           openUrl(url)
         } else {
-          // eslint-disable-next-line camelcase
-          url = this.browser + `/tx/${signed_cid}`
-          // eslint-disable-next-line no-undef
+          url = this.browser + `/tx/${cid}`
           openUrl(url)
         }
       } else {

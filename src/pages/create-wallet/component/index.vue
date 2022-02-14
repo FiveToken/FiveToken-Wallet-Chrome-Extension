@@ -1,68 +1,69 @@
 <template>
-    <layout @layoutMounted="layoutMounted">
+    <ky-layout @layoutMounted="layoutMounted">
         <div class="create-wallet">
-            <kyBack @pageBack="back" />
+            <ky-back @pageBack="back" />
             <div class="title">
-                {{ createType === 'create' ? $t('creatWallet.title') : $t('creatWallet.importWords') }}
+                {{ createType === 'create' ? $t('creatWallet.title') : sourceType === 'recovery'? $t('creatWallet.recoveryWords') : $t('creatWallet.importWords') }}
             </div>
             <div class="input-item">
                 <div class="label">{{$t('creatWallet.accountName')}}</div>
-                <kyInput
+                <ky-input
                     :value="form.accountName"
                     maxlength='15'
                     :error="nameError"
                     type="text"
                     @changeInput="nameChange"
-                ></kyInput>
+                ></ky-input>
                 <div class="error" v-if="nameError">{{$t('creatWallet.nameError')}}</div>
                 <div class="tips" v-else>{{$t('creatWallet.nameTips')}}</div>
             </div>
 
             <div class="input-item">
                 <div class="label">{{$t('creatWallet.password')}}</div>
-                <kyInput
+                <ky-input
                     :value="form.password"
                     :error="passwordError"
+                    maxlength='20'
                     :suffix="suffix"
                     :type="passwordType"
                     @changeInput="passwordChange"
                     @changeEye="passwordEye"
-                ></kyInput>
+                ></ky-input>
                 <div class="error" v-if="passwordError">
-                    {{diff ? $t('creatWallet.diffError'):$t('creatWallet.passwordError')}}
+                    {{ $t('creatWallet.passwordError')}}
                 </div>
-                <div class="tips" v-else>{{$t('creatWallet.passwordTips')}}</div>
+               <ky-progress :value="passwordLevel"></ky-progress>
+               <div>{{$t('creatWallet.strengthTips')}}</div>
             </div>
 
             <div class="input-item">
                 <div class="label">{{$t('creatWallet.confirmPassword')}}</div>
-                <kyInput
+                <ky-input
                     :value="form.confirmPassword"
                     :error="confirmError"
                     :suffix="suffix"
                     :type="confirmType"
+                    maxlength='20'
                     @changeInput="confirmChange"
                     @changeEye="confirmEye"
-                ></kyInput>
+                ></ky-input>
                 <div class="error" v-if="confirmError">
                     {{diff ? $t('creatWallet.diffError'):$t('creatWallet.passwordError')}}
                 </div>
+                <div class="error" v-if="levelError">
+                  {{$t('creatWallet.strengthTips')}}
+                </div>
             </div>
             <div class="btn-wrap">
-                <kyButton :type="'primary'" :active="!disabled" @btnClick="create">{{$t('creatWallet.btn')}}</kyButton>
+                <ky-button :type="'primary'" :active="!disabled" @btnClick="create">{{$t('creatWallet.btn')}}</ky-button>
             </div>
         </div>
-    </layout>
+    </ky-layout>
 </template>
 
 <script>
 import * as bip39 from 'bip39'
-import { getQueryString } from '@/utils'
-import layout from '@/components/layout'
-import kyButton from '@/components/button'
-import kyInput from '@/components/input'
-import kyBack from '@/components/back'
-
+import { getQueryString, zxcvbnFun, isValidPass } from '@/utils'
 export default {
   data () {
     return {
@@ -80,7 +81,10 @@ export default {
         confirmPassword: ''
       },
       placeholder: '',
-      createType: ''
+      createType: '',
+      sourceType: '',
+      passwordLevel: 0,
+      levelError: false
     }
   },
   computed: {
@@ -92,15 +96,12 @@ export default {
       return !bol
     }
   },
-  components: {
-    layout,
-    kyInput,
-    kyButton,
-    kyBack
-  },
   mounted () {
     const createType = getQueryString('createType')
+    const sourceType = getQueryString('sourceType')
+    this.passwordLevel = zxcvbnFun(this.form.password)
     this.createType = createType
+    this.sourceType = sourceType
     this.$set(this.form, 'accountName', 'Account1')
   },
   methods: {
@@ -110,6 +111,7 @@ export default {
       this.form.accountName = val
     },
     passwordChange (val) {
+      this.passwordLevel = zxcvbnFun(val)
       this.form.password = val
     },
     passwordEye (eye) {
@@ -133,7 +135,7 @@ export default {
             const url = `./create-words.html?accountName=${accountName}&password=${this.form.password}&mnemonicWords=${mnemonicWords}&createType=${this.createType}`
             window.location.href = url
           } else {
-            const url = `./import-words.html?accountName=${accountName}&password=${this.form.password}&createType=${this.createType}`
+            const url = `./import-words.html?accountName=${accountName}&password=${this.form.password}&createType=${this.createType}&sourceType=${this.sourceType}`
             window.location.href = url
           }
         }
@@ -146,36 +148,40 @@ export default {
       this.diff = false
     },
     check () {
-      if (this.form.accountName.length > 15) {
+      const { password, confirmPassword, accountName } = this.form
+      if (accountName.length > 15) {
         this.nameError = true
         return false
       } else {
         this.nameError = false
       }
-
-      if (this.form.password.length < 8) {
+      if (!isValidPass(password)) {
         this.passwordError = true
         return false
       } else {
         this.passwordError = false
       }
 
-      if (this.form.confirmPassword.length < 8) {
+      if (!isValidPass(confirmPassword)) {
         this.confirmError = true
         return false
       } else {
         this.confirmError = false
       }
 
-      if (this.form.password !== this.form.confirmPassword) {
-        this.passwordError = true
+      if (password !== confirmPassword) {
         this.confirmError = true
         this.diff = true
         return false
       } else {
-        this.passwordError = false
         this.confirmError = false
         this.diff = false
+      }
+      if (this.passwordLevel < 4) {
+        this.levelError = true
+        return false
+      } else {
+        this.levelError = false
       }
       return true
     },
@@ -184,7 +190,7 @@ export default {
     },
     back () {
       // const backPage = getQueryString('backPage')
-      window.location.href = './welcome.html'
+      window.location.href = this.sourceType === 'recovery' ? './fivetoken.html' : './welcome.html'
     }
   }
 }
@@ -198,6 +204,10 @@ export default {
     background: #fff;
     box-sizing: border-box;
     padding: 20px;
+    .back-wrap{
+      padding: 15px 20px;
+      border-bottom: 1px solid #eee;
+    }
     .title{
         color: #222;
         font-size: 18px;
@@ -249,7 +259,7 @@ export default {
         }
     }
     .btn-wrap{
-        padding-top: 80px;
+        padding-top: 60px;
     }
 }
 </style>

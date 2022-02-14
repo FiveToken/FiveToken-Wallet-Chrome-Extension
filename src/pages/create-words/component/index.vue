@@ -1,43 +1,39 @@
 <template>
-    <layout>
-        <div class="create-words">
-            <kyBack @pageBack="back"/>
-            <div class="content">
-                 <div class="title">{{$t('creatWords.title')}}</div>
-                <div class="sub-title">{{$t('creatWords.subTitle')}}</div>
-                <div class="mnemonic-words">
-                    <div class="words-items" v-for="(item,index) in mnemonicArr" :key="index">
-                        <div class="no">#{{index+1}}</div>
-                        <div class="text">{{item}}</div>
-                    </div>
-                </div>
-                <div class="copy copy-words" @click="copyWords" :data-clipboard-text="mnemonicWords">
-                    {{$t('creatWords.copy')}}
-                </div>
-                <div class="tips">{{$t('creatWords.tips1')}}</div>
-                <div class="tips">{{$t('creatWords.tips2')}}</div>
-                <div class="btn-wrap">
-                    <kyButton :type="'primary'" :active="active" @btnClick="next">{{$t('creatWords.btn1')}}</kyButton>
-                    <kyButton @btnClick="skip">{{$t('creatWords.btn2')}}</kyButton>
-                </div>
-            </div>
-            <div class="loading" v-if="isFetch">
-                <img :src="loading" alt="" class="img">
-            </div>
-            <div class="mask" v-if="mask"></div>
+  <ky-layout>
+    <div class="create-words">
+      <ky-back @pageBack="back" />
+      <div class="content">
+        <div class="title">{{ $t("creatWords.title") }}</div>
+        <div class="sub-title">{{ $t("creatWords.subTitle") }}</div>
+        <div class="mnemonic-words">
+          <div
+            class="words-items"
+            v-for="(item, index) in mnemonicArr"
+            :key="index"
+          >
+            <div class="no">#{{ index + 1 }}</div>
+            <div class="text">{{ item }}</div>
+          </div>
         </div>
-    </layout>
+        <div class="tips">{{ $t("creatWords.tips1") }}</div>
+        <div class="tips">{{ $t("creatWords.tips2") }}</div>
+        <div class="btn-wrap">
+          <ky-button :type="'primary'" :active="active" @btnClick="next">{{
+            $t("creatWords.btn1")
+          }}</ky-button>
+        </div>
+      </div>
+      <div class="loading" v-if="isFetch">
+        <img :src="loading" alt="" class="img" />
+      </div>
+      <div class="mask" v-if="mask"></div>
+    </div>
+  </ky-layout>
 </template>
 
 <script>
-import ClipboardJS from 'clipboard'
-import layout from '@/components/layout'
-import kyButton from '@/components/button'
-import kyBack from '@/components/back'
 import { mapMutations, mapState } from 'vuex'
-import { getQueryString, getF1ByMne, setGlabolKek } from '@/utils'
-import { genSalt, genKek, AESEncrypt } from '@/utils/key'
-import { Database } from '@/utils/database.js'
+import { getQueryString } from '@/utils'
 export default {
   data () {
     return {
@@ -50,14 +46,8 @@ export default {
       accountName: '',
       password: '',
       mnemonicArr: [],
-      createType: '',
-      db: null
+      createType: ''
     }
-  },
-  components: {
-    layout,
-    kyBack,
-    kyButton
   },
   computed: {
     ...mapState('app', [
@@ -79,267 +69,152 @@ export default {
     this.createType = createType
     this.accountName = decodeURIComponent(accountName)
     this.password = password
-
-    const db = new Database()
-    this.db = db
   },
   methods: {
-    ...mapMutations('app', [
-      'SET_DERIVEINDEX'
-    ]),
+    ...mapMutations('app', ['SET_DERIVEINDEX']),
     getQuery (name) {
       let reg = new RegExp('(^|&)' + name + '=([^&]*)(&|$)', 'i')
       let r = window.location.search.substr(1).match(reg)
       let context = ''
-      if (r != null) { context = r[2] }
+      if (r != null) {
+        context = r[2]
+      }
       reg = null
       r = null
-      return context == null || context === '' || context === 'undefined' ? '' : context
-    },
-    async skip () {
-      this.isFetch = true
-      try {
-        setTimeout(async () => {
-          const kek = genKek(this.password)
-          // let f1 = await getF1ByMne(this.mnemonicWords,kek,this.networkType,this.filecoinAddress0,index)
-          const ethereumF1 = await getF1ByMne(this.mnemonicWords, kek, 'ethereum', '', 0)
-          const filecoinF1 = await getF1ByMne(this.mnemonicWords, kek, 'proxy', 'f', 0)
-          const calibrationF1 = await getF1ByMne(this.mnemonicWords, kek, 'proxy', 't', 0)
-          const { address, privateKey, digest } = filecoinF1
-          const accountName = this.accountName
-          this.SET_DERIVEINDEX(1)
-          await this.db.modifyTable(
-            'activenNetworks',
-            { rpc: this.rpc },
-            { deriveIndex: 1 }
-          )
-          // eslint-disable-next-line camelcase
-          const create_time = parseInt(new Date().getTime() / 1000)
-          const _account = []
-          const _networks = []
-          for (const n of this.networks) {
-            if (n.filecoinAddress0 === 'f') {
-              _account.push({
-                accountName,
-                address: filecoinF1.address,
-                createType: 'mnemonic',
-                privateKey: filecoinF1.privateKey,
-                create_time,
-                khazix: 'khazix',
-                digest: filecoinF1.digest,
-                fil: 0,
-                isDelete: 0,
-                rpc: n.rpc
-              })
-            } else if (n.filecoinAddress0 === 't') {
-              _account.push({
-                accountName,
-                address: calibrationF1.address,
-                createType: 'mnemonic',
-                privateKey: calibrationF1.privateKey,
-                create_time,
-                khazix: 'khazix',
-                digest: calibrationF1.digest,
-                fil: 0,
-                isDelete: 0,
-                rpc: n.rpc
-              })
-            } else {
-              _account.push({
-                accountName,
-                address: ethereumF1.address,
-                createType: 'mnemonic',
-                privateKey: ethereumF1.privateKey,
-                create_time,
-                khazix: 'khazix',
-                digest: ethereumF1.digest,
-                fil: 0,
-                isDelete: 0,
-                rpc: n.rpc
-              })
-            }
-            _networks.push({
-              ...n,
-              deriveIndex: 1
-            })
-          }
-          await this.db.bulkAddTable('accountList', _account)
-          await this.db.bulkPutTable('networks', _networks)
-          await this.db.addTable('activeAccount', {
-            address,
-            accountName,
-            privateKey,
-            create_time,
-            khazix: 'khazix',
-            rpc: this.rpc,
-            fil: 0,
-            createType: 'mnemonic',
-            digest
-          })
-
-          const salt = genSalt(this.password)
-          setGlabolKek(kek)
-          const mnemonic = AESEncrypt(this.mnemonicWords, kek)
-
-          await this.db.addTable('walletKey', {
-            mnemonicWords: mnemonic,
-            salt,
-            rpc: this.rpc,
-            khazix: 'khazix'
-          })
-
-          this.isFetch = false
-          window.location.href = './wallet.html'
-        }, 0)
-      } catch (error) {
-        console.log(error, 'error')
-      }
+      return context == null || context === '' || context === 'undefined'
+        ? ''
+        : context
     },
     back () {
       window.location.href = `./create-wallet.html?backPage=wallet&createType=${this.createType}`
     },
-    copyWords () {
-      this.mask = true
-      const that = this
-      const clipboard = new ClipboardJS('.copy-words')
-      clipboard.on('success', function (e) {
-        that.$message({
-          message: that.$t('creatWords.copySuccess'),
-          type: 'success',
-          duration: 1500,
-          onClose: () => {
-            that.mask = false
-          }
-        })
-      })
-      clipboard.on('error', function (e) {})
-    },
     next () {
       const accountName = encodeURIComponent(this.accountName)
-      window.location.href = `./check-words.html?mnemonicWords=${this.mnemonicWords}&accountName=${accountName}&password=${this.password}&createType=${this.createType}`
+      const url = `./check-words.html?mnemonicWords=${this.mnemonicWords}&accountName=${accountName}&password=${this.password}&createType=${this.createType}`
+      window.location.href = url
     }
   }
 }
 </script>
 
 <style  lang="less" scoped>
-.create-words{
+.create-words {
+  width: 100%;
+  margin: 0 auto;
+  min-height: 100%;
+  background: #fff;
+  box-sizing: border-box;
+  padding: 15px 20px;
+  position: relative;
+  .mask {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
-    margin: 0 auto;
-    min-height: 100%;
-    background: #fff;
-    box-sizing: border-box;
-    padding: 15px 20px;
-    position: relative;
-    .mask{
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.6);
-        z-index: 999;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 999;
+  }
+  .loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+    .img {
+      animation: turnX 3s linear infinite;
     }
-    .loading{
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.6);
+    @keyframes turnX {
+      0% {
+        transform: rotateZ(0deg);
+      }
+      100% {
+        transform: rotateZ(360deg);
+      }
+    }
+  }
+  .back {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    font-size: 18px;
+    color: #222;
+    cursor: pointer;
+  }
+  .content {
+    display: flex;
+    justify-content: space-between;
+    flex-direction: column;
+    padding: 30px 0 0;
+    .title {
+      color: #222;
+      font-size: 20px;
+      font-weight: bolder;
+      margin-bottom: 20px;
+    }
+    .sub-title {
+      color: #222;
+      font-size: 16px;
+      margin-bottom: 20px;
+      line-height: 20px;
+    }
+    .mnemonic-words {
+      width: 100%;
+      display: flex;
+      flex-wrap: wrap;
+      .words-items {
+        width: 100px;
+        height: 30px;
+        margin-right: 10px;
+        margin-bottom: 15px;
+        background: #f1f3fd;
+        position: relative;
         display: flex;
         align-items: center;
         justify-content: center;
-        z-index: 999;
-        .img{
-            animation:turnX 3s linear infinite;
+        border-radius: 4px;
+        &:nth-child(3n) {
+          margin-right: 0;
         }
-        @keyframes turnX{
-            0%{
-                transform:rotateZ(0deg);
-            }
-            100%{
-                transform:rotateZ(360deg);
-            }
+        .text {
+          font-size: 14px;
+          color: #101010;
         }
+        .no {
+          position: absolute;
+          top: 0px;
+          left: 3px;
+          color: #6a6767;
+          font-size: 12px;
+          transform: scale(0.8);
+        }
+      }
     }
-    .back{
-        display: flex;
-        align-items: center;
-        margin-bottom: 20px;
-        font-size: 18px;
-        color: #222;
-        cursor: pointer;
+    .btn-wrap {
+      display: flex;
+      justify-content: space-between;
+      padding-top: 60px;
+      /deep/.button-wrap {
+        width: 155px;
+      }
     }
-    .content{
-        display: flex;
-        justify-content: space-between;
-        flex-direction: column;
-        padding: 30px 0 0;
-        .title{
-            color: #222;
-            font-size: 20px;
-            font-weight: bolder;
-            margin-bottom: 20px;
-        }
-        .sub-title{
-            color: #222;
-            font-size: 16px;
-            margin-bottom: 20px;
-            line-height: 20px;
-        }
-        .mnemonic-words{
-            width: 100%;
-            display: flex;
-            flex-wrap: wrap;
-            .words-items{
-                width: 100px;
-                height: 30px;
-                margin-right: 10px;
-                margin-bottom: 15px;
-                background: #F1F3FD;
-                position: relative;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                border-radius: 4px;
-                &:nth-child(3n){
-                    margin-right: 0;
-                }
-                .text{
-                    font-size: 14px;
-                    color: #101010;
-                }
-                .no{
-                    position: absolute;
-                    top: 0px;
-                    left: 3px;
-                    color: #6A6767;
-                    font-size: 12px;
-                    transform: scale(.8);
-                }
-            }
-        }
-        .btn-wrap{
-            display: flex;
-            justify-content: space-between;
-            padding-top: 60px;
-            /deep/.button-wrap{
-                width: 155px;
-            }
-        }
-        .copy{
-            font-size: 14px;
-            color: #1C818A;
-            margin-bottom: 15px;
-            padding-top: 20px;
-            cursor: pointer;
-        }
-        .tips{
-            font-size: 12px;
-            color: #6A6767;
-            line-height: 20px;
-        }
+    .copy {
+      font-size: 14px;
+      color: #1c818a;
+      margin-bottom: 15px;
+      padding-top: 20px;
+      cursor: pointer;
     }
+    .tips {
+      font-size: 12px;
+      color: #6a6767;
+      line-height: 20px;
+    }
+  }
 }
 </style>

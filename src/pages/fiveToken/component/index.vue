@@ -14,12 +14,13 @@
 import welcome from '@/pages/welcome/component/index.vue'
 import wallet from '@/pages/wallet/component/index.vue'
 import lock from '@/pages/lock-user/component/index.vue'
-import { Database } from '@/utils/database.js'
+import ExtensionStore from '@/utils/local-store'
 export default {
   data () {
     return {
       accountList: [],
-      lock: false
+      lock: false,
+      localStore: null
     }
   },
   components: {
@@ -28,15 +29,56 @@ export default {
     lock
   },
   async beforeCreate () {
-    const db = new Database()
-    const activenNetworks = await db.getTable('activenNetworks', { khazix: 'khazix' })
-    const rpc = activenNetworks.length && activenNetworks[0].rpc
-    const lockUser = await db.getTable('lockUser', { khazix: 'khazix' })
-    if (lockUser.length) {
-      this.lock = true
+    const localStore = new ExtensionStore()
+    const allStore = await localStore.get(null)
+    console.log(allStore, 'allStoreallStoreallStore')
+    const activeNetwork = await localStore.get('activeNetwork')
+    if (activeNetwork) {
+      const rpc = activeNetwork.rpc
+      const lockUser = await localStore.get('lockUser')
+      if (lockUser) {
+        this.lock = true
+      }
+      const accountList = await localStore.get('accountList')
+      if (accountList) {
+        const myAccountList = accountList.filter((n) => n.rpc === rpc)
+        this.accountList = myAccountList || []
+      }
     }
-    const accountList = await db.getTable('accountList', { rpc: rpc, isDelete: 0 })
-    this.accountList = accountList || []
+  },
+  async mounted () {
+    const localStore = new ExtensionStore()
+    this.localStore = localStore
+    window.onunload = function () {
+      const time = new Date().getTime()
+      localStorage.setItem('time', time.toString())
+      localStorage.setItem('onunload', time.toString())
+    }
+    await this.eventListener()
+  },
+  beforeDestroy () {
+    this.updateTime()
+  },
+  methods: {
+    updateTime () {
+      const time = new Date().getTime()
+      localStorage.setItem('time', time.toString())
+    },
+    async eventListener () {
+      const lastTime = localStorage.getItem('time')
+      const time = new Date().getTime()
+      const activeAccount = await this.localStore.get('activeAccount')
+      const { address, privateKey } = activeAccount
+      if (lastTime !== null && time - Number(lastTime) > 300 * 1000) {
+        await this.localStore.set({
+          lockUser: {
+            address,
+            privateKey
+          }
+        })
+      }
+      localStorage.setItem('time', time.toString())
+    }
   }
 }
 </script>
@@ -47,5 +89,4 @@ export default {
     height: 100%;
   }
 }
-
 </style>

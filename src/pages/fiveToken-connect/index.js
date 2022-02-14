@@ -4,7 +4,10 @@ import i18n from '../../i18n'
 import router from '../../router'
 import store from '../../store'
 import { Checkbox, CheckboxGroup, Button, Icon, Dialog, Input } from 'element-ui'
-
+import Com from '../../components/index.td'
+const { KyLayout, KyButton } = Com
+Vue.component(KyLayout.name, KyLayout)
+Vue.component(KyButton.name, KyButton)
 Vue.use(Checkbox)
 Vue.use(CheckboxGroup)
 Vue.use(Button)

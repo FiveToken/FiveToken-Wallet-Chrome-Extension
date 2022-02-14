@@ -1,7 +1,7 @@
 <template>
 <div class="networks-list">
     <div class="back">
-        <kyBack :name="$t('settingNetworks.title')" @pageBack="back" :close="true" @pageClose="closeSetting"/>
+        <ky-back :name="$t('settingNetworks.title')" @pageBack="back" :close="true" @pageClose="closeSetting"/>
     </div>
     <div class="list">
         <div class="list-item" :class="{disabled:item.disabled}" v-for="(item,index) in networks" :key="index" @click="networksItem(item)">
@@ -15,14 +15,12 @@
         </div>
     </div>
     <div class="add" @click="addNetwork">
-        <kyButton :active="true" :type="'primary'">{{$t('settingNetworks.addNetwork')}}</kyButton>
+        <ky-button :active="true" :type="'primary'">{{$t('settingNetworks.addNetwork')}}</ky-button>
     </div>
 </div>
 </template>
 
 <script>
-import kyBack from '@/components/back'
-import kyButton from '@/components/button'
 import { mapState } from 'vuex'
 export default {
   data () {
@@ -32,10 +30,6 @@ export default {
   },
   computed: {
     ...mapState('app', ['rpc'])
-  },
-  components: {
-    kyBack,
-    kyButton
   },
   props: {
     networks: Array

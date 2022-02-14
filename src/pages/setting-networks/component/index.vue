@@ -1,5 +1,5 @@
 <template>
-    <layout>
+    <ky-layout>
         <div class="setting-networks">
             <networksList
                 :networks="networks"
@@ -8,7 +8,7 @@
                 v-if="pageType === 'list'"
             />
             <networksFrom
-                :deletaRpc="deletaRpc"
+                :deleteRpc="deleteRpc"
                 :detail="detail"
                 :pageType.sync="pageType"
                 @deleteNetworkCb="deleteNetworkCb"
@@ -16,54 +16,56 @@
                 v-if="pageType === 'detail'"
             />
         </div>
-    </layout>
+    </ky-layout>
 </template>
 
 <script>
 import networksList from './networks-list'
 import networksFrom from './networks-form'
-import layout from '@/components/layout'
-import { Database, reverseOrder } from '@/utils/database.js'
+import ExtensionStore from '@/utils/local-store'
 export default {
   data () {
     return {
       pageType: 'list',
       detail: null,
-      deletaRpc: '',
+      deleteRpc: '',
       networks: [],
-      db: null
+      localStore: null
     }
   },
   components: {
     networksList,
-    networksFrom,
-    layout
+    networksFrom
   },
   async mounted () {
-    const db = new Database()
-    this.db = db
-    const networks = await db.getTable('networks', { khazix: 'khazix' })
+    const localStore = new ExtensionStore()
+    this.localStore = localStore
+    const networks = await localStore.get('networks')
     this.networks = networks
   },
   methods: {
     networksItemClick (obj) {
       this.detail = obj
-      this.deletaRpc = obj.rpc
+      this.deleteRpc = obj.rpc
       this.pageType = 'detail'
     },
     addNetwork () {
-      this.deletaRpc = ''
+      this.deleteRpc = ''
       this.detail = null
       this.pageType = 'detail'
     },
     async deleteNetworkCb () {
-      const networks = await this.db.getTable('networks', { khazix: 'khazix' }, reverseOrder, 'create_time')
-      this.networks = networks
+      const networks = await this.localStore.get('networks')
+      if (networks) {
+        this.networks = networks
+      }
       this.pageType = 'list'
     },
     async addNetworkCb () {
-      const networks = await this.db.getTable('networks', { khazix: 'khazix' }, reverseOrder, 'create_time')
-      this.networks = networks
+      const networks = await this.localStore.get('networks')
+      if (networks) {
+        this.networks = networks
+      }
       this.pageType = 'list'
     }
   }

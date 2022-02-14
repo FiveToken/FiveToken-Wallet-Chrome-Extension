@@ -1,7 +1,7 @@
 <template>
 <div class="address-list">
     <div class="back-wrap">
-        <kyBack
+        <ky-back
             @pageBack="back"
             :name="$t('settingAddress.addressBook')"
             :close="true"
@@ -24,9 +24,9 @@
     </div>
     <div class="position">
         <div class="add-btn">
-            <kyButton :type="'primary'" :active="true" @btnClick="addAddress">
+            <ky-button :type="'primary'" :active="true" @btnClick="addAddress">
                 {{$t('settingAddress.add')}}
-            </kyButton>
+            </ky-button>
         </div>
     </div>
 </div>
@@ -34,23 +34,17 @@
 
 <script>
 import { mapState } from 'vuex'
-import kyBack from '@/components/back'
-import kyButton from '@/components/button'
 export default {
+  props: {
+    pageType: String,
+    addressRecordLast: Array,
+    addressBook: Array
+  },
   data () {
     return {
       search: '',
       collapse: '1'
     }
-  },
-  components: {
-    kyBack,
-    kyButton
-  },
-  props: {
-    pageType: String,
-    addressRecordLast: Array,
-    addressBook: Array
   },
   computed: {
     ...mapState('app', ['accountList'])
@@ -64,9 +58,6 @@ export default {
       }
     }
   },
-  mounted () {
-
-  },
   methods: {
     changeSearch (val) {
       this.search = val
@@ -78,7 +69,6 @@ export default {
       window.location.href = './wallet.html'
     },
     addressClick (detail) {
-      console.log(detail, 'detail 123')
       this.$emit('addressDetail', detail)
     },
     addAddress () {

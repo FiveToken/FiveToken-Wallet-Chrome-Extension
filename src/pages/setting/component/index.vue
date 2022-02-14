@@ -1,8 +1,8 @@
 <template>
-    <layout>
+    <ky-layout>
         <div class="setting">
             <div class="top-nav">
-                <kyBack :name="$t('setting.name')" @pageBack='back'/>
+                <ky-back :name="$t('setting.name')" @pageBack='back'/>
             </div>
             <div class="setting-content">
                 <div class="menu">
@@ -52,27 +52,28 @@
         >
             <kyLanguage v-if="languageVisible" @confirm="languageChange" @close="languageClose"/>
         </el-dialog>
-    </layout>
+    </ky-layout>
 </template>
 <script>
-import layout from '@/components/layout'
-import kyBack from '@/components/back'
 import kyCurrency from './currency.vue'
 import kyLanguage from './language.vue'
 import { mapMutations, mapState } from 'vuex'
-import { Database } from '@/utils/database.js'
-
+import ExtensionStore from '@/utils/local-store'
 export default {
+  components: {
+    kyCurrency,
+    kyLanguage
+  },
   data () {
     return {
       createType: '',
       currencyVisible: false,
       languageVisible: false,
-      db: null
+      localStore: null
     }
   },
   computed: {
-    ...mapState('app', ['currency', 'language', 'rpcName']),
+    ...mapState('app', ['activeAccount', 'currency', 'language', 'rpcName']),
     currencyName () {
       let str = ''
       const obj = {
@@ -100,18 +101,11 @@ export default {
       return str
     }
   },
-  components: {
-    layout,
-    kyBack,
-    kyCurrency,
-    kyLanguage
-  },
   async mounted () {
-    const db = new Database()
-    this.db = db
-    const activeAccount = await db.getTable('activeAccount', { khazix: 'khazix' })
-    const createType = activeAccount.length && activeAccount[0].createType
-    this.createType = createType
+    const localStore = new ExtensionStore()
+    this.localStore = localStore
+    const activeAccount = this.activeAccount
+    this.createType = activeAccount.createType
   },
   methods: {
     ...mapMutations('app', [
@@ -139,17 +133,11 @@ export default {
       this.languageVisible = false
 
       const defaultNetworks = this.$t('defaultNetworks')
-      console.log(defaultNetworks, 'defaultNetworks 333')
-      await this.db.deleteTable('networks', { khazix: 'khazix' }).then(res => {
-        this.db.bulkAddTable('networks', defaultNetworks)
-      })
+      await this.localStore.set({ networks: defaultNetworks })
       if (defaultNetworks.length) {
         const _first = defaultNetworks[0]
-        const { name } = _first
-        this.SET_RPCNAME(name)
-        await this.db.deleteTable('activenNetworks', { khazix: 'khazix' }).then(res => {
-          this.db.addTable('activenNetworks', _first)
-        })
+        this.SET_RPCNAME(_first.name)
+        await this.localStore.set({ activeNetwork: _first })
       }
     },
     languageClose () {

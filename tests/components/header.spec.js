@@ -1,7 +1,7 @@
 /* eslint-disable no-undef */
 import { shallowMount, createLocalVue } from '@vue/test-utils'
 import Vuex from 'vuex'
-import kyHeader from '@/components/header/index.vue'
+import kyHeader from '@/components/header/src/index.vue'
 
 const localVue = createLocalVue()
 localVue.use(Vuex)

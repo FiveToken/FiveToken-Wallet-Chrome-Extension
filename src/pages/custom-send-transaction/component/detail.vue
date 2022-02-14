@@ -11,60 +11,13 @@
                   {{ allGasFee | formatGas(8) }} {{ symbol }}
                 </div>
                 <div class="usd">
-                  $ {{ allGasFee | formatUSD(8, price_currency) }}
+                  $ {{ allGasFee | formatUSD(8, priceCurrency) }}
                 </div>
               </div>
             </div>
           </template>
-          <div class="fee-detail">
-            <div class="gasfee">
-              <div class="label">
-                {{ $t("sendFil.networkGas") }}（{{ gasUnit }})
-                <div class="question">
-                  <el-popover
-                    placement="bottom"
-                    width="200"
-                    trigger="click"
-                    :content="baseFeeTips"
-                  >
-                    <i slot="reference" class="el-icon-question"></i>
-                  </el-popover>
-                </div>
-              </div>
-              <kyInput
-                :value="formData.gasFeeCap"
-                @keydown.native="channelInputLimit"
-                @changeInput="gasFeeCapChange"
-                type="number"
-              ></kyInput>
-              <div class="tips" v-if="formData.gasFeeCap < baseFeeCap">
-                {{ $t("sendFil.gasFeeError") }}
-              </div>
-            </div>
-            <div class="gaslimit">
-              <div class="label">
-                {{ $t("sendFil.gasLimit") }}
-                <div class="question">
-                  <el-popover
-                    placement="bottom"
-                    width="200"
-                    trigger="click"
-                    :content="$t('sendFil.gasLimitTips')"
-                  >
-                    <i slot="reference" class="el-icon-question"></i>
-                  </el-popover>
-                </div>
-              </div>
-              <kyInput
-                :value="formData.gasLimit"
-                @keydown.native="channelInputLimit"
-                @changeInput="gasLimitChange"
-                type="number"
-              ></kyInput>
-              <div class="tips" v-if="formData.gasLimit < baseLimit">
-                {{ $t("sendFil.gasLimitError") }}
-              </div>
-            </div>
+          <div class="fee-detail" v-if="serviceGas">
+            <service-fee></service-fee>
           </div>
         </el-collapse-item>
       </el-collapse>
@@ -80,11 +33,18 @@
 </template>
 
 <script>
-import kyInput from '@/components/input'
 import { mapState } from 'vuex'
 import { formatNumber, bigNumbers, isFilecoinChain } from '@/utils'
 import { BigNumber } from 'bignumber.js'
+import serviceFee from '@/pages/send-fil/component/service-fee.vue'
 export default {
+  components: {
+    serviceFee
+  },
+  props: {
+    formData: Object,
+    priceCurrency: Number
+  },
   data () {
     return {
 
@@ -92,11 +52,12 @@ export default {
   },
   computed: {
     ...mapState('app', ['networkType', 'symbol']),
+    ...mapState('send-fil', ['serviceGas']),
     allGasFee () {
       const gasTimes = bigNumbers(this.formData.gasFeeCap).multipliedBy(
         this.formData.gasLimit
       )
-      const gas = gasTimes.dividedBy(Math.pow(10, 9)).toString()
+      const gas = gasTimes.dividedBy(Math.pow(10, 18)).toString()
       return gas
     },
     gasUnit () {
@@ -129,12 +90,6 @@ export default {
       return str + this.symbol
     }
   },
-  props: {
-    formData: Object,
-    price_currency: Number,
-    baseLimit: Number,
-    baseFeeCap: Number
-  },
   filters: {
     formatFil (val) {
       const big = new BigNumber(val)
@@ -155,9 +110,6 @@ export default {
       const num = formatNumber(str, n)
       return num
     }
-  },
-  components: {
-    kyInput
   },
   methods: {
     gasLimitChange (val) {

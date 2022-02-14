@@ -5,6 +5,10 @@ import router from '../../router'
 import store from '../../store'
 // eslint-disable-next-line no-new
 import { Message, Icon } from 'element-ui'
+import Com from '../../components/index.td'
+const { KyLayout, KyBack } = Com
+Vue.component(KyLayout.name, KyLayout)
+Vue.component(KyBack.name, KyBack)
 Vue.use(Icon)
 Vue.component('pageComponent', pageComponent)
 Vue.prototype.$message = Message

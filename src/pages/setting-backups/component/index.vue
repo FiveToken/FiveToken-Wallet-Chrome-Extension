@@ -1,27 +1,27 @@
 <template>
-    <layout>
+    <ky-layout>
         <div class="setting-backups">
             <div class="backups-content">
                 <div class="step-1" v-if="step === 1">
                     <div class="top-back">
-                        <kyBack
+                        <ky-back
                             @pageBack="back"
                             :name="$t('settingBackups.backupsCheck')"
                             :close="false"
-                        ></kyBack>
+                        ></ky-back>
                     </div>
                     <div class="backups-check">
                         <div class="backups-tips" v-if="backups === 'privateKey'">{{$t('settingBackups.pkTips')}}</div>
                         <div class="backups-tips" v-else>{{$t('settingBackups.mneTips')}}</div>
                         <div class="input-item" :class="{error:passwordError}">
                             <div class="label">{{$t('settingBackups.inputPassword')}}</div>
-                            <kyInput
+                            <ky-input
                                 :value="password"
                                 :suffix="suffix"
                                 :type="passwordType"
                                 @changeInput="passwordChange"
                                 @changeEye="passwordEye"
-                            ></kyInput>
+                            ></ky-input>
                             <div class="error" v-if="passwordError">{{$t('settingBackups.passwordError')}}</div>
                         </div>
                     </div>
@@ -29,12 +29,12 @@
                 </div>
                 <div class="step-2" v-if="step === 2">
                     <div class="top-back">
-                        <kyBack
+                        <ky-back
                             @pageBack="back"
                             :name="backupsTitle"
                             :close="true"
                             @pageClose="pageClose"
-                        ></kyBack>
+                        ></ky-back>
                     </div>
                     <div class="backups-check">
                         <div class="backups-tips" v-if="backups === 'privateKey'">{{$t('settingBackups.pkTips')}}</div>
@@ -45,50 +45,41 @@
                             <div class="value" v-if="backups === 'privateKey'">{{pk}}</div>
                             <div class="value" v-else>{{mnemonic}}</div>
                         </div>
-                        <div class="copy copy-mne" v-if="backups === 'privateKey'" @click="copyMne" :data-clipboard-text="pk">
-                            {{$t('settingBackups.copy')}}
-                        </div>
-                        <div class="copy copy-mne" v-else @click="copyMne" :data-clipboard-text="mnemonic">
-                            {{$t('settingBackups.copy')}}
-                        </div>
                     </div>
                 </div>
 
                 <div class="position">
                     <div class="btn-wrap">
-                        <kyButton
+                        <ky-button
                             v-if="step === 1"
                             :type="'primary'"
                             @btnClick="next"
                             :active="password!==''"
                         >
                             {{$t('settingBackups.next')}}
-                        </kyButton>
-                        <kyButton
+                        </ky-button>
+                        <ky-button
                             v-if="step === 2"
                             :type="'primary'"
                             :active="active"
                             @btnClick="pageClose"
                         >
                             {{$t('settingBackups.close')}}
-                        </kyButton>
+                        </ky-button>
                     </div>
                 </div>
             </div>
             <div class="mask" v-if="mask"></div>
         </div>
-    </layout>
+    </ky-layout>
 </template>
 <script>
-import { validatePassword, getDecodePrivateKey, getQueryString } from '@/utils'
-import { genKek, AESDecrypt } from '@/utils/key'
-import ClipboardJS from 'clipboard'
-import layout from '@/components/layout'
-import kyBack from '@/components/back'
-import kyInput from '@/components/input'
-import kyButton from '@/components/button'
+import { getBackupsPrivateKey, getQueryString } from '@/utils'
 import { mapState } from 'vuex'
-import { Database } from '@/utils/database.js'
+import ExtensionStore from '@/utils/local-store'
+import { decrypt } from '@/utils/aes-gcm.js'
+import { decryptMessage, encrypt } from '@/utils/aes-gcm'
+import { decryptByPrivateKey } from '@/utils/encrypt'
 export default {
   data () {
     return {
@@ -100,22 +91,15 @@ export default {
       passwordType: 'password',
       passwordError: false,
       pk: '',
-      salt: null,
-      nme: '',
+      encryptMnemonic: '',
       mask: false,
-      active: true
+      active: true,
+      walletKey: null
     }
-  },
-  components: {
-    layout,
-    kyBack,
-    kyInput,
-    kyButton
   },
   computed: {
     ...mapState('app', [
       'address',
-      'digest',
       'privateKey',
       'rpc',
       'networkType'
@@ -131,15 +115,14 @@ export default {
     }
   },
   async mounted () {
-    const db = new Database()
-    const walletKey = await db.getTable('walletKey', { khazix: 'khazix' })
-    if (walletKey.length) {
-      const salt = walletKey[0].salt
-      this.salt = salt
-      this.nme = walletKey[0].mnemonicWords
-    }
     const backups = getQueryString('backups')
     this.backups = backups
+    const localStore = new ExtensionStore()
+    const walletKey = await localStore.get('walletKey')
+    if (walletKey) {
+      this.walletKey = walletKey
+      this.encryptMnemonic = walletKey.mnemonicWords
+    }
   },
   methods: {
     back () {
@@ -159,39 +142,26 @@ export default {
         return
       }
       this.passwordError = false
-      if (this.salt) {
-        const voild = await validatePassword(this.password, this.salt)
-        if (voild) {
-          this.step = 2
-          const kek = genKek(this.password)
-          if (this.backups === 'privateKey') {
-            const pk = getDecodePrivateKey(this.privateKey, kek, this.networkType, true)
+      const voild = await decryptByPrivateKey(this.privateKey, this.password, this.address)
+      if (voild) {
+        this.step = 2
+        if (this.backups === 'privateKey') {
+          const _salt = await encrypt(this.password, this.address)
+          const _privateKey = await decryptMessage(this.privateKey, _salt, this.address)
+          if (_privateKey) {
+            const pk = getBackupsPrivateKey(_privateKey, this.networkType)
             this.pk = pk
-          } else {
-            const mnemonic = AESDecrypt(this.nme, kek)
-            this.mnemonic = mnemonic
           }
         } else {
-          this.passwordError = true
-          // this.$message.error(this.$t('settingBackups.passwordError'))
-        }
-      }
-    },
-    copyMne () {
-      this.mask = true
-      const that = this
-      const clipboard = new ClipboardJS('.copy-mne')
-      clipboard.on('success', function (e) {
-        that.$message({
-          type: 'success',
-          message: that.$t('settingBackups.copySuccess'),
-          duration: 1500,
-          onClose: () => {
-            that.mask = false
+          const { mnemonicWords, address } = this.walletKey
+          const _mnemonic = await decrypt(mnemonicWords, address)
+          if (_mnemonic) {
+            this.mnemonic = _mnemonic
           }
-        })
-      })
-      clipboard.on('error', function (e) {})
+        }
+      } else {
+        this.passwordError = true
+      }
     },
     pageClose () {
       window.location.href = './wallet.html'

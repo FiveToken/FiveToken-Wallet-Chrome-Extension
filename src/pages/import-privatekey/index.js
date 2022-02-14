@@ -4,6 +4,12 @@ import i18n from '../../i18n'
 import router from '../../router'
 import store from '../../store'
 import { Input, Dialog, Button, Message, Icon } from 'element-ui'
+import Com from '../../components/index.td'
+const { KyLayout, KyBack, KyButton, KyInput } = Com
+Vue.component(KyLayout.name, KyLayout)
+Vue.component(KyBack.name, KyBack)
+Vue.component(KyButton.name, KyButton)
+Vue.component(KyInput.name, KyInput)
 Vue.use(Input)
 Vue.use(Dialog)
 Vue.use(Button)

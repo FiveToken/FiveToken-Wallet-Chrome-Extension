@@ -29,7 +29,8 @@
       </div>
     </div>
     <div class="middle">
-        <div class="fil">{{balance |formatBalance(4,that)}} {{symbol}}</div>
+        <div class="fil" v-if="onLine">{{balance |formatBalance(4,that)}} {{symbol}}</div>
+        <div class="fil" v-else>---</div>
         <div class="action">
             <div class="receive" @click="openReceive">
                 <div class="icon">
@@ -53,7 +54,12 @@ import ClipboardJS from 'clipboard'
 import { isFilecoinChain, formatNumber } from '@/utils'
 import { mapMutations, mapState } from 'vuex'
 import { BigNumber } from 'bignumber.js'
+import { openUrl } from '@/popup.js'
 export default {
+  props: {
+    balance: Number,
+    mask: Boolean
+  },
   data () {
     return {
       activeName: '1',
@@ -64,10 +70,6 @@ export default {
       rec: require('@/assets/image/rec.png'),
       send: require('@/assets/image/send.png')
     }
-  },
-  props: {
-    balance: Number,
-    mask: Boolean
   },
   filters: {
     addressFormat (val) {
@@ -103,7 +105,8 @@ export default {
       'accountName',
       'browser',
       'networkType',
-      'decimals'
+      'decimals',
+      'onLine'
     ])
   },
   mounted () {
@@ -142,9 +145,9 @@ export default {
           this.walletMenuVisable = false
           window.location.href = './setting-backups.html?backups=privateKey'
           break
-        case 'deleteWallet':
+        case 'deleteAccount':
           this.walletMenuVisable = false
-          this.$emit('update:deleteUserVisible', true)
+          this.$emit('update:deleteAccountVisible', true)
           break
       }
     },
@@ -153,11 +156,9 @@ export default {
         let url = ''
         if (isFilecoinChain(this.networkType)) {
           url = this.browser + `/tipset/address-detail?address=${this.address}`
-          // eslint-disable-next-line no-undef
           openUrl(url)
         } else {
           url = this.browser + `/address/${this.address}`
-          // eslint-disable-next-line no-undef
           openUrl(url)
         }
       } else {
@@ -165,7 +166,7 @@ export default {
       }
     },
     sendFil () {
-      window.location.href = './send-fil.html'
+      window.location.href = `./send-fil.html?tokenSymbol=${this.symbol}`
     },
     openReceive () {
       this.$emit('update:receiveVisible', true)

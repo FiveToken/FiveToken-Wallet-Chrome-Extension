@@ -1,13 +1,19 @@
 <template>
     <div class="token-components">
         <div class="top-back">
-            <kyBack :name="tokenName" @pageBack='closeToken'/>
+            <ky-back :name="tokenName" @pageBack='closeToken'/>
         </div>
         <div class="logo"></div>
-        <div class="balance">{{tokenBalance|formatBalance(tokenDecimals,8)}} {{tokenName}}</div>
+        <div class="balance" v-if="onLine">
+          {{tokenBalance|formatBalance(tokenDecimals,8)}} {{tokenName}}
+        </div>
+        <div class="balance" v-else>---</div>
         <div class="usd" v-if="tokenIsMain">
+          <div v-if="onLine">
             {{ currency === 'cny' ? "¥" : "$"}}
-            {{tokenBalance*price_currency | formatBalance(tokenDecimals,2)}}
+            {{tokenBalance*priceCurrency | formatBalance(tokenDecimals,2,currency)}}
+          </div>
+          <div v-else>---</div>
         </div>
         <div class="action">
             <div class="receive" @click="openReceive">
@@ -33,12 +39,25 @@
 </template>
 
 <script>
-import kyBack from '@/components/back'
 import { mapState } from 'vuex'
 import transactionItem from './transaction-item.vue'
 import { formatNumber } from '@/utils'
 import { BigNumber } from 'bignumber.js'
 export default {
+  components: {
+    transactionItem
+  },
+  props: {
+    tokenIsMain: Number,
+    tokenBalance: Number,
+    tokenName: String,
+    priceCurrency: Number,
+    receiveVisible: Boolean,
+    tokenVisible: Boolean,
+    symbol: String,
+    tokenDecimals: Number,
+    tokenList: Array
+  },
   data () {
     return {
       rec: require('@/assets/image/rec.png'),
@@ -46,18 +65,7 @@ export default {
     }
   },
   computed: {
-    ...mapState('app', ['currency'])
-  },
-  props: {
-    tokenIsMain: Number,
-    tokenBalance: Number,
-    tokenName: String,
-    price_currency: Number,
-    receiveVisible: Boolean,
-    tokenVisible: Boolean,
-    symbol: String,
-    tokenDecimals: Number,
-    tokenList: Array
+    ...mapState('app', ['currency', 'onLine'])
   },
   filters: {
     formatBalance (val, decimals, n) {
@@ -67,16 +75,12 @@ export default {
       return num
     }
   },
-  components: {
-    kyBack,
-    transactionItem
-  },
   methods: {
     closeToken () {
       this.$emit('closeToken')
     },
     sendFil () {
-      window.location.href = './send-fil.html'
+      window.location.href = `./send-fil.html?tokenSymbol=${this.tokenName}`
     },
     openReceive () {
       this.$emit('update:receiveVisible', true)
@@ -86,7 +90,7 @@ export default {
         ...item
       }
       const listObjStr = JSON.stringify(listObj)
-      window.location.href = `./message-detail.html?signed_cid=${item.signed_cid}&listObjStr=${listObjStr}`
+      window.location.href = `./message-detail.html?cid=${item.cid}&listObjStr=${listObjStr}`
     }
   }
 }

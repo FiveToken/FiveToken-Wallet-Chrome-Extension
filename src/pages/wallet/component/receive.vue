@@ -1,6 +1,6 @@
 <template>
     <div class="receive-dialog">
-        <kyBack @pageBack="pageBack"/>
+        <ky-back @pageBack="pageBack"/>
         <div class="dialog-content">
             <div class="name-qr-address">
                 <div class="account">
@@ -28,21 +28,17 @@
 
 <script>
 import ClipboardJS from 'clipboard'
-import kyBack from '@/components/back'
 export default {
-  data () {
-    return {
-      mask: false,
-      logo1: require('@/assets/image/logo-white.png')
-    }
-  },
   props: {
     QRUrl: String,
     accountName: String,
     address: String
   },
-  components: {
-    kyBack
+  data () {
+    return {
+      mask: false,
+      logo1: require('@/assets/image/logo-white.png')
+    }
   },
   methods: {
     pageBack () {

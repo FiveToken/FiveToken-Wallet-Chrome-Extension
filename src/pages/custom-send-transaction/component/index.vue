@@ -1,6 +1,6 @@
 <template>
   <div class="custom-send-transaction">
-    <layout @layoutMounted="layoutMounted">
+    <ky-layout @layoutMounted="layoutMounted">
       <div class="network" @click="wallet">{{rpcName}}</div>
       <div class="from-to">
         <div class="from">{{ formData.address | addressFormat }}</div>
@@ -19,38 +19,65 @@
       </div>
       <componentDeatil
         :formData="formData"
-        :price_currency="price_currency"
-        :baseLimit="baseLimit"
-        :baseFeeCap="baseFeeCap"
+        :priceCurrency="priceCurrency"
         @formDataChange="formDataChange"
       />
       <div class="button-group">
-        <kyButton @btnClick="cancel">
+        <ky-button @btnClick="cancel">
           {{$t('customSendTransaction.cancel')}}
-        </kyButton>
-        <kyButton :type="'primary'" :active="active" @btnClick="confirm">
+        </ky-button>
+        <ky-button :type="'primary'" :active="active" @btnClick="confirm">
           {{$t('customSendTransaction.confirm')}}
-        </kyButton
+        </ky-button
         >
       </div>
       <div class="loading" v-if="isFetch">
         <img :src="loading" alt="" class="img">
       </div>
-    </layout>
+      <el-dialog
+        :visible.sync="passwordVisable"
+        width="300px"
+        :show-close="false"
+        class="password-verification"
+        :top="'34vh'"
+      >
+        <password-verification
+          v-if="passwordVisable"
+          @confirm="confirmPassword"
+          @close="closePassword"
+        >
+        </password-verification>
+      </el-dialog>
+    </ky-layout>
   </div>
 </template>
 
 <script>
-import layout from '@/components/layout'
-import kyButton from '@/components/button'
 import componentDeatil from './detail.vue'
-import { mapState } from 'vuex'
-import { GlobalApi } from '@/api'
-import { Database } from '@/utils/database.js'
-import { getDecodePrivateKey, getGlobalKek, bigNumbers } from '@/utils'
+import { mapMutations, mapState } from 'vuex'
+import { GlobalApi } from '@/api/index.js'
+import ExtensionStore from '@/utils/local-store'
+import { bigNumbers, isFilecoinChain } from '@/utils'
+import { popupToBackground, popupWindowRemove } from '@/popup.js'
+import passwordVerification from '@/components/password-verification'
+import { decryptMessage, encrypt } from '@/utils/aes-gcm'
 export default {
+  components: {
+    componentDeatil,
+    passwordVerification
+  },
+  filters: {
+    addressFormat (val) {
+      if (val.length > 12) {
+        return val.substr(0, 6) + '...' + val.substr(val.length - 6, 6)
+      } else {
+        return val
+      }
+    }
+  },
   data () {
     return {
+      passwordVisable: false,
       active: true,
       origin: '',
       type: 0,
@@ -66,24 +93,8 @@ export default {
         gasPremium: '',
         nonce: 0
       },
-      price_currency: 0,
-      baseLimit: 0,
-      baseFeeCap: 0,
-      db: null
-    }
-  },
-  components: {
-    layout,
-    kyButton,
-    componentDeatil
-  },
-  filters: {
-    addressFormat (val) {
-      if (val.length > 12) {
-        return val.substr(0, 6) + '...' + val.substr(val.length - 6, 6)
-      } else {
-        return val
-      }
+      priceCurrency: 0,
+      localStore: null
     }
   },
   computed: {
@@ -101,16 +112,101 @@ export default {
     const stringParams = window.localStorage.getItem('fiveTokenSendTeansaction')
     const params = JSON.parse(stringParams)
     this.formData = Object.assign({}, this.formData, params)
-    console.log(this.formData, 'this.formData')
-    this.baseLimit = this.formData.gasLimit || 0
-    this.baseFeeCap = this.formData.gasFeeCap || 0
-    this.db = new Database()
+    this.localStore = new ExtensionStore()
   },
   methods: {
+    ...mapMutations('send-fil', ['SET_SERVICEGAS']),
     async layoutMounted () {
-      const kek = getGlobalKek()
-      this.pkk = getDecodePrivateKey(this.privateKey, kek, this.networkType)
       this.getFilPricePoints()
+      if (isFilecoinChain(this.networkType)) {
+        this.SET_SERVICEGAS({
+          rpcType: 'filecoin',
+          gasPrice: 0,
+          maxPriorityFeePerGas: 0,
+          maxFeePerGas: 0,
+          gasLimit: Number(this.formData.gasLimit),
+          gasPremium: Number(this.formData.gasPremium),
+          gasFeeCap: Number(this.formData.gasFeeCap)
+        })
+      } else {
+        this.$message.error(this.$t('customSendTransaction.noSupported'))
+      }
+    },
+    async confirmPassword (password) {
+      const _salt = await encrypt(password, this.address)
+      const _privateKey = await decryptMessage(this.privateKey, _salt, this.address)
+      this.isFetch = true
+      try {
+        const gasFeeCap = bigNumbers(this.formData.gasFeeCap)
+        const tx = {
+          from: this.formData.address,
+          to: this.formData.to,
+          value: this.formData.value,
+          privateKey: _privateKey,
+          nonce: this.formData.nonce,
+          GasPremium: this.formData.gasPremium,
+          GasFeeCap: gasFeeCap.multipliedBy(Math.pow(10, 9)).toNumber(),
+          GasLimit: Math.ceil(this.formData.gasLimit)
+        }
+        // create Api
+        const MyGlobalApi = new GlobalApi()
+        MyGlobalApi.setRpc(this.rpc)
+        MyGlobalApi.setNetworkType(this.networkType)
+        const result = await MyGlobalApi.sendTransaction(tx)
+        if (result && result.cid) {
+          const handlingFee = (bigNumbers(this.formData.gasPremium).plus(this.formData.gasFeeCap)).multipliedBy(this.formData.gasLimit)
+          const value = bigNumbers(this.formData.value).multipliedBy(Math.pow(10, 18)).toNumber()
+          await this.storeMessage({ value, cid: result.cid, nonce: result.nonce, handlingFee })
+          popupToBackground('fil_sendTransaction', { cid: result.cid })
+          popupWindowRemove()
+        }
+        this.isFetch = false
+      } catch (error) {
+        this.isFetch = false
+      }
+    },
+    // Successfully sent and stored in the message
+    async storeMessage (data) {
+      const createTime = parseInt(new Date().getTime() / 1000)
+      const messageList = await this.localStore.get('messageList') || []
+      const message = {
+        cid: data.cid,
+        from: this.address,
+        to: this.formData.to,
+        createTime,
+        blockTime: 0,
+        nonce: data.nonce,
+        allGasFee: data.handlingFee,
+        decimals: this.formData.decimals,
+        token: this.formData.symbol,
+        type: 'pending',
+        value: data.value,
+        rpc: this.rpc
+      }
+      await this.localStore.set({
+        messageList: [
+          ...messageList,
+          message
+        ]
+      })
+
+      const addressRecordLast = await this.localStore.get('addressRecordLast') || []
+      const restRecordList = addressRecordLast.filter(n => {
+        return (n.address !== this.formData.to) && (n.rpc !== this.rpx)
+      })
+      const addressRecord = {
+        address: this.formData.to,
+        rpc: this.rpc
+      }
+      await this.localStore.set({
+        addressRecordLast: [
+          ...restRecordList,
+          addressRecord
+        ]
+      })
+    },
+    closePassword () {
+      this.passwordVisable = false
     },
     // get exchange rate
     async getFilPricePoints () {
@@ -120,7 +216,7 @@ export default {
         MyGlobalApi.setNetworkType(this.networkType)
         const res = await MyGlobalApi.getPrice(this.ids)
         const { usd } = res
-        this.price_currency = usd
+        this.priceCurrency = usd
       }
     },
     wallet () {
@@ -144,66 +240,7 @@ export default {
     async confirm () {
       const volid = this.check()
       if (volid) {
-        this.isFetch = true
-        try {
-          const gasFeeCap = bigNumbers(this.formData.gasFeeCap)
-          const tx = {
-            from: this.formData.address,
-            to: this.formData.to,
-            value: this.formData.value,
-            privateKey: this.pkk,
-            nonce: this.formData.nonce,
-            GasPremium: this.formData.gasPremium,
-            GasFeeCap: gasFeeCap.multipliedBy(Math.pow(10, 9)).toNumber(),
-            GasLimit: Math.ceil(this.formData.gasLimit)
-          }
-          // create Api
-          const MyGlobalApi = new GlobalApi()
-          MyGlobalApi.setRpc(this.rpc)
-          MyGlobalApi.setNetworkType(this.networkType)
-          const result = await MyGlobalApi.sendTransaction(tx)
-          if (result && result.signed_cid) {
-            // eslint-disable-next-line camelcase
-            const create_time = parseInt(new Date().getTime() / 1000)
-            const gasTimes = bigNumbers(this.formData.gasFeeCap).multipliedBy(this.formData.gasLimit)
-            const allGasFee = gasTimes.multipliedBy(Math.pow(10, 9)).toNumber()
-            const _value = bigNumbers(this.formData.value).multipliedBy(Math.pow(10, 18)).toNumber()
-            await this.db.addTable('messageList', {
-              signed_cid: result.signed_cid,
-              from: this.formData.address,
-              to: this.formData.to,
-              create_time,
-              block_time: 0,
-              nonce: result.nonce,
-              allGasFee: allGasFee,
-              decimals: '18',
-              token: 'FIL',
-              type: 'pending',
-              khazix: 'khazix',
-              value: _value,
-              rpc: this.rpc
-            })
-            await this.db.deleteTable('addressRecordLast', {
-              address: this.formData.to,
-              rpc: this.rpc
-            })
-            await this.db.addTable('addressRecordLast', {
-              address: this.formData.to,
-              create_time,
-              rpc: this.rpc,
-              khazix: 'khazix'
-            })
-
-            // eslint-disable-next-line no-undef
-            popupToBackground('fil_sendTransaction', { cid: result.signed_cid })
-            // eslint-disable-next-line no-undef
-            popupWindowRemove()
-          }
-          this.isFetch = false
-        } catch (error) {
-          console.log(error, 'error 1')
-          this.isFetch = false
-        }
+        this.passwordVisable = true
       } else {
         this.$message.error(this.$t('sendFil.insufficientBalance'))
       }
@@ -217,6 +254,13 @@ export default {
 </script>
 <style  lang="less" scoped>
 .custom-send-transaction {
+  height: 100%;
+  .layout-compontent{
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 20px;
+    box-sizing: border-box;
+  }
   .network{
     padding: 20px;
     text-align: center;
@@ -331,8 +375,11 @@ export default {
       }
     }
   }
+  .detail-component{
+    flex-grow: 1;
+  }
   .button-group{
-    padding:100px 20px 20px;
+    padding: 0 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;

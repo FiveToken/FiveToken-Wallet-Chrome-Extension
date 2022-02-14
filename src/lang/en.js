@@ -1,6 +1,7 @@
 /* eslint-disable camelcase */
-const create_time = parseInt(new Date().getTime() / 1000)
+const createTime = parseInt(new Date().getTime() / 1000)
 const en = {
+  noNetWork: 'Unable to connect to the network',
   header: {
     customRpc: 'Custom RPC'
   },
@@ -10,6 +11,7 @@ const en = {
     cancel: 'Cancel',
     functionType: 'Function Type',
     params: 'parameters',
+    noSupported: 'This network transfer is not supported temporarily. Please switch to filecoin network.',
     hexData: 'Hexadecimal data'
   },
   fiveTokenContent: {
@@ -28,12 +30,13 @@ const en = {
     title: 'Welcome to FiveToken',
     subTitle1: 'Bridge Filecoin ecosystem to Web 3 and metaverse with multi-chain integration and reliable identity management;',
     subTitle2: 'We are very happy to have you.',
-    btn1: 'Create a new wallet',
-    btn2: 'Import existing wallet'
+    btn1: 'Create a new account',
+    btn2: 'Import existing account'
   },
   creatWallet: {
-    title: 'Create a new wallet',
+    title: 'Create a new account',
     importWords: 'Import mnemonic words',
+    recoveryWords: 'Recovery mnemonic words',
     back: 'Go back',
     accountName: 'Please enter your username',
     nameTips: 'No more than 15 characters',
@@ -44,14 +47,16 @@ const en = {
     diffError: 'Your current passwords do not match to your first one',
     correctPassword: 'Please enter the correct passwords',
     confirmPassword: 'Confirm passwords',
-    btn: 'Next step'
+    btn: 'Next step',
+    strengthTips: 'The password should be 9 to 16 characters contains digits, uppercase and lowercase letters, and special characters and strength indicator is on four',
+    passwordStrength: '9 or more characters containing numbers, upper and lower case letters and special characters'
   },
   creatWords: {
     title: 'Back up mnemonic words',
     subTitle: 'Please copy your mnemonic words in correct order',
     showWords: 'Click here to display your mnemonic words',
     btn1: 'Verify your mnemonic words',
-    btn2: 'Enter into the wallet',
+    btn2: 'Enter into the account',
     copy: 'Copy mnemonic words',
     copySuccess: 'Copied successfully',
     tips1: '！ Please save your mnemonic words in a safe place, never connecting to the internet.',
@@ -65,16 +70,16 @@ const en = {
   },
   importWords: {
     title: 'Import mnemonic words',
-    subTitle: 'Please enter your mnemonic words to restore your wallet',
+    subTitle: 'Please enter your mnemonic words to restore your account',
     tips: 'Separate words with spaces',
     btn: 'Import',
     error: 'Errors in your mnemonic words',
-    exist: 'Existed wallet'
+    exist: 'Existed account'
   },
   importPrivatkey: {
     title: 'Import private key',
     label1: 'Please select a network',
-    label2: 'Please enter your private key to restore your wallet',
+    label2: 'Please enter your private key to restore your account',
     btn: 'Import',
     titleNetwork: 'Select a network',
     importError: 'The network is not supported',
@@ -85,7 +90,7 @@ const en = {
     lock: 'Locking',
     mneAccount: 'Mnemonic words account',
     pkAccount: 'Private key account',
-    createWallet: 'Create a wallet',
+    createWallet: 'Create a account',
     import: 'Import private key',
     setting: 'Setting',
     titleAdd: 'Add an account',
@@ -103,7 +108,7 @@ const en = {
       { name: 'Modify account name', action: 'editName' },
       { name: 'View in browser', action: 'viewInBrowser' },
       { name: 'Export private key', action: 'backupPrivateKey' },
-      { name: 'Delete the wallet', action: 'deleteWallet' }
+      { name: 'Delete the account', action: 'deleteAccount' }
     ],
     statusSuccess: 'Completed',
     statusError: 'Failed',
@@ -118,7 +123,9 @@ const en = {
     cancel: 'Cancel',
     confirm: 'Confirm',
     deleteTitle: 'Delete the confirmation',
-    deleteTips: 'Please make sure the private key is backed up. After deleting, if you want to show the wallet, you need to import it with the private key.',
+    deleteLabel: 'Please enter the password',
+    confirmDelete: 'Delete',
+    deleteTips: 'Please make sure the private key is backed up. After deleting, if you want to use the wallet, you need to import it with the private key.',
     copyAddress: 'Copy the address',
     copySuccess: 'Copy Succeeded',
     tranRecord: 'Activity record',
@@ -136,7 +143,8 @@ const en = {
     connectedNetwork: 'the connected networks',
     connectedRights: 'These networks have been connected. They can check your account address.',
     unconnectTips: 'FiveToken has no permission to connect to this network. If it is required, please find the access button on the Web3 network.',
-    unconnectNetworksTips: 'No network is connected.'
+    unconnectNetworksTips: 'No network is connected.',
+    noAccountTips: 'The network you want to access has no account'
   },
   messageDetail: {
     title: 'Detailed messages',
@@ -173,23 +181,40 @@ const en = {
     recordLast: 'Recently used',
     myAccount: 'My account',
     addressBook: 'Address book',
-    gasLimit: 'Gas Limit',
     confirmTransaction: 'Confirm transaction',
     sendAmount: 'Send amount',
-    networkGas: 'GasFeeCap',
     maxGas: 'Max. Estimated gas fee',
     totalTips: 'Amount + gas fee',
     total: 'Total amount',
-    gasFeeError: 'Less than current BaseFee',
     gasLimitError: 'Less than the current Gas Limit',
     addressError: 'Incorrect address format',
     insufficientBalance: 'Insufficient balance',
-    filBaseFeeTips: 'The transaction fee rate is used to pay for the network fee, and the message will be packaged only when the transaction fee>BaseFee. nanoFIL = 10^-9 FIL',
-    baseFeeTips: 'Gas unit is the number of paid tokens per unit of Gas, Gwei=10^-9.',
-    gasLimitTips: 'Gas Limit is the maximum amount of gas that will be consumed when sending a message.',
     vaildNumber: 'Please enter a valid number',
+    ethereumMainGasLimitTips: 'Gas limit is the maximum units of gas you are willing to use. Units of gas are a multiplier to “Max priority fee” and “Max fee”.',
+    filecoinGasLimitTips: 'Gas limit is the maximum units of gas you are willing to use. Units of gas are a multiplier to "GasPremium” and “GasFeeCap”.',
+    ethereumOthersGasLimitTips: 'Gas limit is the maximum units of gas you are willing to use. Units of gas are a multiplier to “Max priority fee” and “Max fee”.',
+    gasLimitTips: 'Gas Limit is the maximum amount of gas that will be consumed when sending a message.',
+    maxPriorityFeeTips: 'Max priority fee (aka “miner tip”) goes directly to miners and incentivizes them to prioritize your transaction. You’ll most often pay your max setting',
+    maxFeeTips: 'The max fee is the most you’ll pay (base fee + priority fee).',
+    gasFeeCapTips: 'The max fee is the most you’ll pay. nanoFIL = 10^-9 FIL',
+    gasPremiumTips: 'GasPremium (aka “miner tip”) goes directly to miners and incentivizes them to prioritize your transaction. You’ll most often pay your max setting. nanoFIL = 10^-9FIL',
+    gasPriceTips: 'Gas price specifies the amount of Token you are willing to pay for each unit of gas. Gwei = 10^-9.',
+    sameAddressError: 'Sending address cannot be the same as receiving address',
     cancel: 'Cancel',
     confirm: 'Confirm'
+  },
+  passwordVerification: {
+    title: 'Password validation',
+    label: 'Please enter the password',
+    confirm: 'Confirm',
+    cancel: 'Cancel'
+  },
+  addAccount: {
+    title: 'Create account',
+    nameLabel: 'Please enter account name',
+    nameTips: 'No more than 15 characters',
+    tips: 'This account is based on a hierarchical wallet and uses the same mnemonic phrase as other mnemonic accounts, but has a different private key.',
+    button: 'Confirm'
   },
   setting: {
     name: 'Setting',
@@ -211,6 +236,7 @@ const en = {
       { name: 'Network', url: './setting-networks.html' },
       { name: 'Address book', url: './setting-address.html' },
       { name: 'Mnemonic words backup', url: './setting-backups.html' },
+      { name: 'Update password', url: './setting-password.html' },
       { name: 'About', url: './setting-about.html' }
     ]
   },
@@ -234,6 +260,16 @@ const en = {
     delete: 'Delete',
     deleteTips: 'Are you sure you want to delete this network?',
     deleteSuccess: 'Delete successfully'
+  },
+  settingPassword: {
+    title: 'Update password',
+    currentPassword: 'Verify current password',
+    newPassword: 'New password',
+    newPlaceholder: 'Please enter a new password',
+    passwordTips: 'For account security, please use the strongest password',
+    confirmPassword: 'Confirm password',
+    confirmPlaceholder: 'Please enter the confirmation password',
+    confirm: 'sure'
   },
   settingAbout: {
     about: 'About',
@@ -283,7 +319,10 @@ const en = {
     subTitle: 'Bridge Filecoin ecosystem to Web 3 and metaverse with multi-chain integration and reliable identity management;',
     unlocking: 'Unlock',
     label: 'Passwords',
-    passwordError: 'Password Error'
+    passwordError: 'Password Error',
+    bottomLabel: 'or',
+    bottomLabel2: 'import using Secret Recovery Phrase ',
+    bottomLabel3: '(After importing, FiveToken will be initialized)'
   },
   connect: {
     title: 'Adopt FiveToken to connect to your dApp',
@@ -298,8 +337,7 @@ const en = {
       symbol: 'FIL',
       ids: 'filecoin',
       browser: 'https://filscan.io',
-      khazix: 'khazix',
-      create_time: create_time,
+      createTime: createTime,
       networkType: 'proxy',
       filecoinAddress0: 'f',
       decimals: 18,
@@ -314,10 +352,9 @@ const en = {
       symbol: 'ETH',
       browser: 'https://etherscan.io',
       ids: 'ethereum',
-      khazix: 'khazix',
       networkType: 'ethereum',
       filecoinAddress0: '',
-      create_time: create_time + 1,
+      createTime: createTime + 1,
       decimals: 18,
       image: 'eth.svg',
       disabled: true,
@@ -330,10 +367,9 @@ const en = {
       symbol: 'BNB',
       ids: 'binancecoin',
       browser: 'https://bscscan.com',
-      khazix: 'khazix',
       networkType: 'ethereum',
       filecoinAddress0: '',
-      create_time: create_time + 2,
+      createTime: createTime + 2,
       decimals: 18,
       image: 'bnb.svg',
       disabled: true,
@@ -346,10 +382,9 @@ const en = {
       symbol: 'FIL',
       ids: 'filecoin',
       browser: 'https://calibration.filscan.io',
-      khazix: 'khazix',
       networkType: 'proxy',
       filecoinAddress0: 't',
-      create_time: create_time + 3,
+      createTime: createTime + 3,
       decimals: 18,
       image: 'fil.svg',
       disabled: true,
@@ -362,10 +397,9 @@ const en = {
       symbol: 'ETH',
       ids: 'ethereum',
       browser: 'https://ropsten.etherscan.io',
-      khazix: 'khazix',
       networkType: 'ethereum',
       filecoinAddress0: '',
-      create_time: create_time + 4,
+      createTime: createTime + 4,
       decimals: 18,
       image: 'eth.svg',
       disabled: true,
@@ -378,10 +412,9 @@ const en = {
       symbol: 'ETH',
       ids: 'ethereum',
       browser: 'https://kovan.etherscan.io',
-      khazix: 'khazix',
       networkType: 'ethereum',
       filecoinAddress0: '',
-      create_time: create_time + 5,
+      createTime: createTime + 5,
       decimals: 18,
       image: 'eth.svg',
       disabled: true,
@@ -394,10 +427,9 @@ const en = {
       symbol: 'ETH',
       ids: 'ethereum',
       browser: 'https://rinkeby.etherscan.io',
-      khazix: 'khazix',
       networkType: 'ethereum',
       filecoinAddress0: '',
-      create_time: create_time + 6,
+      createTime: createTime + 6,
       decimals: 18,
       image: 'eth.svg',
       disabled: true,
@@ -410,10 +442,9 @@ const en = {
       symbol: 'ETH',
       ids: 'ethereum',
       browser: 'https://goerli.etherscan.io',
-      khazix: 'khazix',
       networkType: 'ethereum',
       filecoinAddress0: '',
-      create_time: create_time + 7,
+      createTime: createTime + 7,
       decimals: 18,
       image: 'eth.svg',
       disabled: true,
@@ -426,10 +457,9 @@ const en = {
       symbol: 'BNB',
       ids: 'binancecoin',
       browser: 'https://testnet.bscscan.com',
-      khazix: 'khazix',
       networkType: 'ethereum',
       filecoinAddress0: '',
-      create_time: create_time + 8,
+      createTime: createTime + 8,
       decimals: 18,
       image: 'bnb.svg',
       disabled: true,

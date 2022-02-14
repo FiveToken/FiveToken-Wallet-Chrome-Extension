@@ -1,12 +1,11 @@
 const state = {
-  activenNetworks: [],
+  activeNetwork: [],
   rpc: '',
   rpcName: '',
   accountList: [],
   activeAccount: [],
   address: '',
   privateKey: '',
-  digest: '',
   accountName: '',
   symbol: '',
   ids: '',
@@ -20,14 +19,26 @@ const state = {
   decimals: 0,
   owenChain: true,
   rpcImage: '',
-  deriveIndex: 0
+  deriveIndex: 0,
+  onLine: false
 }
 
 const getters = {
-
+  sortedAccountList (state) {
+    let sortList = []
+    if (state.accountList.length) {
+      sortList = state.accountList.sort(function (a, b) {
+        return a.createTime - b.createTime
+      })
+    }
+    return sortList
+  }
 }
 
 const mutations = {
+  SET_ONLINE (state, data) {
+    state.onLine = data
+  },
   SET_DERIVEINDEX (state, data) {
     state.deriveIndex = data
   },
@@ -67,8 +78,8 @@ const mutations = {
   SET_BROWSER (state, data) {
     state.browser = data
   },
-  SET_ACTIVENETWORKS (state, data) {
-    state.activenNetworks = data
+  SET_ACTIVENETWORK (state, data) {
+    state.activeNetwork = data
   },
   SET_ACTIVEACCOUNT (state, data) {
     state.activeAccount = data
@@ -82,9 +93,6 @@ const mutations = {
   SET_PRIVATEKEY (state, data) {
     state.privateKey = data
   },
-  SET_DIGEST (state, data) {
-    state.digest = data
-  },
   SET_ACCOUNTNAME (state, data) {
     state.accountName = data
   },
@@ -93,6 +101,20 @@ const mutations = {
   },
   SET_NETWORKS (state, data) {
     state.networks = data
+  },
+  SET_CUSTOMNETWORK (state, data) {
+    const { rpc, name, browser, symbol, ids, networkType, filecoinAddress0, decimals, disabled, image, deriveIndex } = data
+    state.rpc = rpc
+    state.name = name
+    state.browser = browser
+    state.symbol = symbol
+    state.ids = ids
+    state.networkType = networkType
+    state.filecoinAddress0 = filecoinAddress0
+    state.decimals = decimals
+    state.disabled = disabled
+    state.image = image
+    state.deriveIndex = deriveIndex
   }
 }
 

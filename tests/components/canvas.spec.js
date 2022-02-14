@@ -1,6 +1,6 @@
 /* eslint-disable no-undef */
 import { mount } from '@vue/test-utils'
-import kyCanvas from '@/components/canvas'
+import kyCanvas from '@/components/token-icon/src'
 describe('canvas component', () => {
   test('canvas-test', () => {
     const wrapper = mount(kyCanvas, {

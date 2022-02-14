@@ -2,15 +2,21 @@
 import { shallowMount, createLocalVue } from '@vue/test-utils'
 import importWords from '@/pages/import-words/component/index.vue'
 import elementUI from 'element-ui'
-import { Database } from '@/utils/database.js'
+import KyLayout from '@/components/layout/index'
+import KyBack from '@/components/back/index'
+import KyButton from '@/components/button/index'
+import KyInput from '@/components/input/index'
 import Vuex from 'vuex'
-const Dexie = require('dexie')
-Dexie.dependencies.indexedDB = require('fake-indexeddb')
-Dexie.dependencies.IDBKeyRange = require('fake-indexeddb/lib/FDBKeyRange')
+import { mocksData } from '../../mock'
 const localVue = createLocalVue()
 localVue.use(Vuex)
 localVue.use(elementUI)
-
+localVue.use(KyLayout)
+localVue.use(KyBack)
+localVue.use(KyButton)
+localVue.use(KyInput)
+jest.useFakeTimers()
+jest.spyOn(global, 'setTimeout')
 const networks = [
   {
     name: 'Filcoin Mainnet',
@@ -19,8 +25,7 @@ const networks = [
     symbol: 'FIL',
     ids: 'filecoin',
     browser: 'https://filscan.io',
-    khazix: 'khazix',
-    create_time: 1631613194,
+    createTime: 1631613194,
     networkType: 'proxy',
     filecoinAddress0: 'f',
     decimals: 18,
@@ -35,10 +40,9 @@ const networks = [
     symbol: 'FIL',
     ids: 'filecoin',
     browser: 'https://calibration.filscan.io',
-    khazix: 'khazix',
     networkType: 'proxy',
     filecoinAddress0: 't',
-    create_time: 1631613195,
+    createTime: 1631613195,
     decimals: 18,
     image: 'fil.svg',
     disabled: true,
@@ -51,16 +55,25 @@ const networks = [
     symbol: 'BNB',
     ids: 'binancecoin',
     browser: 'https://testnet.bscscan.com',
-    khazix: 'khazix',
     networkType: 'ethereum',
     filecoinAddress0: '',
-    create_time: 1631613196,
+    createTime: 1631613196,
     decimals: 18,
     image: 'bnb.svg',
     disabled: true,
     deriveIndex: 0
   }
 ]
+
+jest.mock('@/utils/local-store', () => (class ExtensionStore {
+  get (key) {
+    return mocksData[key]
+  }
+
+  set () {
+    jest.fn()
+  }
+}))
 
 describe('importWords index.vue', () => {
   const assignMock = jest.fn()
@@ -69,7 +82,6 @@ describe('importWords index.vue', () => {
   afterEach(() => {
     assignMock.mockClear()
   })
-  const db = new Database()
   const store = new Vuex.Store({
     modules: {
       app: {
@@ -85,12 +97,10 @@ describe('importWords index.vue', () => {
               accountName: 'Account1',
               address: 'f1ntv4qlgoi55wqqxrxxolatfdgn7xvu7vfhrkcfq',
               createType: 'mnemonic',
-              create_time: 1631613193,
+              createTime: 1631613193,
               digest: 'zBUjeDDJuuDAPNQF',
               fil: 0,
               id: 1,
-              isDelete: 0,
-              khazix: 'khazix',
               privateKey: '98b983395737275c208f5b6884180cbc7575e7c208dba4621da300fc5248046ec7224a209285b4e9e770fa1e',
               rpc: 'https://api.fivetoken.io'
             }
@@ -121,8 +131,8 @@ describe('importWords index.vue', () => {
 
   Object.defineProperty(window, 'location', {
     value: {
-      href: './setting.html',
-      search: '?mnemonicWords=robot%20sort%20steak%20cart%20banana%20bracket%20cat%20mass%20room%20success%20tackle%20rival&accountName=Account1&password=Aa123456&createType=create'
+      href: './import-words.html',
+      search: '?accountName=Account1&password=%40Aa123456789012zpc&createType=importWords&sourceType=recovery'
     }
   })
 
@@ -131,8 +141,17 @@ describe('importWords index.vue', () => {
     localVue,
     data () {
       return {
+        loading: require('@/assets/image/loading.png'),
+        show: false,
+        agree: false,
+        isFetch: false,
+        form: {
+          mnemonicWords: '',
+          accountName: '',
+          password: ''
+        },
         error: false,
-        db
+        sourceType: ''
       }
     },
     mocks: {
@@ -142,22 +161,27 @@ describe('importWords index.vue', () => {
       }
     },
     stubs: {
-      'el-dialog': true
+      'el-dialog': true,
+      'el-input': true,
+      'el-button': true
     }
   })
 
   it('index.vue-test', async () => {
     wrapper.vm.layoutMounted()
 
-    await wrapper.vm.importWallet()
-    wrapper.vm.focus()
-    expect(wrapper.vm.error).toBe(false)
-
-    wrapper.vm.mnemonicWordsChange('words')
-    expect(wrapper.vm.form.mnemonicWords).toBe('words')
+    const words = 'vintage about dice wagon border labor toy property correct credit digital drum'
+    wrapper.vm.mnemonicWordsChange(words)
+    expect(wrapper.vm.form.mnemonicWords).toBe(words)
 
     const accountName = wrapper.vm.getQuery('accountName')
     expect(accountName).toBe('Account1')
+
+    await wrapper.vm.importWallet()
+    expect(setTimeout).toHaveBeenCalledTimes(1)
+    expect(setTimeout).toHaveBeenLastCalledWith(expect.any(Function), 0)
+    wrapper.vm.focus()
+    expect(wrapper.vm.error).toBe(false)
 
     await wrapper.vm.back()
     wrapper.vm.back()

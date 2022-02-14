@@ -1,6 +1,7 @@
 /* eslint-disable camelcase */
-const create_time = parseInt(new Date().getTime() / 1000)
+const createTime = parseInt(new Date().getTime() / 1000)
 const ko = {
+  noNetWork: '네트워크에 연결할 수 없습니다',
   header: {
     customRpc: '사용자 지정 RPC'
   },
@@ -10,6 +11,7 @@ const ko = {
     cancel: '취소',
     functionType: '함수 유형',
     params: '매개변수',
+    noSupported: '이 네트워크 이체는 잠시 지원되지 않습니다. filecoin 네트워크로 전환하십시오.',
     hexData: '16진수 데이터'
   },
   fiveTokenContent: {
@@ -29,12 +31,13 @@ const ko = {
     title: 'FiveToken에 오신 것을 환영합니다.',
     subTitle1: 'Filecoin 생태 분야의 커넥터, 멀티 체인 융합, 미래 저장 세계의 입구입니다.',
     subTitle2: '만나서 반갑습니다.',
-    btn1: '새 지갑 만들기',
-    btn2: '기존 지갑 가져오기'
+    btn1: '새 계정 만들기',
+    btn2: '기존 계정 가져오기'
   },
   creatWallet: {
-    title: '새 지갑 만들기',
+    title: '새 계정 만들기',
     importWords: '도움말 가져오기',
+    recoveryWords: '복구',
     back: '되돌아가기',
     accountName: '아이디를 입력하세요.',
     nameTips: '15자 이내',
@@ -45,14 +48,16 @@ const ko = {
     diffError: '비밀번호가 일치하지 않습니다',
     correctPassword: '정확한 비밀번호를 입력하세요',
     confirmPassword: '비밀번호 확인',
-    btn: '다음'
+    btn: '다음',
+    strengthTips: '숫자, 대소문자 및 특수 문자를 포함하는 9-16자리 문자로 암호가 가장 높',
+    passwordStrength: '숫자, 대소문자 및 특수 문자를 포함하는 9자리 이상 문자'
   },
   creatWords: {
     title: '도움말 백업',
     subTitle: '순서대로 도움말을 따라쓰세요',
     showWords: '여기를 클릭하여 비밀언어를 표시하기',
     btn1: '도움말 인증',
-    btn2: '지갑에 들어가기',
+    btn2: '계정에 들어가기',
     copy: '도움말 복사',
     copySuccess: '복제 성공',
     tips1: '！ 도움말을 안전한 곳에 보관하여 다른 네트워크와 격리시키세요.',
@@ -66,7 +71,7 @@ const ko = {
   },
   importWords: {
     title: '가져오기助记词',
-    subTitle: '도움말을 입력하여 지갑을 복원하세요.',
+    subTitle: '도움말을 입력하여 계정을 복원하세요.',
     tips: '단어가 빈칸 분리를 사용합니다.',
     btn: '수입',
     error: '도움말 오류',
@@ -75,7 +80,7 @@ const ko = {
   importPrivatkey: {
     title: '비밀 키 가져오기',
     label1: '지원하는 네트워크를 선택하십시오',
-    label2: '비밀 키를 입력하여 지갑을 복원하세요.',
+    label2: '비밀 키를 입력하여 계정을 복원하세요.',
     btn: '수입',
     titleNetwork: '네트워크 선택',
     importError: '지원하지 않는 형식입니다.',
@@ -86,7 +91,7 @@ const ko = {
     lock: '잠금',
     mneAccount: '도움말 계정',
     pkAccount: '비밀 키 계정',
-    createWallet: '지갑 만들기',
+    createWallet: '계정 만들기',
     import: '비밀 키 가져오기',
     setting: '설정',
     titleAdd: '계정 추가',
@@ -104,7 +109,7 @@ const ko = {
       { name: '계정명 수정', action: 'editName' },
       { name: '블록체인 브라우저 보기', action: 'viewInBrowser' },
       { name: '비밀 키 백업', action: 'backupPrivateKey' },
-      { name: '지갑 삭제', action: 'deleteWallet' }
+      { name: '계정 삭제', action: 'deleteAccount' }
     ],
     statusSuccess: '완성',
     statusError: '실패',
@@ -119,7 +124,9 @@ const ko = {
     cancel: '취소',
     confirm: '확인하다',
     deleteTitle: '삭제 확인',
-    deleteTips: '비밀 키가 백업되었는지 확인하세요. 삭제 후, 해당 지갑을 보여주려면 비밀 키로 가져와야 합니다.',
+    deleteLabel: '비밀번호를 입력해주세요',
+    confirmDelete: '삭제',
+    deleteTips: '개인 키가 백업되었는지 확인하십시오. 삭제 후 지갑을 사용하려면 개인키로 가져와야 합니다.',
     copyAddress: '주소 복사',
     copySuccess: '复制성공',
     tranRecord: '활동 기록',
@@ -136,7 +143,8 @@ const ko = {
     connectedNetwork: '연결된 웹사이트',
     connectedRights: '이 사이트에 연결되었습니다. 그들은 귀하의 계정 주소를 볼 수 있습니다.',
     unconnectTips: 'FiveToken이 이 웹사이트에 연결되지 않았습니다. web3 웹사이트에 연결하려면 웹사이트에서 연결 버튼을 찾으세요.',
-    unconnectNetworksTips: '아직 연결된 웹사이트가 없습니다.'
+    unconnectNetworksTips: '아직 연결된 웹사이트가 없습니다.',
+    noAccountTips: '액세스하려는 네트워크에 계정이 없습니다.'
   },
   messageDetail: {
     title: '소식 상세 정보',
@@ -173,23 +181,40 @@ const ko = {
     recordLast: '최근 사용',
     myAccount: '내 계정',
     addressBook: '주소록',
-    gasLimit: 'Gas Limit',
     confirmTransaction: '거래 확인',
     sendAmount: '발송 액수',
-    networkGas: '네트워크 요율',
     maxGas: '예상 최대 가스 요금',
     totalTips: '청구 액수+예상 가스 요금',
     total: '총액',
     cancel: '취소',
     confirm: '확인하다',
-    gasFeeError: '현재 BaseFee 보다 적음',
     gasLimitError: '현재 Gas Limit 보다 적음',
     addressError: '주소 형식이 잘못되었습니다',
     insufficientBalance: '잔액이 부족합니다.',
-    filBaseFeeTips: '네트워크 수수료율은 네트워크 수수료를 지불하는 데 사용되며, 네트워크 수수료율>BaseFee일 때만 메시지가 패키징됩니다. 나노필 = 10^-9',
-    baseFeeTips: 'Gas price는 Gas 단위당 지불 토큰 수, Gwei=10^-9',
-    gasLimitTips: 'Gas Limit은 메시지를 발송할 때 소모되는 Gas 최대치입니다.',
+    ethereumMainGasLimitTips: '가스 한도는 사용하려는 가스의 최대 단위입니다. 가스 단위는 "최대 우선 요금" 및 "최대 요금"의 승수입니다.',
+    filecoinGasLimitTips: '가스 한도는 사용하려는 가스의 최대 단위입니다. 가스 단위는 "GasPremium" 및 "GasFeeCap"의 승수입니다.',
+    ethereumOthersGasLimitTips: '가스 한도는 사용하려는 가스의 최대 단위입니다. 가스 단위는 "Max priority fee" 및 "Max fee"의 승수입니다.',
+    maxPriorityFeeTips: '최대 우선 순위 수수료(일명 "광부 팁")는 채굴자에게 직접 전달되며 거래의 우선 순위를 정하도록 장려합니다. 가장 자주 최대 설정을 지불합니다.',
+    maxFeeTips: '최대 수수료는 지불할 최대 금액입니다(기본 수수료 + 우선 수수료).',
+    gasFeeCapTips: '최대 수수료는 귀하가 지불할 최대 금액입니다. nanoFIL = 10^-9 FIL',
+    gasPremiumTips: 'GasPremium(일명 "광부 팁")은 광부에게 직접 이동하여 거래의 우선 순위를 지정하도록 장려합니다. 가장 자주 최대 설정을 지불합니다. nanoFIL = 10^-9FIL',
+    gasPriceTips: '가스 가격은 각 가스 단위에 대해 지불할 토큰의 양을 지정합니다. 그웨이 = 10^-9.',
+    sameAddressError: '발송 주소가 수신 주소와 같을 수 없습니다',
     vaildNumber: '유효한 숫자를 입력하세요'
+  },
+
+  passwordVerification: {
+    title: '비밀번호 확인',
+    label: '비밀번호를 입력해주세요',
+    confirm: '확인하다',
+    cancel: '취소'
+  },
+  addAccount: {
+    title: '계정 만들기',
+    nameLabel: '계정 이름을 입력하십시오.',
+    nameTips: '15자 이내',
+    tips: '이 계정은 계층 지갑을 기반으로 하며 다른 니모닉 계정과 동일한 니모닉 구문을 사용하지만 개인 키가 다릅니다.',
+    button: '확인하다'
   },
   setting: {
     name: '설정',
@@ -211,6 +236,7 @@ const ko = {
       { name: '인터넷', url: './setting-networks.html' },
       { name: '주소록', url: './setting-address.html' },
       { name: '도움말 백업', url: './setting-backups.html' },
+      { name: '암호 수정', url: './setting-password.html' },
       { name: '관련', url: './setting-about.html' }
     ]
   },
@@ -234,6 +260,16 @@ const ko = {
     delete: '삭제',
     deleteTips: '이 네트워크를 삭제하시겠습니까?',
     deleteSuccess: '성공적으로 삭제되었습니다'
+  },
+  settingPassword: {
+    title: '암호 수정',
+    currentPassword: '현재 암호 확인',
+    newPassword: '새 암호',
+    newPlaceholder: '새 암호를 입력하십시오',
+    passwordTips: '계정 보안을 위해 최강 비밀번호를 사용하세요',
+    confirmPassword: '암호 확인',
+    confirmPlaceholder: '확인 암호를 입력하십시오',
+    confirm: '확인'
   },
   settingAbout: {
     about: '관련',
@@ -283,7 +319,10 @@ const ko = {
     subTitle: 'Filecoin 생태분야의 커넥터, 멀티 체인 융합, 미래 저장 세계의 입구입니다.',
     unlocking: '잠금 해제',
     label: '비밀번호',
-    passwordError: '암호 오류'
+    passwordError: '암호 오류',
+    bottomLabel: 'or',
+    bottomLabel2: '도움말 가져오기 ',
+    bottomLabel3: '(가져오면 기존 계정이 초기화됩니다)'
   },
   connect: {
     title: 'FiveToken으로 연결하기',
@@ -298,8 +337,7 @@ const ko = {
       symbol: 'FIL',
       ids: 'filecoin',
       browser: 'https://filscan.io',
-      khazix: 'khazix',
-      create_time: create_time,
+      createTime: createTime,
       networkType: 'proxy',
       filecoinAddress0: 'f',
       decimals: 18,
@@ -314,10 +352,9 @@ const ko = {
       symbol: 'ETH',
       browser: 'https://etherscan.io',
       ids: 'ethereum',
-      khazix: 'khazix',
       networkType: 'ethereum',
       filecoinAddress0: '',
-      create_time: create_time + 1,
+      createTime: createTime + 1,
       decimals: 18,
       image: 'eth.svg',
       disabled: true,
@@ -330,10 +367,9 @@ const ko = {
       symbol: 'BNB',
       ids: 'binancecoin',
       browser: 'https://bscscan.com',
-      khazix: 'khazix',
       networkType: 'ethereum',
       filecoinAddress0: '',
-      create_time: create_time + 2,
+      createTime: createTime + 2,
       decimals: 18,
       image: 'bnb.svg',
       disabled: true,
@@ -346,10 +382,9 @@ const ko = {
       symbol: 'FIL',
       ids: 'filecoin',
       browser: 'https://calibration.filscan.io',
-      khazix: 'khazix',
       networkType: 'proxy',
       filecoinAddress0: 't',
-      create_time: create_time + 3,
+      createTime: createTime + 3,
       decimals: 18,
       image: 'fil.svg',
       disabled: true,
@@ -362,10 +397,9 @@ const ko = {
       symbol: 'ETH',
       ids: 'ethereum',
       browser: 'https://ropsten.etherscan.io',
-      khazix: 'khazix',
       networkType: 'ethereum',
       filecoinAddress0: '',
-      create_time: create_time + 4,
+      createTime: createTime + 4,
       decimals: 18,
       image: 'eth.svg',
       disabled: true,
@@ -378,10 +412,9 @@ const ko = {
       symbol: 'ETH',
       ids: 'ethereum',
       browser: 'https://kovan.etherscan.io',
-      khazix: 'khazix',
       networkType: 'ethereum',
       filecoinAddress0: '',
-      create_time: create_time + 5,
+      createTime: createTime + 5,
       decimals: 18,
       image: 'eth.svg',
       disabled: true,
@@ -394,10 +427,9 @@ const ko = {
       symbol: 'ETH',
       ids: 'ethereum',
       browser: 'https://rinkeby.etherscan.io',
-      khazix: 'khazix',
       networkType: 'ethereum',
       filecoinAddress0: '',
-      create_time: create_time + 6,
+      createTime: createTime + 6,
       decimals: 18,
       image: 'eth.svg',
       disabled: true,
@@ -410,10 +442,9 @@ const ko = {
       symbol: 'ETH',
       ids: 'ethereum',
       browser: 'https://goerli.etherscan.io',
-      khazix: 'khazix',
       networkType: 'ethereum',
       filecoinAddress0: '',
-      create_time: create_time + 7,
+      createTime: createTime + 7,
       decimals: 18,
       image: 'eth.svg',
       disabled: true,
@@ -426,10 +457,9 @@ const ko = {
       symbol: 'BNB',
       ids: 'binancecoin',
       browser: 'https://testnet.bscscan.com',
-      khazix: 'khazix',
       networkType: 'ethereum',
       filecoinAddress0: '',
-      create_time: create_time + 8,
+      createTime: createTime + 8,
       decimals: 18,
       image: 'bnb.svg',
       disabled: true,

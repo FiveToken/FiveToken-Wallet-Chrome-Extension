@@ -1,7 +1,7 @@
 <template>
-    <layout @layoutMounted="layoutMounted">
-        <div class="wallet-page" >
-            <bHeader
+    <ky-layout @layoutMounted="layoutMounted">
+        <div class="wallet-page">
+            <ky-header
                 @openNetwork="openNetwork"
             />
             <div class="content">
@@ -10,12 +10,12 @@
                     :balance="balance"
                     :mask.sync="mask"
                     :editNameVisable.sync="editNameVisable"
-                    :deleteUserVisible.sync="deleteUserVisible"
+                    :deleteAccountVisible.sync="deleteAccountVisible"
                     :receiveVisible.sync="receiveVisible"
                 />
                 <kyList
                     v-if="address && rpc"
-                    :price_currency="price_currency"
+                    :priceCurrency="priceCurrency"
                     :balance="balance"
                     @tokenShow="tokenShow"
                     ref="kyList"
@@ -30,7 +30,7 @@
                 :modal="false"
                 :top="'0'"
             >
-                <kyNetwork
+                <ky-network
                     @closeNetwork="closeNetwork"
                     @networkChange="networkChange"
                 />
@@ -40,7 +40,7 @@
                 :visible.sync="editNameVisable"
                 width="300px"
                 :show-close="false"
-                :top="'31vh'"
+                :top="'24vh'"
             >
                 <editName
                     :addressName.sync="addressName"
@@ -50,7 +50,7 @@
             </el-dialog>
 
             <el-dialog
-                :visible.sync="deleteUserVisible"
+                :visible.sync="deleteAccountVisible"
                 width="300px"
                 :top="'31vh'"
                 :show-close="false"
@@ -88,7 +88,7 @@
                     :tokenDecimals="tokenDecimals"
                     :tokenBalance="tokenBalance"
                     :tokenName="tokenName"
-                    :price_currency="price_currency"
+                    :priceCurrency="priceCurrency"
                     :receiveVisible.sync="receiveVisible"
                     :symbol="symbol"
                     :tokenList="tokenList"
@@ -100,23 +100,34 @@
             </div>
             <div class="mask" v-if="mask" @click="maskClick"></div>
         </div>
-    </layout>
+    </ky-layout>
 </template>
 <script>
-import bHeader from '@/components/header'
-import layout from '@/components/layout'
 import editName from './edit-name.vue'
 import deleteUser from './delete-user.vue'
 import receive from './receive.vue'
 import kyTop from './top.vue'
 import kyList from './transaction-list.vue'
 import kyToken from './token.vue'
-import kyNetwork from '@/components/header/network.vue'
-import { GlobalApi } from '@/api'
+import { GlobalApi } from '@/api/index.js'
 import QRCode from 'qrcode'
 import { mapMutations, mapState } from 'vuex'
-import { Database, reverseOrder } from '@/utils/database.js'
+import { isFilecoinChain } from '@/utils'
+import changeNetwork from '@/minix/change-network'
+import changeAccount from '@/minix/change-account'
+import ABI from '@/utils/abi'
+import { ethers } from 'ethers'
+import ExtensionStore from '@/utils/local-store'
 export default {
+  components: {
+    editName,
+    deleteUser,
+    receive,
+    kyTop,
+    kyList,
+    kyToken
+  },
+  mixins: [changeNetwork, changeAccount],
   data () {
     return {
       mask: false,
@@ -124,20 +135,19 @@ export default {
       isLoading: false,
       addressName: '',
       editNameVisable: false,
-      deleteUserVisible: false,
+      deleteAccountVisible: false,
       receiveVisible: false,
       tokenVisible: false,
       balance: 0,
-      price_currency: 0,
+      priceCurrency: 0,
       QRUrl: '',
-      signed_cid: '',
       tokenName: '',
       tokenDecimals: 0,
       tokenList: [],
       tokenBalance: 0,
       tokenIsMain: 0,
       networkVisible: false,
-      db: null
+      localStore: null
     }
   },
   computed: {
@@ -150,73 +160,41 @@ export default {
       'ids',
       'networkType',
       'currency',
-      'accountList'
+      'activeAccount',
+      'accountList',
+      'onLine',
+      'networks'
     ])
   },
-  components: {
-    layout,
-    bHeader,
-    editName,
-    deleteUser,
-    receive,
-    kyTop,
-    kyList,
-    kyToken,
-    kyNetwork
-  },
-  mounted () {
-    const db = new Database()
-    this.db = db
+  async mounted () {
+    const localStore = new ExtensionStore()
+    this.localStore = localStore
+    const allStore = await localStore.get(null)
+    console.log(allStore, 'allStoreallStoreallStore')
   },
   methods: {
-    ...mapMutations('app', [
-      'SET_PRIVATEKEY',
-      'SET_ADDRESS',
-      'SET_DIGEST',
-      'SET_ACCOUNTNAME'
+    ...mapMutations('wallet', [
+      'SET_MESSAGELIST',
+      'SET_TOKENLIST'
     ]),
     async layoutMounted () {
-      const address = this.address
-      const rpc = this.rpc
-      const networkType = this.networkType
+      this.addressName = this.accountName
+      this.isLoading = true
       try {
         this.getQRCode()
-        this.isLoading = true
-        this.addressName = this.accountName
+        await this.getBalanceNonce()
         await this.getPrice()
-        const balance = await this.getBalanceNonce(address, rpc, networkType)
-        this.balance = balance
-        await this.db.modifyTable(
-          'activeAccount',
-          {
-            address: address,
-            rpc: rpc
-          },
-          {
-            fil: balance
-          }
-        )
-        await this.db.modifyTable(
-          'accountList',
-          {
-            address: address,
-            rpc: rpc
-          },
-          {
-            fil: balance
-          }
-        )
+        await this.updateMessageList()
+        await this.getTokenList()
+        await this.getMessageList()
         this.isLoading = false
-        await this.$refs.kyList.getTokenList()
-        await this.$refs.kyList.updateActivityList()
-        await this.$refs.kyList.getActivityList()
       } catch (error) {
         this.isLoading = false
       }
     },
     networkChange () {
-      this.closeNetwork()
       this.layoutMounted()
+      this.closeNetwork()
     },
     openNetwork () {
       this.mask = true
@@ -231,74 +209,119 @@ export default {
       this.networkVisible = false
     },
     // edit current address
-    confirmEdit () {
+    async confirmEdit () {
       const addressName = this.addressName
       if (addressName) {
         const address = this.address
         const rpc = this.rpc
         this.SET_ACCOUNTNAME(addressName)
-        this.db.modifyTable(
-          'accountList',
-          {
-            address: address,
-            rpc: rpc
-          },
-          {
+        const localStore = new ExtensionStore()
+        const accountList = await localStore.get('accountList')
+        const restAccountList = accountList.filter(n => {
+          return !((n.rpc === rpc) && (n.address === address))
+        })
+        await this.localStore.set({
+          accountList: [
+            ...restAccountList,
+            {
+              ...this.activeAccount,
+              accountName: addressName
+            }
+          ]
+        })
+
+        await this.localStore.set({
+          activeAccount: {
+            ...this.activeAccount,
             accountName: addressName
           }
-        )
-        this.db.modifyTable(
-          'activeAccount',
-          {
-            address: address,
-            rpc: rpc
-          },
-          {
-            accountName: addressName
-          }
-        )
+        })
+
         this.editNameVisable = false
       }
     },
     closeEdit () {
+      this.addressName = this.accountName
       this.editNameVisable = false
     },
-    // delete current address
-    async confirmDelete () {
-      if (this.accountList.length === 1) {
-        await this.db.clearTable()
-        window.location.href = './welcome.html'
-      } else {
-        if (this.accountList.length) {
-          await this.db.deleteTable('activeAccount', { khazix: 'khazix' })
-          await this.db.modifyTable(
-            'accountList',
-            {
-              address: this.address,
-              rpc: this.rpc
-            },
-            {
-              isDelete: 1
-            }
-          )
-          const _accountList = await this.db.getTable('accountList', { rpc: this.rpc, isDelete: 0 })
-          const first = _accountList.find((n, index) => {
-            return index === 0
-          })
-          const { privateKey, address, digest, accountName } = first
-          this.SET_PRIVATEKEY(privateKey)
-          this.SET_ADDRESS(address)
-          this.SET_DIGEST(digest)
-          this.SET_ACCOUNTNAME(accountName)
-          await this.db.addTable('activeAccount', first)
-          window.location.href = './wallet.html'
-        } else {
-          window.location.href = './welcome.html'
+    async getDataNetwork () {
+      const networks = this.networks
+      let dataNetwork = null
+      for (let i = 0; i < networks.length; i++) {
+        const AllAccountList = await this.localStore.get('accountList')
+        if (AllAccountList) {
+          const _rpc = networks[i].rpc
+          const _accountList = AllAccountList.filter(n => n.rpc === _rpc)
+          if (_accountList.length > 0) {
+            dataNetwork = networks[i]
+            break
+          }
         }
+      }
+      return dataNetwork
+    },
+    /**
+     * After deleting an account, if the current network still has an account,
+     * switch to the first account of the current network.
+     * If the current network has no account, switch to the next network with an account.
+     * If all networks have no account, jump to the welcome page
+     */
+    async confirmDelete () {
+      try {
+        const allAccountList = await this.localStore.get('accountList')
+        const isFilecoin = isFilecoinChain(this.networkType)
+        if (isFilecoin) {
+          const _address = this.address.substring(1, this.address.length)
+          const restAccountList = allAccountList.filter(n => {
+            return (n.address.indexOf(_address) === -1)
+          })
+          await this.localStore.set({
+            accountList: [
+              ...restAccountList
+            ]
+          })
+        } else {
+          const restAccountList = allAccountList.filter(n => {
+            return n.address !== this.address
+          })
+          await this.localStore.set({
+            accountList: [
+              ...restAccountList
+            ]
+          })
+        }
+        const currentRpc = this.rpc
+        const _currentAccountList = await this.localStore.get('accountList')
+        if (_currentAccountList) {
+          const currentAccountList = _currentAccountList.filter(n => n.rpc === currentRpc)
+          if (currentAccountList.length) {
+            const first = currentAccountList.find((n, index) => {
+              return index === 0
+            })
+            await this.minixChangeAccount(first, currentRpc)
+            window.location.href = './wallet.html'
+          } else {
+            const dataNetwork = await this.getDataNetwork()
+            if (dataNetwork) {
+              await this.minixChangeNetwork(dataNetwork, currentRpc)
+              const allAccountList = await this.localStore.get('accountList')
+              if (allAccountList) {
+                const _accountList = allAccountList.filter(n => n.rpc === dataNetwork.rpc)
+                if (_accountList.length) {
+                  await this.minixChangeAccount(_accountList[0], currentRpc)
+                  window.location.href = './wallet.html'
+                }
+              }
+            } else {
+              window.location.href = './welcome.html'
+            }
+          }
+        }
+      } catch (error) {
       }
     },
     closeDelete () {
-      this.deleteUserVisible = false
+      this.deleteAccountVisible = false
     },
     // get exchange rate
     async getPrice () {
@@ -309,9 +332,9 @@ export default {
         const res = await MyGlobalApi.getPrice(this.ids)
         const { usd, cny } = res
         if (this.currency === 'cny') {
-          this.price_currency = cny
+          this.priceCurrency = cny
         } else {
-          this.price_currency = usd
+          this.priceCurrency = usd
         }
       }
     },
@@ -319,14 +342,37 @@ export default {
       window.location.href = './send-fil.html'
     },
     // get current account balance
-    async getBalanceNonce (address, rpc, networkType) {
+    async getBalanceNonce () {
+      const address = this.address
+      const rpc = this.rpc
+      const networkType = this.networkType
       let balance = 0
       const MyGlobalApi = new GlobalApi()
       MyGlobalApi.setRpc(rpc)
       MyGlobalApi.setNetworkType(networkType)
       const res = await MyGlobalApi.getBalance(address)
       balance = res && res.balance
-      return balance
+      this.balance = balance
+      await this.localStore.set({
+        activeAccount: {
+          ...this.activeAccount,
+          fil: balance
+        }
+      })
+      const allAccountList = await this.localStore.get('accountList')
+      const restAccountList = allAccountList.filter(n => {
+        return !((n.rpc === rpc) && (n.address === address))
+      })
+
+      await this.localStore.set({
+        accountList: [
+          ...restAccountList,
+          {
+            ...this.activeAccount,
+            fil: balance
+          }
+        ]
+      })
     },
     openReceive () {
       this.receiveVisible = true
@@ -347,22 +393,139 @@ export default {
       this.tokenDecimals = Number(decimals)
       this.tokenBalance = balance
       this.tokenIsMain = isMain
-      const mesList = await this.db.getTable(
-        'messageList',
-        { rpc: this.rpc },
-        reverseOrder,
-        'create_time'
-      )
-      const tokenList = mesList.filter(n => {
-        return ((n.from === this.address) && (n.token === symbol)) || ((n.to === this.address) && (n.token === symbol))
-      })
-      console.log(tokenList, ' tokenList 2222')
-      this.tokenList = tokenList.map(n => {
-        return {
-          ...n
-        }
-      })
+      const messageList = await this.localStore.get('messageList')
+      if (messageList) {
+        const tokenList = messageList.filter(n => {
+          return ((n.from === this.address) && (n.token === symbol)) || ((n.to === this.address) && (n.token === symbol))
+        })
+
+        const pendingList = tokenList.filter(n => n.type === 'pending')
+        const sortPending = pendingList.sort(function (a, b) {
+          return b.createTime - a.createTime
+        })
+        const othersList = tokenList.filter(n => n.type !== 'pending')
+        const sortOthers = othersList.sort(function (a, b) {
+          return b.createTime - a.createTime
+        })
+        this.tokenList = [
+          ...sortPending,
+          ...sortOthers
+        ]
+      }
       this.tokenVisible = true
+    },
+
+    async getMessageList () {
+      const messageList = await this.localStore.get('messageList')
+      if (messageList) {
+        const currentAddress = this.address
+        const myMessageList = messageList.filter((n) => {
+          return ((n.rpc === this.rpc) && (n.from === currentAddress)) || ((n.rpc === this.rpc) && (n.to === currentAddress))
+        })
+        this.SET_MESSAGELIST(myMessageList)
+      } else {
+        this.SET_MESSAGELIST([])
+      }
+    },
+    // get token list
+    async getTokenList () {
+      if (!isFilecoinChain(this.networkType)) {
+        const allTokenList = await this.localStore.get('tokenList')
+        if (allTokenList) {
+          const myTokenList = allTokenList.filter(n => {
+            return (n.rpc === this.rpc) && (n.address === this.address)
+          })
+          const tokenList = []
+          const provider = ethers.getDefaultProvider(this.rpc)
+          myTokenList.forEach(async (n) => {
+            try {
+              const contract = new ethers.Contract(n.contract, ABI, provider)
+              // get token balance by address
+              contract.balanceOf(this.address).then((res) => {
+                const balance = res.toString()
+                const num = Number(balance)
+                tokenList.push({
+                  ...n,
+                  balance: num
+                })
+              })
+            } catch (err) {
+              throw new Error(err)
+            }
+          })
+          this.SET_TOKENLIST(tokenList)
+        }
+      } else {
+        this.SET_TOKENLIST([])
+      }
+    },
+    async updateMessageList () {
+      const allMessageList = await this.localStore.get('messageList')
+      if (allMessageList) {
+        const messageList = allMessageList.filter((n) => {
+          return (n.rpc === this.rpc) && (n.from === this.address || n.to === this.address)
+        })
+        messageList.forEach(async (n) => {
+        // Get status
+          if (n.type === 'pending') {
+            const itemRes = await this.getDetail(n.cid)
+            if (itemRes) {
+            // get detail, update store messageList (type,allGasFee,blockTime)
+              const updateMessageItem = messageList.find(m => n.cid === m.cid)
+              const restMessageList = messageList.filter(m => n.cid !== m.cid)
+              await this.localStore.set({
+                messageList: [
+                  ...restMessageList,
+                  {
+                    ...updateMessageItem,
+                    type: itemRes.type,
+                    allGasFee: itemRes.allGasFee,
+                    blockTime: itemRes.blockTime,
+                    height: itemRes.height
+                  }
+                ]
+              })
+            }
+          }
+        })
+        this.deleteSameNonce()
+      }
+    },
+    // get detail by hash
+    async getDetail (cid) {
+      const MyGlobalApi = new GlobalApi()
+      MyGlobalApi.setRpc(this.rpc)
+      MyGlobalApi.setNetworkType(this.networkType)
+      const detail = await MyGlobalApi.getTransaction(cid)
+      return detail
+    },
+    // delete same nonce （ type = pending）
+    async deleteSameNonce () {
+      const allMessageList = await this.localStore.get('messageList')
+      if (allMessageList) {
+        const messageList = allMessageList.filter(n => {
+          return (n.rpc === this.rpc) && (n.address === this.address)
+        })
+        const obj = {}
+        let nonce = 0
+        for (let i = 0; i < messageList.length; i++) {
+          if (!obj.nonce) {
+            obj.nonce = messageList[i].nonce
+          } else {
+            nonce = messageList[i].nonce
+          }
+        }
+
+        if (nonce) {
+          const restMessageList = messageList.filter(n => {
+            return (n.nonce !== nonce) && (n.type !== 'pending')
+          })
+
+          await this.localStore.set({
+            messageList: restMessageList
+          })
+        }
+      }
     }
   }
 }
@@ -374,6 +537,13 @@ export default {
     margin: 0 auto;
     background: #fff;
     box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    .content{
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+    }
     .mask{
         position: absolute;
         top: 0;

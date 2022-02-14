@@ -30,28 +30,28 @@
       </el-checkbox-group>
     </div>
     <div class="btn-wrap" v-if="accountList.length">
-      <kyButton @btnClick="cancel">{{ $t("fiveTokenContent.cancel") }}</kyButton>
-      <kyButton type="primary" :active="active" @btnClick="next">{{$t('fiveTokenContent.next')}}</kyButton>
+      <ky-button @btnClick="cancel">{{ $t("fiveTokenContent.cancel") }}</ky-button>
+      <ky-button type="primary" :active="active" @btnClick="next">{{$t('fiveTokenContent.next')}}</ky-button>
     </div>
   </div>
 </template>
 
 <script>
-import kyButton from '@/components/button'
 import { mapState } from 'vuex'
 import { formatNumber } from '@/utils'
 import { BigNumber } from 'bignumber.js'
+import { popupWindowRemove } from '@/popup.js'
 export default {
+  props: {
+    origin: String,
+    accountList: Array
+  },
   data () {
     return {
       logo: require('@/assets/image/logo.png'),
       checkList: [],
       all: false
     }
-  },
-  props: {
-    origin: String,
-    accountList: Array
   },
   computed: {
     ...mapState('app', [
@@ -61,9 +61,6 @@ export default {
     active () {
       return this.checkList.length > 0
     }
-  },
-  components: {
-    kyButton
   },
   filters: {
     formatBalance (val, decimals) {

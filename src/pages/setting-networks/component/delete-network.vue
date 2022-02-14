@@ -9,22 +9,18 @@
            {{$t('settingNetworks.deleteTips')}}
        </div>
        <div class="btn-wrap">
-           <kyButton @btnClick="closeDelete">{{ $t('settingNetworks.cancel') }}</kyButton>
-           <kyButton :type="'primary'" :active="true" @btnClick="confirmDelete">
+           <ky-button @btnClick="closeDelete">{{ $t('settingNetworks.cancel') }}</ky-button>
+           <ky-button :type="'primary'" :active="true" @btnClick="confirmDelete">
                {{ $t('settingNetworks.confirm') }}
-            </kyButton>
+            </ky-button>
        </div>
     </div>
 </template>
 
 <script>
-import kyButton from '@/components/button'
 export default {
   data () {
     return { }
-  },
-  components: {
-    kyButton
   },
   methods: {
     confirmDelete (val) {

@@ -1,8 +1,8 @@
 <template>
-    <layout>
+    <ky-layout>
         <div class="setting-about">
             <div class="back-wrap">
-                <kyBack @pageBack="back" :name="$t('settingAbout.about')" :close="true" @pageClose="closeSetting"/>
+                <ky-back @pageBack="back" :name="$t('settingAbout.about')" :close="true" @pageClose="closeSetting"/>
             </div>
             <div class="about-content">
                  <div class="logo">
@@ -15,23 +15,18 @@
                 <div class="use-rule" @click="toService">{{$t('settingAbout.useRule')}}</div>
             </div>
         </div>
-    </layout>
+    </ky-layout>
 </template>
 
 <script>
-import layout from '@/components/layout'
-import kyBack from '@/components/back'
 import { fiveTokenVersion } from '@/utils'
+import { openUrl } from '@/popup'
 export default {
   data () {
     return {
       logo: require('@/assets/image/logo.png'),
       version: ''
     }
-  },
-  components: {
-    layout,
-    kyBack
   },
   mounted () {
     this.version = fiveTokenVersion
@@ -47,13 +42,13 @@ export default {
       let lang = this.$i18n.locale
       lang = lang === 'zh' ? 'cn' : lang
       // eslint-disable-next-line no-undef
-      openUrl(`https://fivetoken.io/service?lang=${lang}`)
+      openUrl(`https://fivetoken.co/service?lang=${lang}`)
     },
     toPrivacy () {
       let lang = this.$i18n.locale
       lang = lang === 'zh' ? 'cn' : lang
       // eslint-disable-next-line no-undef
-      openUrl(`https://fivetoken.io/private?lang=${lang}`)
+      openUrl(`https://fivetoken.co/private?lang=${lang}`)
     }
   }
 }

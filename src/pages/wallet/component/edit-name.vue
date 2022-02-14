@@ -8,37 +8,31 @@
        <div class="add-content">
            <div class="input-item">
                <div class="label">{{ $t('wallet.editLabel') }}</div>
-               <kyInput :value="addressName" @changeInput="changeInput" maxlength='15'/>
+               <ky-input :value="addressName" @changeInput="changeInput" maxlength='15'/>
            </div>
            <div class="tips">{{ $t('wallet.editTips') }}</div>
            <div class="btn-wrap">
-               <kyButton @btnClick="closeEdit">{{ $t('wallet.cancel') }}</kyButton>
-               <kyButton @btnClick="confirmEdit" :type="'primary'" :active="active">
+               <ky-button @btnClick="closeEdit">{{ $t('wallet.cancel') }}</ky-button>
+               <ky-button @btnClick="confirmEdit" :type="'primary'" :active="active">
                    {{ $t('wallet.confirm') }}
-                </kyButton>
+                </ky-button>
            </div>
        </div>
     </div>
 </template>
 
 <script>
-import kyInput from '@/components/input'
-import kyButton from '@/components/button'
 export default {
-  data () {
-    return { }
-  },
   props: {
     addressName: String
+  },
+  data () {
+    return { }
   },
   computed: {
     active () {
       return this.addressName !== ''
     }
-  },
-  components: {
-    kyInput,
-    kyButton
   },
   methods: {
     changeInput (val) {

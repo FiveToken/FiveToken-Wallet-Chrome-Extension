@@ -1,13 +1,13 @@
 <template>
-  <layout @layoutMounted="layoutMounted">
+  <ky-layout @layoutMounted="layoutMounted">
     <div class="add-token-page">
       <div class="back-wrap">
-        <kyBack @pageBack="back" :name="$t('addToken.addToken')" />
+        <ky-back @pageBack="back" :name="$t('addToken.addToken')" />
       </div>
       <div class="add-content">
         <div class="input-item">
           <div class="label">{{ $t("addToken.contractAddress") }}</div>
-          <kyInput
+          <ky-input
             :value="contract"
             @changeInput="changeInput"
             @blur="contractInput"
@@ -17,7 +17,7 @@
         </div>
         <div class="info" v-if="contractEffective">
           <div class="logo">
-            <kyCanvas :contract="contract"/>
+            <ky-canvas :contract="contract"/>
           </div>
           <div class="info-item">
             <div class="label">{{ $t("addToken.contractAddress") }}:</div>
@@ -46,31 +46,26 @@
         </div>
       </div>
       <div class="btn-wrap">
-        <kyButton
+        <ky-button
           :type="'primary'"
           @btnClick="addContract"
           :active="active"
         >
           {{ $t("addToken.addToken") }}
-        </kyButton>
+        </ky-button>
       </div>
       <!-- <kyCanvas /> -->
       <div class="loading" v-if="isFetch">
         <img :src="loading" alt="" class="img"/>
       </div>
     </div>
-  </layout>
+  </ky-layout>
 </template>
 <script>
-import layout from '@/components/layout'
-import kyBack from '@/components/back'
-import kyInput from '@/components/input'
-import kyButton from '@/components/button'
-import kyCanvas from '@/components/canvas'
 import { ethers } from 'ethers'
 import ABI from '@/utils/abi'
 import { mapState } from 'vuex'
-import { Database } from '@/utils/database.js'
+import ExtensionStore from '@/utils/local-store'
 import { trimStr } from '@/utils'
 export default {
   data () {
@@ -86,7 +81,7 @@ export default {
       tokenList: [],
       isExists: false,
       logoArr: [],
-      db: null,
+      localStore: null,
       error: ''
     }
   },
@@ -98,23 +93,17 @@ export default {
       return v
     }
   },
-  components: {
-    layout,
-    kyBack,
-    kyInput,
-    kyButton,
-    kyCanvas
-  },
-  mounted () {},
   methods: {
     async layoutMounted () {
-      const db = new Database()
-      this.db = db
-      const tokenList = await db.getTable('tokenList', {
-        rpc: this.rpc,
-        address: this.address
-      })
-      this.tokenList = tokenList
+      const localStore = new ExtensionStore()
+      this.localStore = localStore
+      const _tokenList = await localStore.get('tokenList')
+      if (_tokenList) {
+        const tokenList = _tokenList.filter(n => {
+          return (n.rpc === this.rpc) && (n.address === this.address)
+        })
+        this.tokenList = tokenList
+      }
     },
     changeInput (val) {
       this.contract = val
@@ -122,8 +111,8 @@ export default {
       this.contractEffective = false
     },
     contractInput (val) {
-      console.log(val, '0x740542fb3a6ca5ab1dcd067a7e08af9ab9c16886')
       if (this.contract) {
+        this.isFetch = true
         const _contract = trimStr(this.contract)
         const that = this
         const isExists = this.tokenList.find(item => { return item.contract === _contract }) !== undefined
@@ -134,6 +123,7 @@ export default {
         const namePromise = contract.name()
         const symbolPromise = contract.symbol()
         Promise.all([decimalsPromise, namePromise, symbolPromise]).then((values) => {
+          this.isFetch = false
           if (values.length === 3) {
             that.contractEffective = true
             that.decimals = values[0].toString()
@@ -141,6 +131,7 @@ export default {
             that.symbol = values[2]
           }
         }).catch(err => {
+          this.isFetch = false
           that.contractEffective = false
           that.decimals = ''
           that.name = ''
@@ -157,17 +148,21 @@ export default {
       this.$router.go(-1)
     },
     async addContract () {
-      // rpc,name,decimals,symbol,khazix
       const _contract = trimStr(this.contract)
       if (this.contractEffective && !this.isExists) {
-        await this.db.addTable('tokenList', {
-          chainName: this.name,
-          decimals: this.decimals,
-          rpc: this.rpc,
-          symbol: this.symbol,
-          contract: _contract,
-          address: this.address,
-          khazix: 'khazix'
+        const allTokenList = await this.localStore.get('tokenList') || []
+        await this.localStore.set({
+          tokenList: [
+            ...allTokenList,
+            {
+              chainName: this.name,
+              decimals: this.decimals,
+              rpc: this.rpc,
+              symbol: this.symbol,
+              contract: _contract,
+              address: this.address
+            }
+          ]
         }).then(res => {
           window.location.href = './wallet.html'
         })

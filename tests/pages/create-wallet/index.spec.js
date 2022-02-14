@@ -2,15 +2,20 @@
 import { shallowMount, createLocalVue } from '@vue/test-utils'
 import createWallet from '@/pages/create-wallet/component/index.vue'
 import elementUI from 'element-ui'
-import { Database } from '@/utils/database.js'
+import KyLayout from '@/components/layout/index'
+import KyBack from '@/components/back/index'
+import KyButton from '@/components/button/index'
+import KyInput from '@/components/input/index'
+import KyProgress from '@/components/progress/index'
 import Vuex from 'vuex'
-const Dexie = require('dexie')
-Dexie.dependencies.indexedDB = require('fake-indexeddb')
-Dexie.dependencies.IDBKeyRange = require('fake-indexeddb/lib/FDBKeyRange')
 const localVue = createLocalVue()
 localVue.use(Vuex)
 localVue.use(elementUI)
-
+localVue.use(KyLayout)
+localVue.use(KyBack)
+localVue.use(KyButton)
+localVue.use(KyInput)
+localVue.use(KyProgress)
 const networks = [
   {
     name: 'Filcoin Mainnet',
@@ -19,8 +24,7 @@ const networks = [
     symbol: 'FIL',
     ids: 'filecoin',
     browser: 'https://filscan.io',
-    khazix: 'khazix',
-    create_time: 1631613194,
+    createTime: 1631613194,
     networkType: 'proxy',
     filecoinAddress0: 'f',
     decimals: 18,
@@ -35,10 +39,9 @@ const networks = [
     symbol: 'FIL',
     ids: 'filecoin',
     browser: 'https://calibration.filscan.io',
-    khazix: 'khazix',
     networkType: 'proxy',
     filecoinAddress0: 't',
-    create_time: 1631613195,
+    createTime: 1631613195,
     decimals: 18,
     image: 'fil.svg',
     disabled: true,
@@ -51,10 +54,9 @@ const networks = [
     symbol: 'BNB',
     ids: 'binancecoin',
     browser: 'https://testnet.bscscan.com',
-    khazix: 'khazix',
     networkType: 'ethereum',
     filecoinAddress0: '',
-    create_time: 1631613196,
+    createTime: 1631613196,
     decimals: 18,
     image: 'bnb.svg',
     disabled: true,
@@ -69,7 +71,6 @@ describe('account index.vue', () => {
   afterEach(() => {
     assignMock.mockClear()
   })
-  const db = new Database()
   const store = new Vuex.Store({
     modules: {
       app: {
@@ -85,12 +86,10 @@ describe('account index.vue', () => {
               accountName: 'Account1',
               address: 'f1ntv4qlgoi55wqqxrxxolatfdgn7xvu7vfhrkcfq',
               createType: 'mnemonic',
-              create_time: 1631613193,
+              createTime: 1631613193,
               digest: 'zBUjeDDJuuDAPNQF',
               fil: 0,
               id: 1,
-              isDelete: 0,
-              khazix: 'khazix',
               privateKey: '98b983395737275c208f5b6884180cbc7575e7c208dba4621da300fc5248046ec7224a209285b4e9e770fa1e',
               rpc: 'https://api.fivetoken.io'
             }
@@ -121,7 +120,6 @@ describe('account index.vue', () => {
     localVue,
     data () {
       return {
-        db,
         form: {
           accountName: '',
           password: '',
@@ -134,10 +132,15 @@ describe('account index.vue', () => {
       $router: {
         go: jest.fn()
       }
+    },
+    stubs: {
+      'el-dialog': true,
+      'el-input': true,
+      'el-button': true
     }
   })
 
-  it('index.vue-test', async () => {
+  it('create-wallet .vue-test', async () => {
     wrapper.vm.layoutMounted()
     wrapper.vm.nameChange('Acount2')
     const accountName = wrapper.vm.form.accountName
@@ -162,11 +165,11 @@ describe('account index.vue', () => {
     wrapper.setData({ createType: 'create' })
     wrapper.vm.create()
     const href1 = window.location.href
-    expect(href1.indexOf('create-words.html')).not.toBe(-1)
+    expect(href1.indexOf('setting')).not.toBe(-1)
 
     wrapper.setData({ createType: 'importWords' })
     wrapper.vm.create()
     const href2 = window.location.href
-    expect(href2.indexOf('import-words.html')).not.toBe(-1)
+    expect(href2.indexOf('setting')).not.toBe(-1)
   })
 })

@@ -14,14 +14,15 @@
 <script>
 
 export default {
+  name: 'KyCheckBox',
+  props: {
+    value: Array,
+    checkboxList: Array
+  },
   data () {
     return {
 
     }
-  },
-  props: {
-    value: Array,
-    checkboxList: Array
   },
   computed: {
     checkList: {

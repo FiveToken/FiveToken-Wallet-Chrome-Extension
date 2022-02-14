@@ -1,8 +1,8 @@
 <template>
   <div class="content-page">
     <welcome v-if="accountList.length === 0"/>
-    <lockUser v-else-if="lockUser.length"/>
-    <layout  v-else @layoutMounted="layoutMounted">
+    <lockUser v-else-if="lock"/>
+    <ky-layout  v-else @layoutMounted="layoutMounted">
       <stepOne
         :accountList="accountList"
         :origin="origin"
@@ -18,21 +18,7 @@
         @connect="connect"
         v-if="step === 2"
       />
-    </layout>
-    <el-dialog
-      :visible.sync="addAccountVisable"
-      width="300px"
-      :show-close="false"
-      class="network-dialog"
-      :top="'34vh'"
-    >
-        <kyAdd
-          v-if="addAccountVisable"
-          :addName.sync="addName"
-          @confirmAdd="confirmAdd"
-          @closeAdd="closeAdd"
-        />
-    </el-dialog>
+    </ky-layout>
     <div class="loading" v-if="isFetch">
       <img :src="loading" alt="" class="img">
     </div>
@@ -42,15 +28,18 @@
 <script>
 import welcome from '@/pages/welcome/component/index.vue'
 import lockUser from '@/pages/lock-user/component/index.vue'
-import layout from '@/components/layout'
 import stepOne from './step-1.vue'
 import stepTwo from './step-2.vue'
-import kyAdd from '@/pages/account/component/add.vue'
 import { mapMutations, mapState } from 'vuex'
-import { Database } from '@/utils/database.js'
-import { getF1ByMne, getGlobalKek } from '@/utils'
-import { AESDecrypt } from '@/utils/key'
+import ExtensionStore from '@/utils/local-store'
+import { popupToBackground, popupWindowRemove } from '@/popup.js'
 export default {
+  components: {
+    welcome,
+    lockUser,
+    stepOne,
+    stepTwo
+  },
   data () {
     return {
       isFetch: false,
@@ -59,17 +48,10 @@ export default {
       rpc: '',
       address: '',
       accountList: [],
-      lockUser: [],
-      db: null,
+      lock: [],
+      localStore: null,
       origin: '',
-      addAccountVisable: false,
-      addName: '',
-      activeF1: null,
-      ethereumF1: null,
-      filecoinF1: null,
-      calibrationF1: null,
-      checkList: [],
-      mnemonicWords: ''
+      checkList: []
     }
   },
   computed: {
@@ -77,40 +59,46 @@ export default {
       return this.address !== ''
     },
     ...mapState('app', [
-      'activenNetworks',
+      'activeNetwork',
       'deriveIndex',
       'networks'
     ])
   },
-  components: {
-    welcome,
-    lockUser,
-    layout,
-    stepOne,
-    stepTwo,
-    kyAdd
-  },
   async mounted () {
     const origin = window.localStorage.getItem('fiveTokenConnectOrigin')
     this.origin = origin
-    const db = new Database()
-    this.db = db
-    const lockUser = await db.getTable('lockUser', { khazix: 'khazix' })
-    this.lockUser = lockUser
-    const activenNetworks = await db.getTable('activenNetworks', { khazix: 'khazix' })
-    if (activenNetworks.length) {
-      const rpc = activenNetworks[0].rpc
-      this.rpc = rpc
-      const accountList = await db.getTable('accountList', { rpc: rpc, isDelete: 0 })
-      this.accountList = accountList
-      const walletKey = await db.getTable('walletKey', { khazix: 'khazix' })
-      if (walletKey.length) {
-        const nme = walletKey[0].mnemonicWords
-        this.mnemonicWords = AESDecrypt(nme)
+    const localStore = new ExtensionStore()
+    this.localStore = localStore
+    let lockUser
+    try {
+      lockUser = await localStore.get('lockUser')
+    } catch (e) {
+      console.log('lockUser error')
+    }
+    if (lockUser) {
+      this.lock = true
+    }
+    let activeNetwork
+    try {
+      activeNetwork = await localStore.get('activeNetwork')
+    } catch (e) {
+      console.log('activeNetwork null')
+    }
+    if (activeNetwork) {
+      this.rpc = activeNetwork.rpc
+      let accountList
+      try {
+        accountList = await localStore.get('accountList')
+      } catch (e) {
+        console.log('accountList null')
       }
-      if (accountList.length) {
-        const frist = accountList[0]
-        this.address = frist.address
+      if (accountList) {
+        const _accountList = accountList.filter(n => n.rpc === activeNetwork.rpc)
+        this.accountList = _accountList
+        if (_accountList.length) {
+          const frist = _accountList[0]
+          this.address = frist.address
+        }
       }
     }
   },
@@ -120,16 +108,11 @@ export default {
 
     },
     async addAccount () {
-      const _accountList_ = await this.db.getTable('accountList', { rpc: this.rpc })
-      this.addName = 'Account' + (_accountList_.length + 1)
-      this.addAccountVisable = true
+      window.location.href = './add-account.html'
     },
     next (checkList) {
       this.step = 2
       this.checkList = checkList
-    },
-    closeAdd () {
-      this.addAccountVisable = false
     },
     cancel () {
       // eslint-disable-next-line no-undef
@@ -147,8 +130,7 @@ export default {
           accountName: n.accountName,
           createType: n.createType,
           fil: n.fil,
-          origin: this.origin,
-          khazix: 'khazix'
+          origin: this.origin
         }
       })
       // eslint-disable-next-line no-undef
@@ -158,86 +140,6 @@ export default {
       this.isFetch = false
       // eslint-disable-next-line no-undef
       popupWindowRemove()
-    },
-    async confirmAdd () {
-      this.isFetch = true
-      try {
-        setTimeout(async () => {
-          const kek = getGlobalKek()
-          const deriveIndex = this.deriveIndex
-          console.log('deriveIndex:', deriveIndex)
-          const ethereumF1 = await getF1ByMne(this.mnemonicWords, kek, 'ethereum', '', deriveIndex)
-          const filecoinF1 = await getF1ByMne(this.mnemonicWords, kek, 'proxy', 'f', deriveIndex)
-          const calibrationF1 = await getF1ByMne(this.mnemonicWords, kek, 'proxy', 't', deriveIndex)
-          const accountName = this.addName
-          // eslint-disable-next-line camelcase
-          const create_time = parseInt(new Date().getTime() / 1000)
-          const _account = []
-          const _networks = []
-          for (const n of this.networks) {
-            if (n.filecoinAddress0 === 'f') {
-              _account.push({
-                accountName,
-                address: filecoinF1.address,
-                createType: 'mnemonic',
-                privateKey: filecoinF1.privateKey,
-                create_time,
-                khazix: 'khazix',
-                digest: filecoinF1.digest,
-                fil: 0,
-                isDelete: 0,
-                rpc: n.rpc
-              })
-            } else if (n.filecoinAddress0 === 't') {
-              _account.push({
-                accountName,
-                address: calibrationF1.address,
-                createType: 'mnemonic',
-                privateKey: calibrationF1.privateKey,
-                create_time,
-                khazix: 'khazix',
-                digest: calibrationF1.digest,
-                fil: 0,
-                isDelete: 0,
-                rpc: n.rpc
-              })
-            } else {
-              _account.push({
-                accountName,
-                address: ethereumF1.address,
-                createType: 'mnemonic',
-                privateKey: ethereumF1.privateKey,
-                create_time,
-                khazix: 'khazix',
-                digest: ethereumF1.digest,
-                fil: 0,
-                isDelete: 0,
-                rpc: n.rpc
-              })
-            }
-            _networks.push({
-              ...n,
-              deriveIndex: n.deriveIndex + 1
-            })
-          }
-          await this.db.bulkAddTable('accountList', _account)
-          await this.db.bulkPutTable('networks', _networks)
-          this.SET_DERIVEINDEX(this.deriveIndex + 1)
-          await this.db.modifyTable(
-            'activenNetworks',
-            { rpc: this.rpc },
-            { deriveIndex: this.deriveIndex + 1 }
-          )
-          const accountList = await this.db.getTable('accountList', { rpc: this.rpc, isDelete: 0 })
-          this.accountList = accountList
-          this.isFetch = false
-          this.addAccountVisable = false
-        }, 0)
-      } catch (error) {
-        this.isFetch = false
-        this.addAccountVisable = false
-        console.log(error, 'error')
-      }
     }
   }
 }

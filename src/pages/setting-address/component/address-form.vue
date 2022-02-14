@@ -1,7 +1,7 @@
 <template>
 <div class="address-form">
     <div class="back-wrap">
-        <kyBack
+        <ky-back
             @pageBack="back"
             :name="pageName"
         />
@@ -9,19 +9,19 @@
     <div class="form-content">
         <div class="input-item">
             <div class="label">{{$t('settingAddress.name')}}</div>
-            <kyInput :value="form.accountName" @changeInput="editFormChange(arguments,'accountName')"></kyInput>
+            <ky-input :value="form.accountName" @changeInput="editFormChange(arguments,'accountName')"></ky-input>
         </div>
         <div class="input-item">
             <div class="label">{{$t('settingAddress.address')}}</div>
-            <kyInput :value="form.address" @changeInput="editFormChange(arguments,'address')"></kyInput>
+            <ky-input :value="form.address" @changeInput="editFormChange(arguments,'address')"></ky-input>
             <div class="error" v-if="editAddressError">{{$t('settingAddress.addressError')}}</div>
         </div>
         <div class="position">
             <div class="btn-box" :class="{two:detail}">
-                <kyButton @btnClick="deleteAddress" v-if="detail">{{$t('settingAddress.delete')}}</kyButton>
-                <kyButton :type="'primary'" :active="active" @btnClick="save">
+                <ky-button @btnClick="deleteAddress" v-if="detail">{{$t('settingAddress.delete')}}</ky-button>
+                <ky-button :type="'primary'" :active="active" @btnClick="save">
                     {{$t('settingAddress.confirm')}}
-                </kyButton>
+                </ky-button>
             </div>
         </div>
     </div>
@@ -44,12 +44,19 @@
 import { isValidAddress } from '@/utils'
 import ClipboardJS from 'clipboard'
 import { mapState } from 'vuex'
-import kyBack from '@/components/back'
-import kyButton from '@/components/button'
-import kyInput from '@/components/input'
 import deleteAdress from './delete-address.vue'
-import { Database } from '@/utils/database.js'
+import ExtensionStore from '@/utils/local-store'
 export default {
+  components: {
+    deleteAdress
+  },
+  props: {
+    pageType: String,
+    detail: Object,
+    to: String,
+    addressBook: Array,
+    editAddress: String
+  },
   data () {
     return {
       deleteAddressVisible: false,
@@ -59,25 +66,7 @@ export default {
         address: ''
       },
       editAddressError: '',
-      db: null
-    }
-  },
-  props: {
-    pageType: String,
-    detail: Object,
-    to: String,
-    addressBook: Array,
-    editAddress: String
-  },
-  watch: {
-    detail: {
-      handler (newval, old) {
-        if (newval) {
-          this.form = Object.assign({}, this.form, { ...newval })
-        }
-      },
-      deep: true,
-      immediate: true
+      localStore: null
     }
   },
   computed: {
@@ -98,31 +87,38 @@ export default {
       return vol
     }
   },
-  components: {
-    kyBack,
-    kyButton,
-    kyInput,
-    deleteAdress
+  watch: {
+    detail: {
+      handler (newval, old) {
+        if (newval) {
+          this.form = Object.assign({}, this.form, { ...newval })
+        }
+      },
+      deep: true,
+      immediate: true
+    }
   },
   mounted () {
-    const db = new Database()
-    this.db = db
+    const localStore = new ExtensionStore()
+    this.localStore = localStore
   },
   methods: {
     async confirmDelete () {
       const that = this
-      await this.db.deleteTable('addressBook', { address: this.editAddress }).then(res => {
+      const _addressBook = this.addressBook
+      if (_addressBook.length) {
+        const restAddressBook = _addressBook.filter(n => n.address !== this.editAddress)
+        await this.localStore.set({
+          addressBook: restAddressBook
+        })
         that.deleteAddressVisible = false
         that.$emit('deleteAddressCb')
         that.$message({
           type: 'success',
           message: that.$t('settingAddress.deleteSuccess'),
-          duration: 1000,
-          onClose: () => {
-
-          }
+          duration: 1000
         })
-      })
+      }
     },
     closeDelete () {
       this.deleteAddressVisible = false
@@ -140,47 +136,60 @@ export default {
     back () {
       this.$emit('update:pageType', 'list')
     },
-    async save () {
-      console.log(this.active, '33333')
-
+    async check () {
       if (this.active) {
-        // edit address
-        const voild = isValidAddress(this.form.address, this.networkType)
+        const voild = await isValidAddress(this.form.address, this.networkType)
         if (voild) {
-          if (this.detail) {
-            this.db.modifyTable(
-              'addressBook',
-              { address: this.editAddress },
-              {
-                address: this.form.address,
-                accountName: this.form.accountName
-              }
-            ).then(res => {
-              this.form = Object.assign({}, this.form, { accountName: this.form.accountName, address: this.form.address })
-              this.$message.success(this.$t('settingAddress.editSuccess'))
-              this.$emit('addEditAddressCb')
-            })
-          } else {
-            const isExist = this.addressBook.filter(n => {
-              return n.address === this.form.address
-            })
-            if (isExist.length) {
-              this.$message.error(this.$t('settingAddress.addressIsExist'))
-            } else {
-              // eslint-disable-next-line camelcase
-              const create_time = parseInt(new Date().getTime() / 1000)
-              await this.db.addTable('addressBook', {
-                address: this.form.address,
-                accountName: this.form.accountName,
-                create_time,
-                rpc: this.rpc,
-                khazix: 'khazix'
-              })
-              this.$emit('addEditAddressCb')
-            }
-          }
+          return true
         } else {
           this.editAddressError = '1'
+          return false
+        }
+      } else {
+        return false
+      }
+    },
+    async save () {
+      const voild = await this.check()
+      const allAddress = await this.localStore.get('addressBook') || []
+      if (voild) {
+        if (this.detail) {
+          if (allAddress) {
+            const restAddressBook = allAddress.filter(n => n.address !== this.editAddress)
+            await this.localStore.set({
+              addressBook: [
+                ...restAddressBook,
+                {
+                  rpc: this.rpc,
+                  address: this.form.address,
+                  accountName: this.form.accountName
+                }
+              ]
+            })
+            this.form = Object.assign({}, this.form, { accountName: this.form.accountName, address: this.form.address })
+            this.$message.success(this.$t('settingAddress.editSuccess'))
+            this.$emit('addEditAddressCb')
+          }
+        } else {
+          const isExist = this.addressBook.filter(n => {
+            return n.address === this.form.address
+          })
+          if (isExist.length) {
+            this.$message.error(this.$t('settingAddress.addressIsExist'))
+          } else {
+            this.localStore.set({
+              addressBook: [
+                ...allAddress,
+                {
+                  address: this.form.address,
+                  accountName: this.form.accountName,
+                  rpc: this.rpc
+                }
+              ]
+            })
+
+            this.$emit('addEditAddressCb')
+          }
         }
       }
     },

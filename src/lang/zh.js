@@ -1,6 +1,7 @@
 /* eslint-disable camelcase */
-const create_time = parseInt(new Date().getTime() / 1000)
+const createTime = parseInt(new Date().getTime() / 1000)
 const zh = {
+  noNetWork: '无法连接到网络',
   header: {
     customRpc: '自定义RPC'
   },
@@ -10,6 +11,7 @@ const zh = {
     cancel: '取消',
     functionType: '功能类型',
     params: '参数',
+    noSupported: '暂不支持该网络转账，请切换到filecoin网络。',
     hexData: '十六进制数据'
   },
   fiveTokenContent: {
@@ -29,12 +31,13 @@ const zh = {
     title: '欢迎使用 FiveToken',
     subTitle1: 'Filecoin生态领域的连接器，多链融合，未来存储世界的入口。',
     subTitle2: '我们很高兴见到您。',
-    btn1: '创建新钱包',
-    btn2: '导入现有钱包'
+    btn1: '创建新账户',
+    btn2: '导入现有账户'
   },
   creatWallet: {
-    title: '创建新钱包',
+    title: '创建新账户',
     importWords: '导入助记词',
+    recoveryWords: '恢复助记词',
     back: '返回',
     accountName: '请输入账户名',
     nameTips: '不超过15个字符',
@@ -45,14 +48,16 @@ const zh = {
     diffError: '密码不匹配',
     correctPassword: '请输入正确的密码',
     confirmPassword: '确认密码',
-    btn: '下一步'
+    btn: '下一步',
+    strengthTips: '包含数字、大小写字母和特殊字符的9-16位字符，密码达到最强等级',
+    passwordStrength: '包含数字、大小写字母和特殊字符的9位及以上字符'
   },
   creatWords: {
     title: '备份助记词',
     subTitle: '请按顺序抄写您的助记词',
     showWords: '点击此处显示密语',
     btn1: '验证助记词',
-    btn2: '进入钱包',
+    btn2: '进入账户',
     copy: '复制助记词',
     copySuccess: '复制成功',
     tips1: '！ 请把您的助记词放在一个安全的地方，与任何网络隔离。',
@@ -66,7 +71,7 @@ const zh = {
   },
   importWords: {
     title: '导入助记词',
-    subTitle: '请输入您的助记词，以恢复您的钱包',
+    subTitle: '请输入您的助记词，以恢复您的账户',
     tips: '单词使用空格分隔',
     btn: '导入',
     error: '助记词错误',
@@ -75,7 +80,7 @@ const zh = {
   importPrivatkey: {
     title: '导入私钥',
     label1: '请选择支持的网络',
-    label2: '请输入您的私钥，以恢复您的钱包',
+    label2: '请输入您的私钥，以恢复您的账户',
     btn: '导入',
     titleNetwork: '选择网络',
     importError: '类型不支持',
@@ -86,7 +91,7 @@ const zh = {
     lock: '锁定',
     mneAccount: '助记词账户',
     pkAccount: '私钥账户',
-    createWallet: '创建钱包',
+    createWallet: '创建账户',
     import: '导入私钥',
     setting: '设置',
     titleAdd: '添加账户',
@@ -94,6 +99,19 @@ const zh = {
     addLabel: '账户名称',
     confirm: '确认',
     cancel: '取消'
+  },
+  passwordVerification: {
+    title: '密码验证',
+    label: '请输入密码',
+    confirm: '确认',
+    cancel: '取消'
+  },
+  addAccount: {
+    title: '创建账户',
+    nameLabel: '请输入账户名',
+    nameTips: '不超过15个字符',
+    tips: '该账户基于分层钱包，与其它助记词账户使用相同助记词，但有不同的私钥。',
+    button: '确定'
   },
   wallet: {
     tab: [
@@ -104,7 +122,7 @@ const zh = {
       { name: '修改账户名', action: 'editName' },
       { name: '区块链浏览器查看', action: 'viewInBrowser' },
       { name: '备份私钥', action: 'backupPrivateKey' },
-      { name: '删除钱包', action: 'deleteWallet' }
+      { name: '删除账户', action: 'deleteAccount' }
     ],
     statusSuccess: '完成',
     statusError: '失败',
@@ -119,7 +137,9 @@ const zh = {
     cancel: '取消',
     confirm: '确认',
     deleteTitle: '删除确认',
-    deleteTips: '请确保私钥已备份。删除后，若要展示该钱包，需使用私钥导入。',
+    deleteLabel: '请输入密码',
+    deleteTips: '请确保私钥已备份。删除后，若要使用该钱包，需使用私钥导入。',
+    confirmDelete: '删除',
     copyAddress: '复制地址',
     copySuccess: '复制成功',
     tranRecord: '活动记录',
@@ -138,7 +158,8 @@ const zh = {
     connectedNetwork: '已连接的网站',
     connectedRights: '已连接到这些网站。他们可以查看您的账户地址。',
     unconnectTips: 'FiveToken 没有连接这个网站。要连接到 web3 网站，请在他们的网站上找到连接按钮。',
-    unconnectNetworksTips: '还没连接任何网站。'
+    unconnectNetworksTips: '还没连接任何网站。',
+    noAccountTips: '您要访问的网络无账户'
   },
   messageDetail: {
     title: '消息详情',
@@ -175,21 +196,24 @@ const zh = {
     recordLast: '最近使用',
     myAccount: '我的账户',
     addressBook: '地址簿',
-    gasLimit: 'Gas Limit',
     confirmTransaction: '确认交易',
     sendAmount: '发送数额',
-    networkGas: '网络费率',
     maxGas: '预估最大Gas费',
     totalTips: '发送数额+预估Gas费',
     total: '总额',
-    gasFeeError: '低于当前BaseFee',
     gasLimitError: '低于当前Gas Limit',
     addressError: '地址格式不正确',
     insufficientBalance: '余额不足',
-    filBaseFeeTips: '网络费率用于支付网络费用，网络费率>BaseFee时，消息才会被打包。nanoFIL = 10^-9',
-    baseFeeTips: 'Gas价格是单位Gas的支付代币数量，Gwei=10^-9',
-    gasLimitTips: 'Gas Limit是发送消息时，将会被消耗的Gas最大值。',
+    ethereumMainGasLimitTips: 'Gas limit是你愿意使用的最大gas数量。 Gas数量是“最大优先费用”和“最大费用”的乘数。',
+    filecoinGasLimitTips: 'Gas limit是你愿意使用的最大gas数量。 Gas数量是“矿工消费”和“最大费用”的乘数。',
+    ethereumOthersGasLimitTips: 'Gas limit是你愿意使用的最大gas数量。 Gas数量是“矿工小费”和“最大费用”的乘数。',
+    maxPriorityFeeTips: '最大优先费（又名“矿工小费”）直接支付给矿工，并激励他们优先考虑您的交易。 矿工小费一般会按最高设置支付。',
+    maxFeeTips: '最大费率是您支付的最大费率(基本费率 + 优先费率)。',
+    gasFeeCapTips: '最大费率是您支付的最大费率（基本费率 + 优先费率)。nanoFIL = 10^-9FIL。',
+    gasPremiumTips: '最大优先费（又名“矿工小费”）直接支付给矿工，并激励他们优先考虑您的交易。 矿工小费一般会按最高设置支付。nanoFIL = 10^-9FIL。',
+    gasPriceTips: 'Gas Price是你将为每单位数量的gas支付的Token数量，Gwei = 10^-9',
     vaildNumber: '请输入有效数字',
+    sameAddressError: '发送地址和接收地址相同',
     cancel: '取消',
     confirm: '确认'
   },
@@ -213,6 +237,7 @@ const zh = {
       { name: '网络', url: './setting-networks.html' },
       { name: '地址簿', url: './setting-address.html' },
       { name: '助记词备份', url: './setting-backups.html' },
+      { name: '修改密码', url: './setting-password.html' },
       { name: '关于', url: './setting-about.html' }
     ]
   },
@@ -236,6 +261,16 @@ const zh = {
     delete: '删除',
     deleteTips: '您确定要删除该网络吗？',
     deleteSuccess: '删除成功'
+  },
+  settingPassword: {
+    title: '修改密码',
+    currentPassword: '验证当前密码',
+    newPassword: '新密码',
+    newPlaceholder: '请输入新密码',
+    passwordTips: '为了账户安全，请使用最强密码',
+    confirmPassword: '确认密码',
+    confirmPlaceholder: '请输入确认密码',
+    confirm: '确认'
   },
   settingAbout: {
     about: '关于',
@@ -285,7 +320,10 @@ const zh = {
     subTitle: 'Filecoin生态领域的连接器，多链融合，未来存储世界的入口。',
     unlocking: '解锁',
     label: '密码',
-    passwordError: '密码错误'
+    passwordError: '密码错误',
+    bottomLabel: '或者',
+    bottomLabel2: '导入助记词',
+    bottomLabel3: '(导入后，现有账户将被初始化)'
   },
   connect: {
     title: '使用 FiveToken 连接',
@@ -300,8 +338,7 @@ const zh = {
       symbol: 'FIL',
       ids: 'filecoin',
       browser: 'https://filscan.io',
-      khazix: 'khazix',
-      create_time: create_time,
+      createTime: createTime,
       networkType: 'proxy',
       filecoinAddress0: 'f',
       decimals: 18,
@@ -316,10 +353,9 @@ const zh = {
       symbol: 'ETH',
       browser: 'https://etherscan.io',
       ids: 'ethereum',
-      khazix: 'khazix',
       networkType: 'ethereum',
       filecoinAddress0: '',
-      create_time: create_time + 1,
+      createTime: createTime + 1,
       decimals: 18,
       image: 'eth.svg',
       disabled: true,
@@ -332,10 +368,9 @@ const zh = {
       symbol: 'BNB',
       ids: 'binancecoin',
       browser: 'https://bscscan.com',
-      khazix: 'khazix',
       networkType: 'ethereum',
       filecoinAddress0: '',
-      create_time: create_time + 2,
+      createTime: createTime + 2,
       decimals: 18,
       image: 'bnb.svg',
       disabled: true,
@@ -348,10 +383,9 @@ const zh = {
       symbol: 'FIL',
       ids: 'filecoin',
       browser: 'https://calibration.filscan.io',
-      khazix: 'khazix',
       networkType: 'proxy',
       filecoinAddress0: 't',
-      create_time: create_time + 3,
+      createTime: createTime + 3,
       decimals: 18,
       image: 'fil.svg',
       disabled: true,
@@ -364,10 +398,9 @@ const zh = {
       symbol: 'ETH',
       ids: 'ethereum',
       browser: 'https://ropsten.etherscan.io',
-      khazix: 'khazix',
       networkType: 'ethereum',
       filecoinAddress0: '',
-      create_time: create_time + 4,
+      createTime: createTime + 4,
       decimals: 18,
       image: 'eth.svg',
       disabled: true,
@@ -380,10 +413,9 @@ const zh = {
       symbol: 'ETH',
       ids: 'ethereum',
       browser: 'https://kovan.etherscan.io',
-      khazix: 'khazix',
       networkType: 'ethereum',
       filecoinAddress0: '',
-      create_time: create_time + 5,
+      createTime: createTime + 5,
       decimals: 18,
       image: 'eth.svg',
       disabled: true,
@@ -396,10 +428,9 @@ const zh = {
       symbol: 'ETH',
       ids: 'ethereum',
       browser: 'https://rinkeby.etherscan.io',
-      khazix: 'khazix',
       networkType: 'ethereum',
       filecoinAddress0: '',
-      create_time: create_time + 6,
+      createTime: createTime + 6,
       decimals: 18,
       image: 'eth.svg',
       disabled: true,
@@ -412,10 +443,9 @@ const zh = {
       symbol: 'ETH',
       ids: 'ethereum',
       browser: 'https://goerli.etherscan.io',
-      khazix: 'khazix',
       networkType: 'ethereum',
       filecoinAddress0: '',
-      create_time: create_time + 7,
+      createTime: createTime + 7,
       decimals: 18,
       image: 'eth.svg',
       disabled: true,
@@ -428,10 +458,9 @@ const zh = {
       symbol: 'BNB',
       ids: 'binancecoin',
       browser: 'https://testnet.bscscan.com',
-      khazix: 'khazix',
       networkType: 'ethereum',
       filecoinAddress0: '',
-      create_time: create_time + 8,
+      createTime: createTime + 8,
       decimals: 18,
       image: 'bnb.svg',
       disabled: true,

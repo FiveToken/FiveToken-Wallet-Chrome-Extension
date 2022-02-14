@@ -3,15 +3,19 @@ import { shallowMount, createLocalVue } from '@vue/test-utils'
 import importPrivatekey from '@/pages/import-privatekey/component/index.vue'
 import selectNetwork from '@/pages/import-privatekey/component/select-network.vue'
 import elementUI from 'element-ui'
-import { Database } from '@/utils/database.js'
+import KyLayout from '@/components/layout/index'
+import KyBack from '@/components/back/index'
+import KyButton from '@/components/button/index'
+import KyInput from '@/components/input/index'
 import Vuex from 'vuex'
-const Dexie = require('dexie')
-Dexie.dependencies.indexedDB = require('fake-indexeddb')
-Dexie.dependencies.IDBKeyRange = require('fake-indexeddb/lib/FDBKeyRange')
+import { mocksData } from '../../mock'
 const localVue = createLocalVue()
 localVue.use(Vuex)
 localVue.use(elementUI)
-
+localVue.use(KyLayout)
+localVue.use(KyBack)
+localVue.use(KyButton)
+localVue.use(KyInput)
 const networks = [
   {
     name: 'Filcoin Mainnet',
@@ -20,8 +24,7 @@ const networks = [
     symbol: 'FIL',
     ids: 'filecoin',
     browser: 'https://filscan.io',
-    khazix: 'khazix',
-    create_time: 1631613194,
+    createTime: 1631613194,
     networkType: 'proxy',
     filecoinAddress0: 'f',
     decimals: 18,
@@ -36,10 +39,9 @@ const networks = [
     symbol: 'FIL',
     ids: 'filecoin',
     browser: 'https://calibration.filscan.io',
-    khazix: 'khazix',
     networkType: 'proxy',
     filecoinAddress0: 't',
-    create_time: 1631613195,
+    createTime: 1631613195,
     decimals: 18,
     image: 'fil.svg',
     disabled: true,
@@ -52,16 +54,25 @@ const networks = [
     symbol: 'BNB',
     ids: 'binancecoin',
     browser: 'https://testnet.bscscan.com',
-    khazix: 'khazix',
     networkType: 'ethereum',
     filecoinAddress0: '',
-    create_time: 1631613196,
+    createTime: 1631613196,
     decimals: 18,
     image: 'bnb.svg',
     disabled: true,
     deriveIndex: 0
   }
 ]
+
+jest.mock('@/utils/local-store', () => (class ExtensionStore {
+  get (key) {
+    return mocksData[key]
+  }
+
+  set () {
+    jest.fn()
+  }
+}))
 
 describe('importPrivatekey index.vue', () => {
   const assignMock = jest.fn()
@@ -70,7 +81,6 @@ describe('importPrivatekey index.vue', () => {
   afterEach(() => {
     assignMock.mockClear()
   })
-  const db = new Database()
   const store = new Vuex.Store({
     modules: {
       app: {
@@ -86,12 +96,10 @@ describe('importPrivatekey index.vue', () => {
               accountName: 'Account1',
               address: 'f1ntv4qlgoi55wqqxrxxolatfdgn7xvu7vfhrkcfq',
               createType: 'mnemonic',
-              create_time: 1631613193,
+              createTime: 1631613193,
               digest: 'zBUjeDDJuuDAPNQF',
               fil: 0,
               id: 1,
-              isDelete: 0,
-              khazix: 'khazix',
               privateKey: '98b983395737275c208f5b6884180cbc7575e7c208dba4621da300fc5248046ec7224a209285b4e9e770fa1e',
               rpc: 'https://api.fivetoken.io'
             }
@@ -122,7 +130,7 @@ describe('importPrivatekey index.vue', () => {
 
   Object.defineProperty(window, 'location', {
     value: {
-      href: './setting.html'
+      href: './import-privateKey.html'
     }
   })
 
@@ -131,11 +139,15 @@ describe('importPrivatekey index.vue', () => {
     localVue,
     data () {
       return {
-        customNetworkType: '',
+        loading: require('@/assets/image/loading.png'),
+        privatekey: '',
         isFetch: false,
-        networkVisible: true,
-        privatekey: '7b2254797065223a22736563703235366b31222c22507269766174654b6579223a224941317956674e6e7a7a6e2f58642b7164556f6e416a4151335450677a59445a78745845616c4e563664413d227d',
-        db
+        center: true,
+        net: '',
+        networkVisible: false,
+        passwordVisable: false,
+        mnePsd: null,
+        customNetwork: ''
       }
     },
     mocks: {
@@ -145,7 +157,9 @@ describe('importPrivatekey index.vue', () => {
       }
     },
     stubs: {
-      'el-dialog': true
+      'el-dialog': true,
+      'el-input': true,
+      'el-button': true
     }
   })
 
@@ -162,22 +176,34 @@ describe('importPrivatekey index.vue', () => {
 
   it('index.vue-test', async () => {
     wrapper.vm.layoutMounted()
-    expect(wrapper.vm.customNetworkType).toBe('proxy')
     expect(wrapper.vm.net).toBe('https://api.fivetoken.io')
-    expect(wrapper.vm.customFilecoinAddress0).toBe('f')
-
     const obj = {
       networkType: 'ethereum',
       filecoinAddress0: '',
       rpc: 'https://data-seed-prebsc-1-s1.binance.org:8545'
     }
-    await wrapper.vm.confirmNet(obj)
-    expect(wrapper.vm.customNetworkType).toBe('ethereum')
-    expect(wrapper.vm.net).toBe('https://data-seed-prebsc-1-s1.binance.org:8545')
-    expect(wrapper.vm.customFilecoinAddress0).toBe('')
+    const obj1 = {
+      accountName: 'Account2',
+      browser: 'https://filscan.io',
+      chainID: '1',
+      createTime: 1644715573,
+      decimals: 18,
+      deriveIndex: 1,
+      disabled: true,
+      filecoinAddress0: 'f',
+      ids: 'filecoin',
+      image: 'fil.svg',
+      name: 'Filcoin Mainnet',
+      networkType: 'proxy',
+      rpc: 'https://api.fivetoken.io',
+      symbol: 'FIL'
+    }
+    await wrapper.vm.confirmNet(obj1)
+    expect(wrapper.vm.net).toBe('https://api.fivetoken.io')
 
-    await wrapper.vm.privatekeyChange('privatekey')
-    expect(wrapper.vm.privatekey).toBe('privatekey')
+    const privatekey1 = '7b2254797065223a22736563703235366b31222c22507269766174654b6579223a22444f776a377669762b756c79524e684a4c4d30346c733270626236704256335876516e2f4a5353573253633d227d'
+    await wrapper.vm.privatekeyChange(privatekey1)
+    expect(wrapper.vm.privatekey).toBe(privatekey1)
 
     wrapper.vm.selectNet()
     expect(wrapper.vm.networkVisible).toBe(true)
@@ -186,6 +212,8 @@ describe('importPrivatekey index.vue', () => {
     expect(wrapper.vm.networkVisible).toBe(false)
 
     await wrapper.vm.importWallet()
+    const password = '@Aa123456789012zpc'
+    await wrapper.vm.confirmPassword(password)
     wrapper.vm.back()
   })
 

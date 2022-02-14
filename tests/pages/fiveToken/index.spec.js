@@ -1,6 +1,6 @@
 /* eslint-disable no-undef */
 import { shallowMount, createLocalVue } from '@vue/test-utils'
-import fivetoken from '@/pages/fivetoken/component/index.vue'
+import fivetoken from '@/pages/fiveToken/component/index.vue'
 import elementUI from 'element-ui'
 import KyLayout from '@/components/layout/index'
 import KyBack from '@/components/back/index'

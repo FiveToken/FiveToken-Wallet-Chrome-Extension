@@ -130,16 +130,6 @@ export default class ExtensionStore {
   _clear () {
     const { local } = extension.storage
     local.clear()
-    // return new Promise((resolve, reject) => {
-    //   local.remove(() => {
-    //     const err = checkForError()
-    //     if (err) {
-    //       reject(err)
-    //     } else {
-    //       resolve()
-    //     }
-    //   })
-    // })
   }
 }
 

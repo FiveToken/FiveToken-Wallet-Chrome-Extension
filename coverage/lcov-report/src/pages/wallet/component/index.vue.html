@@ -22,9 +22,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">22.22% </span>
+                <span class="strong">21.43% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>44/198</span>
+                <span class='fraction'>42/196</span>
             </div>
         
             
@@ -43,9 +43,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">22.45% </span>
+                <span class="strong">21.65% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>44/196</span>
+                <span class='fraction'>42/194</span>
             </div>
         
             
@@ -661,11 +661,7 @@
 <a name='L603'></a><a href='#L603'>603</a>
 <a name='L604'></a><a href='#L604'>604</a>
 <a name='L605'></a><a href='#L605'>605</a>
-<a name='L606'></a><a href='#L606'>606</a>
-<a name='L607'></a><a href='#L607'>607</a>
-<a name='L608'></a><a href='#L608'>608</a>
-<a name='L609'></a><a href='#L609'>609</a>
-<a name='L610'></a><a href='#L610'>610</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L606'></a><a href='#L606'>606</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -836,8 +832,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -940,7 +934,6 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -957,7 +950,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -981,8 +973,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1445,8 +1437,6 @@ export default {
   async mounted () {
     const localStore = new ExtensionStore()
     this.localStore = localStore
-    const allStore = await localStore.get(null)
-    console.log(allStore, 'allStoreallStoreallStore')
   },
   methods: {
     ...mapMutations('wallet', [
@@ -1543,57 +1533,55 @@ export default {
      * If all networks have no account, jump to the welcome page
      */
 <span class="fstat-no" title="function not covered" >    async confirmDelete () {</span>
-<span class="cstat-no" title="statement not covered" >      try {</span>
-<span class="cstat-no" title="statement not covered" >        const allAccountList = await this.localStore.get('accountList')</span>
-<span class="cstat-no" title="statement not covered" >        const isFilecoin = isFilecoinChain(this.networkType)</span>
-<span class="cstat-no" title="statement not covered" >        if (isFilecoin) {</span>
-<span class="cstat-no" title="statement not covered" >          const _address = this.address.substring(1, this.address.length)</span>
-<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >          const restAccountList = allAccountList.filter(n =&gt; {</span></span>
-<span class="cstat-no" title="statement not covered" >            return (n.address.indexOf(_address) === -1)</span>
+<span class="cstat-no" title="statement not covered" >      const allAccountList = await this.localStore.get('accountList')</span>
+<span class="cstat-no" title="statement not covered" >      const isFilecoin = isFilecoinChain(this.networkType)</span>
+<span class="cstat-no" title="statement not covered" >      if (isFilecoin) {</span>
+<span class="cstat-no" title="statement not covered" >        const _address = this.address.substring(1, this.address.length)</span>
+<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >        const restAccountList = allAccountList.filter(n =&gt; {</span></span>
+<span class="cstat-no" title="statement not covered" >          return (n.address.indexOf(_address) === -1)</span>
+        })
+<span class="cstat-no" title="statement not covered" >        await this.localStore.set({</span>
+          accountList: [
+            ...restAccountList
+          ]
+        })
+      } else {
+<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >        const restAccountList = allAccountList.filter(n =&gt; {</span></span>
+<span class="cstat-no" title="statement not covered" >          return n.address !== this.address</span>
+        })
+<span class="cstat-no" title="statement not covered" >        await this.localStore.set({</span>
+          accountList: [
+            ...restAccountList
+          ]
+        })
+      }
+<span class="cstat-no" title="statement not covered" >      const currentRpc = this.rpc</span>
+<span class="cstat-no" title="statement not covered" >      if (allAccountList) {</span>
+<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >        const currentAccountList = allAccountList.filter(n =&gt; n.rpc === currentRpc)</span></span>
+<span class="cstat-no" title="statement not covered" >        if (currentAccountList.length) {</span>
+<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >          const first = currentAccountList.find((n, index) =&gt; {</span></span>
+<span class="cstat-no" title="statement not covered" >            return index === 0</span>
           })
-<span class="cstat-no" title="statement not covered" >          await this.localStore.set({</span>
-            accountList: [
-              ...restAccountList
-            ]
-          })
+<span class="cstat-no" title="statement not covered" >          await this.minixChangeAccount(first, currentRpc)</span>
+<span class="cstat-no" title="statement not covered" >          window.location.href = './wallet.html'</span>
         } else {
-<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >          const restAccountList = allAccountList.filter(n =&gt; {</span></span>
-<span class="cstat-no" title="statement not covered" >            return n.address !== this.address</span>
-          })
-<span class="cstat-no" title="statement not covered" >          await this.localStore.set({</span>
-            accountList: [
-              ...restAccountList
-            ]
-          })
-        }
-<span class="cstat-no" title="statement not covered" >        const currentRpc = this.rpc</span>
-<span class="cstat-no" title="statement not covered" >        const _currentAccountList = await this.localStore.get('accountList')</span>
-<span class="cstat-no" title="statement not covered" >        if (_currentAccountList) {</span>
-<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >          const currentAccountList = _currentAccountList.filter(n =&gt; n.rpc === currentRpc)</span></span>
-<span class="cstat-no" title="statement not covered" >          if (currentAccountList.length) {</span>
-<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >            const first = currentAccountList.find((n, index) =&gt; {</span></span>
-<span class="cstat-no" title="statement not covered" >              return index === 0</span>
-            })
-<span class="cstat-no" title="statement not covered" >            await this.minixChangeAccount(first, currentRpc)</span>
-<span class="cstat-no" title="statement not covered" >            window.location.href = './wallet.html'</span>
-          } else {
-<span class="cstat-no" title="statement not covered" >            const dataNetwork = await this.getDataNetwork()</span>
-<span class="cstat-no" title="statement not covered" >            if (dataNetwork) {</span>
-<span class="cstat-no" title="statement not covered" >              await this.minixChangeNetwork(dataNetwork, currentRpc)</span>
-<span class="cstat-no" title="statement not covered" >              const allAccountList = await this.localStore.get('accountList')</span>
-<span class="cstat-no" title="statement not covered" >              if (allAccountList) {</span>
-<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >                const _accountList = allAccountList.filter(n =&gt; n.rpc === dataNetwork.rpc)</span></span>
-<span class="cstat-no" title="statement not covered" >                if (_accountList.length) {</span>
-<span class="cstat-no" title="statement not covered" >                  await this.minixChangeAccount(_accountList[0], currentRpc)</span>
-<span class="cstat-no" title="statement not covered" >                  window.location.href = './wallet.html'</span>
-                }
+<span class="cstat-no" title="statement not covered" >          const dataNetwork = await this.getDataNetwork()</span>
+<span class="cstat-no" title="statement not covered" >          if (dataNetwork) {</span>
+<span class="cstat-no" title="statement not covered" >            await this.minixChangeNetwork(dataNetwork, currentRpc)</span>
+<span class="cstat-no" title="statement not covered" >            const allAccountList = await this.localStore.get('accountList')</span>
+<span class="cstat-no" title="statement not covered" >            if (allAccountList) {</span>
+<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >              const _accountList = allAccountList.filter(n =&gt; n.rpc === dataNetwork.rpc)</span></span>
+<span class="cstat-no" title="statement not covered" >              if (_accountList.length) {</span>
+<span class="cstat-no" title="statement not covered" >                await this.minixChangeAccount(_accountList[0], currentRpc)</span>
+<span class="cstat-no" title="statement not covered" >                window.location.href = './wallet.html'</span>
               }
-            } else {
-<span class="cstat-no" title="statement not covered" >              window.location.href = './welcome.html'</span>
             }
+          } else {
+<span class="cstat-no" title="statement not covered" >            localStorage.clear()</span>
+<span class="cstat-no" title="statement not covered" >            this.localStore.clear()</span>
+<span class="cstat-no" title="statement not covered" >            window.location.href = './welcome.html'</span>
           }
         }
-      } catch (error) {
       }
     },
 <span class="fstat-no" title="function not covered" >    closeDelete () {</span>
@@ -1890,7 +1878,7 @@ export default {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank">istanbul</a>
-                at Mon Feb 14 2022 17:01:01 GMT+0800 (China Standard Time)
+                at Wed Feb 16 2022 16:44:25 GMT+0800 (China Standard Time)
             </div>
         </div>
         <script src="../../../../prettify.js"></script>

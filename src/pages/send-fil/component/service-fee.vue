@@ -134,7 +134,7 @@
 <script>
 import { bigNumbers, isFilecoinChain } from '@/utils'
 import { mapMutations, mapState } from 'vuex'
-import { enumerateNetworkType } from '@/enumeration.js'
+import { enumerateNetworkType } from '@/utils/enumeration.js'
 export default {
   computed: {
     ...mapState('app', [
@@ -209,7 +209,7 @@ export default {
     formatValue (value) {
       const _big = bigNumbers(value)
       const limit = _big.decimalPlaces(9)
-      const _value = limit.toString()
+      const _value = limit.toFixed()
       return _value
     },
     updateServiceFee () {

@@ -69,29 +69,15 @@ export default {
     this.origin = origin
     const localStore = new ExtensionStore()
     this.localStore = localStore
-    let lockUser
-    try {
-      lockUser = await localStore.get('lockUser')
-    } catch (e) {
-      console.log('lockUser error')
-    }
+    const lockUser = await localStore.get('lockUser')
     if (lockUser) {
       this.lock = true
     }
-    let activeNetwork
-    try {
-      activeNetwork = await localStore.get('activeNetwork')
-    } catch (e) {
-      console.log('activeNetwork null')
-    }
+
+    const activeNetwork = await localStore.get('activeNetwork')
     if (activeNetwork) {
       this.rpc = activeNetwork.rpc
-      let accountList
-      try {
-        accountList = await localStore.get('accountList')
-      } catch (e) {
-        console.log('accountList null')
-      }
+      const accountList = await localStore.get('accountList')
       if (accountList) {
         const _accountList = accountList.filter(n => n.rpc === activeNetwork.rpc)
         this.accountList = _accountList

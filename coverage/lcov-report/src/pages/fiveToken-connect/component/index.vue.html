@@ -22,9 +22,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">70.49% </span>
+                <span class="strong">72.73% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>43/61</span>
+                <span class='fraction'>40/55</span>
             </div>
         
             
@@ -43,9 +43,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">68.52% </span>
+                <span class="strong">70.83% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>37/54</span>
+                <span class='fraction'>34/48</span>
             </div>
         
             
@@ -229,21 +229,7 @@
 <a name='L171'></a><a href='#L171'>171</a>
 <a name='L172'></a><a href='#L172'>172</a>
 <a name='L173'></a><a href='#L173'>173</a>
-<a name='L174'></a><a href='#L174'>174</a>
-<a name='L175'></a><a href='#L175'>175</a>
-<a name='L176'></a><a href='#L176'>176</a>
-<a name='L177'></a><a href='#L177'>177</a>
-<a name='L178'></a><a href='#L178'>178</a>
-<a name='L179'></a><a href='#L179'>179</a>
-<a name='L180'></a><a href='#L180'>180</a>
-<a name='L181'></a><a href='#L181'>181</a>
-<a name='L182'></a><a href='#L182'>182</a>
-<a name='L183'></a><a href='#L183'>183</a>
-<a name='L184'></a><a href='#L184'>184</a>
-<a name='L185'></a><a href='#L185'>185</a>
-<a name='L186'></a><a href='#L186'>186</a>
-<a name='L187'></a><a href='#L187'>187</a>
-<a name='L188'></a><a href='#L188'>188</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L174'></a><a href='#L174'>174</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
@@ -330,35 +316,17 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -424,6 +392,10 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -501,115 +473,101 @@ export default {
     this.origin = origin
     const localStore = new ExtensionStore()
     this.localStore = localStore
-    let lockUser
-    try {
-      lockUser = await localStore.get('lockUser')
-    } catch (e) {
-<span class="fstat-no" title="function not covered" ></span>      console.log('lockUser error')
-    }<span class="cstat-no" title="statement not covered" ></span>
+    const lockUser = await localStore.get('lockUser')
     if (lockUser) {
       this.lock = true
     }
-    let activeNetwork
-    try {
-      activeNetwork = await localStore.get('activeNetwork')
-    } catch (e) {
-      console.log('activeNetwork null')
-    }
+<span class="fstat-no" title="function not covered" ></span>
+    co<span class="cstat-no" title="statement not covered" >nst activeNetwork = await lo</span>calStore.get('activeNetwork')
     if (activeNetwork) {
       this.rpc = activeNetwork.rpc
-      let accountList
-      try {
-        accountList = await localStore.get('accountList')
-      } catch (e) {
-<span class="cstat-no" title="statement not covered" >        console.log('accountList null</span>')
-      }
+      const accountList = await localStore.get('accountList')
       if (accountList) {
-    <span class="missing-if-branch" title="if path not taken" >I</span>    const _accountList = accountList.filter(n =&gt; n.rpc === activeNetwork.rpc)
-<span class="cstat-no" title="statement not covered" >        this.accountList</span> = _accountList
+        const _accountList = accountList.filter(n =&gt; n.rpc === activeNetwork.rpc)
+        this.accountList = _accountList
         if (_accountList.length) {
           const frist = _accountList[0]
           this.address = frist.address
         }
       }
     }
-  },
+  },<span class="missing-if-branch" title="if path not taken" >I</span>
   meth<span class="cstat-no" title="statement not covered" >ods: {</span>
     ...mapMutations('app', ['SET_DERIVEINDEX']),
     async layoutMounted () {
-<span class="missing-if-branch" title="else path not taken" >E</span>
+&nbsp;
     },
-    async addAccount () {
+    <span class="missing-if-branch" title="else path not taken" >E</span>async addAccount () {
       window.location.href = './add-account.html'
     },
     next (checkList) {
-      this.step = 2
-      th<span class="cstat-no" title="statement not covered" >is.checkList = checkList</span>
+      <span class="missing-if-branch" title="else path not taken" >E</span>this.step = 2
+      this.checkList = checkList
     },
     cancel () {
-      <span class="missing-if-branch" title="else path not taken" >E</span>// eslint-disable-next-line no-undef
-      popupWindowRemove()
+      // eslint-disable-next-line no-undef
+      po<span class="missing-if-branch" title="else path not taken" >E</span>pupWindowRemove()
     },
     async connect () {
       this.isFetch = true
-      co<span class="missing-if-branch" title="else path not taken" >E</span>nst list = this.accountList.filter(n =&gt; {
+      const list = this.accountList.filter(n =&gt; {
         return this.checkList.includes(n.address)
       })
       const account = list.map((n, index) =&gt; {
         return {
           address: n.address,
-          rpc: n.rpc,
+<span class="fstat-no" title="function not covered" ></span>          rpc: n.rpc,
           accountName: n.accountName,
           createType: n.createType,
           fil: n.fil,
-<span class="fstat-no" title="function not covered" ></span>          origin: this.origin
+          origin: this.origin
         }
-      })
+<span class="fstat-no" title="function not covered" ></span>      })
+<span class="cstat-no" title="statement not covered" >      // eslint-disab</span>le-next-line no-undef
+<span class="cstat-no" title="statement not covered" >      const address = account.leng</span>th &amp;&amp; account[0].address
       // eslint-disable-next-line no-undef
-      const address = account.length &amp;&amp; account[0].address
+      popupToBackground('fil_requestAccounts', { account: [address] })
+<span class="fstat-no" title="function not covered" ></span>      this.isFetch = false
       // eslint-disable-next-line no-undef
-<span class="fstat-no" title="function not covered" ></span>      popupToBackground('fil_requestAccounts', { account: [address] })
-<span class="cstat-no" title="statement not covered" >      this.isFetch = </span>false
-<span class="cstat-no" title="statement not covered" >      // eslint-disable-next-line </span>no-undef
-      popupWindowRemove()
+<span class="cstat-no" title="statement not covered" >      popupWindowRemove()</span>
     }
-  }<span class="fstat-no" title="function not covered" ></span>
-}
+  }
+}<span class="fstat-no" title="function not covered" ></span>
 &lt;/scri<span class="cstat-no" title="statement not covered" >pt&gt;</span>
-&lt;style lang="less" scoped&gt;
-/deep/.el-dialog{
-<span class="fstat-no" title="function not covered" >    bo</span>rder-radius: 10px;
-    .e<span class="cstat-no" title="statement not covered" >l-dialog__header{</span>
-        padding: 0;<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" ></span></span>
-    }<span class="cstat-no" title="statement not covered" ></span>
+&lt;style lang="less" <span class="cstat-no" title="statement not covered" >scoped&gt;<span class="fstat-no" title="function not covered" ></span></span>
+/deep/.e<span class="cstat-no" title="statement not covered" >l-dialog{</span>
+    border-radius: 10px;
+    .el-dialog__header<span class="cstat-no" title="statement not covered" >{<span class="fstat-no" title="function not covered" ></span></span>
+<span class="cstat-no" title="statement not covered" >        padding: 0;</span>
+    }
     .el-dialog__body{
-        padding: 0;<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" ></span></span>
-    }<span class="cstat-no" title="statement not covered" ></span>
+        padding: 0;
+    }
 }
 .content-page{
   width: 100%;
   height: 100%;
   padding:0 20px;
-  box-sizing: border-box;
+  box-sizing: border-b<span class="cstat-no" title="statement not covered" >ox;</span>
   position: relative;
-  .loading{
+  .loa<span class="cstat-no" title="statement not covered" >ding{</span>
     position: absolute;
-    top: 0;<span class="cstat-no" title="statement not covered" ></span>
-    left: 0;
-    wi<span class="cstat-no" title="statement not covered" >dth: 100%;</span>
-    height: 100%;
+    top: 0;
+    le<span class="cstat-no" title="statement not covered" >ft: 0;</span>
+    width: 100%;
+    he<span class="cstat-no" title="statement not covered" >ight: 100%;</span>
     background: rgba(0,0,0,0.6);
-    di<span class="cstat-no" title="statement not covered" >splay: flex;</span>
+    display: flex;
     align-items: center;
-    ju<span class="cstat-no" title="statement not covered" >stify-content: center;</span>
+    justify-content: center;
     z-index: 99999;
     .img{
-        animation:turnX 3s linear infinite;
-    }
+        animation:turnX 3s linear infinite;<span class="branch-0 cbranch-no" title="branch not covered" ><span class="branch-1 cbranch-no" title="branch not covered" ></span></span>
+    }<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" ><span class="branch-1 cbranch-no" title="branch not covered" ><span class="branch-1 cbranch-no" title="branch not covered" ></span></span></span></span></span>
     @keyframes turnX{
         0%{
-            transform:rotateZ(0deg);<span class="branch-0 cbranch-no" title="branch not covered" ><span class="branch-1 cbranch-no" title="branch not covered" ></span></span>
-        }<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" ><span class="branch-1 cbranch-no" title="branch not covered" ><span class="branch-1 cbranch-no" title="branch not covered" ></span></span></span></span></span>
+            transform:rotateZ(0deg);
+        }
         100%{
             transform:rotateZ(360deg);
         }
@@ -624,7 +582,7 @@ export default {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank">istanbul</a>
-                at Mon Feb 14 2022 17:01:01 GMT+0800 (China Standard Time)
+                at Wed Feb 16 2022 16:44:25 GMT+0800 (China Standard Time)
             </div>
         </div>
         <script src="../../../../prettify.js"></script>

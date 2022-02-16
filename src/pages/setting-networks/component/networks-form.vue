@@ -143,6 +143,8 @@ export default {
               }
             }
           } else {
+            localStorage.clear()
+            this.localStore.clear()
             window.location.href = './welcome.html'
           }
         } else {

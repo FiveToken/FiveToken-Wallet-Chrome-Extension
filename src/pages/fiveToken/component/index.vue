@@ -30,8 +30,6 @@ export default {
   },
   async beforeCreate () {
     const localStore = new ExtensionStore()
-    const allStore = await localStore.get(null)
-    console.log(allStore, 'allStoreallStoreallStore')
     const activeNetwork = await localStore.get('activeNetwork')
     if (activeNetwork) {
       const rpc = activeNetwork.rpc
@@ -68,16 +66,18 @@ export default {
       const lastTime = localStorage.getItem('time')
       const time = new Date().getTime()
       const activeAccount = await this.localStore.get('activeAccount')
-      const { address, privateKey } = activeAccount
-      if (lastTime !== null && time - Number(lastTime) > 300 * 1000) {
-        await this.localStore.set({
-          lockUser: {
-            address,
-            privateKey
-          }
-        })
+      if (activeAccount) {
+        const { address, privateKey } = activeAccount
+        if (lastTime !== null && time - Number(lastTime) > 300 * 1000) {
+          await this.localStore.set({
+            lockUser: {
+              address,
+              privateKey
+            }
+          })
+        }
+        localStorage.setItem('time', time.toString())
       }
-      localStorage.setItem('time', time.toString())
     }
   }
 }

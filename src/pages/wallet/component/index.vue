@@ -169,8 +169,6 @@ export default {
   async mounted () {
     const localStore = new ExtensionStore()
     this.localStore = localStore
-    const allStore = await localStore.get(null)
-    console.log(allStore, 'allStoreallStoreallStore')
   },
   methods: {
     ...mapMutations('wallet', [
@@ -267,57 +265,55 @@ export default {
      * If all networks have no account, jump to the welcome page
      */
     async confirmDelete () {
-      try {
-        const allAccountList = await this.localStore.get('accountList')
-        const isFilecoin = isFilecoinChain(this.networkType)
-        if (isFilecoin) {
-          const _address = this.address.substring(1, this.address.length)
-          const restAccountList = allAccountList.filter(n => {
-            return (n.address.indexOf(_address) === -1)
+      const allAccountList = await this.localStore.get('accountList')
+      const isFilecoin = isFilecoinChain(this.networkType)
+      if (isFilecoin) {
+        const _address = this.address.substring(1, this.address.length)
+        const restAccountList = allAccountList.filter(n => {
+          return (n.address.indexOf(_address) === -1)
+        })
+        await this.localStore.set({
+          accountList: [
+            ...restAccountList
+          ]
+        })
+      } else {
+        const restAccountList = allAccountList.filter(n => {
+          return n.address !== this.address
+        })
+        await this.localStore.set({
+          accountList: [
+            ...restAccountList
+          ]
+        })
+      }
+      const currentRpc = this.rpc
+      if (allAccountList) {
+        const currentAccountList = allAccountList.filter(n => n.rpc === currentRpc)
+        if (currentAccountList.length) {
+          const first = currentAccountList.find((n, index) => {
+            return index === 0
           })
-          await this.localStore.set({
-            accountList: [
-              ...restAccountList
-            ]
-          })
+          await this.minixChangeAccount(first, currentRpc)
+          window.location.href = './wallet.html'
         } else {
-          const restAccountList = allAccountList.filter(n => {
-            return n.address !== this.address
-          })
-          await this.localStore.set({
-            accountList: [
-              ...restAccountList
-            ]
-          })
-        }
-        const currentRpc = this.rpc
-        const _currentAccountList = await this.localStore.get('accountList')
-        if (_currentAccountList) {
-          const currentAccountList = _currentAccountList.filter(n => n.rpc === currentRpc)
-          if (currentAccountList.length) {
-            const first = currentAccountList.find((n, index) => {
-              return index === 0
-            })
-            await this.minixChangeAccount(first, currentRpc)
-            window.location.href = './wallet.html'
-          } else {
-            const dataNetwork = await this.getDataNetwork()
-            if (dataNetwork) {
-              await this.minixChangeNetwork(dataNetwork, currentRpc)
-              const allAccountList = await this.localStore.get('accountList')
-              if (allAccountList) {
-                const _accountList = allAccountList.filter(n => n.rpc === dataNetwork.rpc)
-                if (_accountList.length) {
-                  await this.minixChangeAccount(_accountList[0], currentRpc)
-                  window.location.href = './wallet.html'
-                }
+          const dataNetwork = await this.getDataNetwork()
+          if (dataNetwork) {
+            await this.minixChangeNetwork(dataNetwork, currentRpc)
+            const allAccountList = await this.localStore.get('accountList')
+            if (allAccountList) {
+              const _accountList = allAccountList.filter(n => n.rpc === dataNetwork.rpc)
+              if (_accountList.length) {
+                await this.minixChangeAccount(_accountList[0], currentRpc)
+                window.location.href = './wallet.html'
               }
-            } else {
-              window.location.href = './welcome.html'
             }
+          } else {
+            localStorage.clear()
+            this.localStore.clear()
+            window.location.href = './welcome.html'
           }
         }
-      } catch (error) {
       }
     },
     closeDelete () {

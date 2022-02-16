@@ -29,7 +29,7 @@ export const minimumPrecision = 0.00000001
 export function formatNumber (str, n = 8) {
   const big = bigNumbers(str)
   const limit = big.decimalPlaces(n)
-  const value = limit.toString()
+  const value = limit.toFixed()
   return value
 }
 

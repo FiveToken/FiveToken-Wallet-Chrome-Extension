@@ -7,7 +7,7 @@ import { BSCChainAPI } from '@/api/ethers.js'
 import { ethers } from 'ethers'
 import Config from '@/config.js'
 import request from '@/utils/request'
-import { enumerateNetworkType } from '@/enumeration'
+import { enumerateNetworkType } from '@/utils/enumeration'
 import {
   BalanceNonceByAddress,
   MessagePush,

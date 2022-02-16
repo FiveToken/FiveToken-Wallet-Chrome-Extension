@@ -184,7 +184,6 @@ export default {
             return f1
           }
         } else {
-          console.log(thisPk)
           const f1 = await getF1ByPrivateKey(thisPk, password, customNetwork.networkType, customNetwork.filecoinAddress0)
           return f1
         }

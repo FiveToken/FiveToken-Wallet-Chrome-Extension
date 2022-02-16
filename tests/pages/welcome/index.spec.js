@@ -1,5 +1,6 @@
 /* eslint-disable no-undef */
-import { networks } from '@/enumeration'
+
+import { mocksData } from '../../mock.js'
 import { shallowMount, createLocalVue } from '@vue/test-utils'
 import welcome from '@/pages/welcome/component/index.vue'
 import elementUI from 'element-ui'
@@ -41,7 +42,7 @@ describe('welcome index.vue', () => {
               rpc: 'https://api.fivetoken.io'
             }
           ],
-          networks: networks
+          networks: mocksData.networks
         },
         mutations: {
           SET_PRIVATEKEY: jest.fn(),

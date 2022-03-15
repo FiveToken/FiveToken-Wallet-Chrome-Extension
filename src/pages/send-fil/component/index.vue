@@ -504,7 +504,7 @@ export default {
     // Successfully sent and stored in the message
     async storeMessage (data) {
       const createTime = parseInt(new Date().getTime() / 1000)
-      const messageList = await this.localStore.get('messageList') || []
+      const storeMessageList = await this.localStore.get('messageList') || []
       const message = {
         cid: data.cid,
         from: this.address,
@@ -521,7 +521,7 @@ export default {
       }
       await this.localStore.set({
         messageList: [
-          ...messageList,
+          ...storeMessageList,
           message
         ]
       })

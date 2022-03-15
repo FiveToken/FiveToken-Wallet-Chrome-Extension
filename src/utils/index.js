@@ -6,7 +6,6 @@ import {
   genT1WalletByCK,
   genPrivateKeyFromMne
 } from '@/utils/f1'
-import { AddressCheck } from '@/api/proxy'
 import { BigNumber } from 'bignumber.js'
 import { Wallet } from 'ethers'
 import { encryptMessage, encrypt } from './aes-gcm'
@@ -229,25 +228,60 @@ export function parseE (str) {
 
 /*
 * Check address validity
-* @param {number} v:address
+* @param {string} address:address
 * @param {string} networkType: chain type
 * @returns {Boolean}
 */
 export async function isValidAddress (address, networkType) {
   const trim = trimStr(address)
   if (isFilecoinChain(networkType)) {
-    const rpc = 'https://api.fivetoken.io'
-    const res = await AddressCheck(trim, rpc)
-    if (res.code === 200 && res.data === 'ok') {
-      return true
-    } else {
-      return false
-    }
+    const valid = checkFileCoinAddress(trim)
+    return valid
   } else {
-    const reg = /^0x[0-9A-Fa-f]{40}$/
-    const bol = reg.test(trim)
-    return bol
+    const valid = checkEthereumAddress(trim)
+    return valid
   }
+}
+
+/*
+* Check address validity
+* @param {string} address:address
+* @returns {Boolean}
+*/
+export function checkEthereumAddress (address) {
+  const reg = /^0x[0-9A-Fa-f]{40}$/
+  const bol = reg.test(address)
+  return bol
+}
+
+/*
+* Check address validity
+* @param {string} address:address
+* @returns {Boolean}
+*/
+export function checkFileCoinAddress (address) {
+  if (!address) return false
+  if (address.length < 3) return false
+  const network = address[0]
+  if (network !== 'f' && network !== 't') return false
+
+  const Protocol = {
+    ID: 0,
+    SECP256K1: 1,
+    ACTOR: 2,
+    BLS: 3
+  }
+  const protocol = address[1]
+
+  if (protocol === Protocol.ID && address.length > 22) return false
+
+  if (protocol === Protocol.SECP256K1 && address.length !== 41) return false
+
+  if (protocol === Protocol.ACTOR && address.length !== 41) return false
+
+  if (protocol === Protocol.BLS && address.length !== 86) return false
+
+  return true
 }
 
 /*

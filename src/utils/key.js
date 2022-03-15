@@ -1,5 +1,4 @@
 import * as CryptoJS from 'crypto-js'
-export const saltKey = '724b092810ec86d7e35c9d067702b31ef90bc43a7b598626749914d6a3e033ed'
 
 export function genSalt (password) {
   const str = `fiveToken${password}`

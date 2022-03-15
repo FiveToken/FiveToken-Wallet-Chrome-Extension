@@ -225,18 +225,19 @@ export default {
         }
       }
       const util = Math.pow(10, 9)
-      const _maxPriorityFeePerGas = (bigNumbers(this.maxPriorityFeePerGas).multipliedBy(util)).toNumber()
-      const _maxFeePerGas = (bigNumbers(this.maxFeePerGas).multipliedBy(util)).toNumber()
-      const _gasFeeCap = (bigNumbers(this.gasFeeCap).multipliedBy(util)).toNumber()
-      const _gasPremium = (bigNumbers(this.gasPremium).multipliedBy(util)).toNumber()
-      const _gasPrice = (bigNumbers(this.gasPrice).multipliedBy(util)).toNumber()
+      const _maxPriorityFeePerGas = (bigNumbers(this.maxPriorityFeePerGas).multipliedBy(util)).toFixed()
+      const _maxFeePerGas = (bigNumbers(this.maxFeePerGas).multipliedBy(util)).toFixed()
+      const _gasFeeCap = (bigNumbers(this.gasFeeCap).multipliedBy(util)).toFixed()
+      const _gasPremium = (bigNumbers(this.gasPremium).multipliedBy(util)).toFixed()
+      const _gasPrice = (bigNumbers(this.gasPrice).multipliedBy(util)).toFixed()
+
       this.SET_SERVICEGAS({
         rpcType,
-        maxPriorityFeePerGas: _maxPriorityFeePerGas,
-        maxFeePerGas: _maxFeePerGas,
-        gasFeeCap: _gasFeeCap,
-        gasPremium: _gasPremium,
-        gasPrice: _gasPrice,
+        maxPriorityFeePerGas: Number(_maxPriorityFeePerGas),
+        maxFeePerGas: Number(_maxFeePerGas),
+        gasFeeCap: Number(_gasFeeCap),
+        gasPremium: Number(_gasPremium),
+        gasPrice: Number(_gasPrice),
         gasLimit: Number(this.gasLimit)
       })
     },

@@ -281,15 +281,18 @@ export default {
         const restAccountList = allAccountList.filter(n => {
           return n.address !== this.address
         })
+
         await this.localStore.set({
           accountList: [
             ...restAccountList
           ]
         })
       }
+      // Get deleted list
       const currentRpc = this.rpc
-      if (allAccountList) {
-        const currentAccountList = allAccountList.filter(n => n.rpc === currentRpc)
+      const allList = await this.localStore.get('accountList')
+      if (allList) {
+        const currentAccountList = allList.filter(n => n.rpc === currentRpc)
         if (currentAccountList.length) {
           const first = currentAccountList.find((n, index) => {
             return index === 0
@@ -412,12 +415,14 @@ export default {
     },
 
     async getMessageList () {
-      const messageList = await this.localStore.get('messageList')
-      if (messageList) {
+      const storeMessageList = await this.localStore.get('messageList')
+      if (storeMessageList) {
         const currentAddress = this.address
-        const myMessageList = messageList.filter((n) => {
-          return ((n.rpc === this.rpc) && (n.from === currentAddress)) || ((n.rpc === this.rpc) && (n.to === currentAddress))
+        const currentRpc = this.rpc
+        const myMessageList = storeMessageList.filter((n) => {
+          return ((n.rpc === currentRpc) && (n.from === currentAddress)) || ((n.rpc === currentRpc) && (n.to === currentAddress))
         })
+
         this.SET_MESSAGELIST(myMessageList)
       } else {
         this.SET_MESSAGELIST([])
@@ -467,8 +472,8 @@ export default {
             const itemRes = await this.getDetail(n.cid)
             if (itemRes) {
             // get detail, update store messageList (type,allGasFee,blockTime)
-              const updateMessageItem = messageList.find(m => n.cid === m.cid)
-              const restMessageList = messageList.filter(m => n.cid !== m.cid)
+              const updateMessageItem = allMessageList.find(m => n.cid === m.cid)
+              const restMessageList = allMessageList.filter(m => n.cid !== m.cid)
               await this.localStore.set({
                 messageList: [
                   ...restMessageList,
@@ -513,8 +518,8 @@ export default {
         }
 
         if (nonce) {
-          const restMessageList = messageList.filter(n => {
-            return (n.nonce !== nonce) && (n.type !== 'pending')
+          const restMessageList = allMessageList.filter(n => {
+            return (n.nonce !== nonce) && (n.type !== 'pending') && (n.rpc !== this.rpc) && (n.address !== this.address)
           })
 
           await this.localStore.set({

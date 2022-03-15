@@ -437,13 +437,15 @@ export class GlobalApi {
       method: 'post',
       data: params
     })
-    const maxFeePerGas = _baseFeePerGas * _coefficient
+    const bigMaxFeePerGas = bigNumbers(_baseFeePerGas * _coefficient)
+    const decimalMaxFeePerGas = bigMaxFeePerGas.decimalPlaces(0)
     const isHexString = ethers.utils.isHexString(_res.result)
     if (isHexString) {
-      const maxPriorityFeePerGas = Number(_res.result)
+      const bigMaxPriorityFeePerGas = bigNumbers(Number(_res.result))
+      const decimalMaxPriorityFeePerGas = bigMaxPriorityFeePerGas.decimalPlaces(0)
       return {
-        maxFeePerGas,
-        maxPriorityFeePerGas
+        maxFeePerGas: decimalMaxFeePerGas.toNumber(),
+        maxPriorityFeePerGas: decimalMaxPriorityFeePerGas.toNumber()
       }
     } else {
       return {
